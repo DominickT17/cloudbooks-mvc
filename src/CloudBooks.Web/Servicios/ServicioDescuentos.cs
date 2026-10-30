@@ -11,13 +11,7 @@ public class ServicioDescuentos
         if (subtotal < 0) throw new ArgumentOutOfRangeException(nameof(subtotal));
         if (cantidad < 1) throw new ArgumentOutOfRangeException(nameof(cantidad));
 
-        decimal tasaVolumen = cantidad switch
-        {
-            <= 5 => 0m,
-            <= 20 => 0.05m,
-            <= 50 => 0.10m,
-            _ => 0.15m
-        };
+        decimal tasaVolumen = ObtenerTasaVolumen(cantidad);
         decimal descuentoVolumen = Redondear(subtotal * tasaVolumen);
         decimal descuentoInstitucional = institucional ? Redondear((subtotal - descuentoVolumen) * 0.08m) : 0m;
         decimal baseImponible = subtotal - descuentoVolumen - descuentoInstitucional;
@@ -26,4 +20,13 @@ public class ServicioDescuentos
     }
 
     private static decimal Redondear(decimal valor) => decimal.Round(valor, 2, MidpointRounding.AwayFromZero);
+
+    public static decimal ObtenerTasaVolumen(int cantidad) => cantidad switch
+    {
+        < 1 => throw new ArgumentOutOfRangeException(nameof(cantidad)),
+        <= 5 => 0m,
+        <= 20 => 0.05m,
+        <= 50 => 0.10m,
+        _ => 0.15m
+    };
 }

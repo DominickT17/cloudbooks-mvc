@@ -55,6 +55,26 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.ToTable("Autores");
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.Carrito", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId")
+                        .IsUnique();
+
+                    b.ToTable("Carritos");
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.Categoria", b =>
                 {
                     b.Property<int>("Id")
@@ -71,6 +91,36 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.HasKey("Id");
 
                     b.ToTable("Categorias");
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.DetalleCarrito", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CarritoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LibroId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LibroId");
+
+                    b.HasIndex("CarritoId", "LibroId")
+                        .IsUnique();
+
+                    b.ToTable("DetallesCarrito", t =>
+                        {
+                            t.HasCheckConstraint("CK_DetalleCarrito_Cantidad", "[Cantidad] >= 1");
+                        });
                 });
 
             modelBuilder.Entity("CloudBooks.Web.Modelos.Editorial", b =>
@@ -369,6 +419,36 @@ namespace CloudBooks.Web.Datos.Migraciones
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.Carrito", b =>
+                {
+                    b.HasOne("CloudBooks.Web.Modelos.UsuarioAplicacion", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.DetalleCarrito", b =>
+                {
+                    b.HasOne("CloudBooks.Web.Modelos.Carrito", "Carrito")
+                        .WithMany("Detalles")
+                        .HasForeignKey("CarritoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CloudBooks.Web.Modelos.Libro", "Libro")
+                        .WithMany()
+                        .HasForeignKey("LibroId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Carrito");
+
+                    b.Navigation("Libro");
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.Libro", b =>
                 {
                     b.HasOne("CloudBooks.Web.Modelos.Categoria", "Categoria")
@@ -437,6 +517,11 @@ namespace CloudBooks.Web.Datos.Migraciones
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.Carrito", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 #pragma warning restore 612, 618
         }

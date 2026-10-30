@@ -1,0 +1,25 @@
+@model CloudBooks.Web.ModelosVista.CarritoModelo
+@using CloudBooks.Web.Servicios
+@{ ViewData["Title"] = "Tu carrito"; string Dinero(decimal n) => "Q" + n.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture); }
+<section class="container pagina"><p class="etiqueta">TUS LECTURAS</p><h1>Tu carrito</h1>
+@if (TempData["Error"] != null) { <p class="alert alert-danger" role="alert">@TempData["Error"]</p> }
+@if (TempData["Exito"] != null) { <p class="alert alert-success" role="status">@TempData["Exito"]</p> }
+@if (Model.Detalles.Count == 0) { <p>Tu carrito está vacío.</p><a class="boton" asp-controller="Catalogo" asp-action="Index">Explorar catálogo</a> }
+else {
+<div class="compra-grid"><div>
+@foreach (var detalle in Model.Detalles) {
+    <article class="linea-carrito"><img src="@detalle.Libro.ImagenPortada" alt="Portada de @detalle.Libro.Titulo" />
+    <div><h2><a asp-controller="Catalogo" asp-action="Detalle" asp-route-id="@detalle.LibroId">@detalle.Libro.Titulo</a></h2>
+    <p>@Dinero(detalle.Libro.PrecioBase) por unidad · Subtotal @Dinero(detalle.Libro.PrecioBase * detalle.Cantidad)</p>
+    @if (!detalle.Libro.Activo) { <p class="errores">Este libro ya no está disponible.</p> }
+    <form asp-action="Actualizar" method="post" class="cantidad-form"><input type="hidden" name="detalleId" value="@detalle.Id" /><label for="cantidad-@detalle.Id">Cantidad</label><input id="cantidad-@detalle.Id" type="number" name="cantidad" min="1" max="10000" value="@detalle.Cantidad" required /><button type="submit">Actualizar</button></form>
+    <form asp-action="Eliminar" method="post"><input type="hidden" name="detalleId" value="@detalle.Id" /><button class="enlace-boton" type="submit">Eliminar</button></form></div></article>
+}
+</div><aside class="resumen-compra"><h2>Resumen</h2><dl>
+<div><dt>Subtotal</dt><dd>@Dinero(Model.Resumen!.Subtotal)</dd></div>
+<div><dt>Descuento por volumen (@(ServicioDescuentos.ObtenerTasaVolumen(Model.CantidadTotal) * 100) %)</dt><dd>−@Dinero(Model.Resumen.DescuentoVolumen)</dd></div>
+@if (Model.Institucional) { <div><dt>Descuento institucional (8 %)</dt><dd>−@Dinero(Model.Resumen.DescuentoInstitucional)</dd></div> }
+<div><dt>IVA (12 %)</dt><dd>@Dinero(Model.Resumen.Impuesto)</dd></div><div class="total"><dt>Total</dt><dd>@Dinero(Model.Resumen.Total)</dd></div></dl>
+<p>La confirmación de compra estará disponible en el siguiente bloque.</p></aside></div>
+}
+</section>

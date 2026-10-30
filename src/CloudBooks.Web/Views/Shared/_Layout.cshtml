@@ -15,7 +15,7 @@
                 <a asp-controller="Inicio" asp-action="Index">Inicio</a>
                 <a asp-controller="Catalogo" asp-action="Index">Catálogo</a>
                 <a asp-controller="Inicio" asp-action="Instituciones">Instituciones</a>
-                <a asp-controller="Inicio" asp-action="Carrito">Carrito</a>
+                @await Component.InvokeAsync("ContadorCarrito")
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a>

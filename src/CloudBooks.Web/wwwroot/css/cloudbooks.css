@@ -60,5 +60,14 @@ h1 { max-width: 680px; font-size: clamp(2.6rem, 6vw, 4.7rem); font-weight: 700; 
 .ficha { max-width: 550px; }
 .ficha div { display: grid; grid-template-columns: 1fr 2fr; border-bottom: 1px solid #edf1f5; padding: .5rem 0; }
 .ficha dt { color: #607386; font-weight: 500; }.ficha dd { margin: 0; }
+.agregar-carrito, .cantidad-form { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin: 1rem 0; }
+.agregar-carrito input, .cantidad-form input { width: 5.5rem; padding: .5rem; border: 1px solid #b8c8d9; border-radius: 6px; }
+.compra-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 2rem; margin-top: 2rem; align-items: start; }
+.linea-carrito { display: flex; gap: 1rem; border-bottom: 1px solid #e2eaf2; padding: 1rem 0; }
+.linea-carrito img { width: 100px; height: 140px; object-fit: cover; border-radius: 5px; }
+.linea-carrito h2 { font-size: 1.1rem; }.linea-carrito h2 a { color: var(--tinta); text-decoration: none; }
+.resumen-compra { background: #f2f7fd; padding: 1.5rem; border-radius: 10px; }.resumen-compra h2 { font-size: 1.25rem; }
+.resumen-compra dl div { display: flex; justify-content: space-between; gap: 1rem; margin: .8rem 0; }.resumen-compra dt { font-weight: 400; }.resumen-compra dd { margin: 0; white-space: nowrap; }.resumen-compra .total { border-top: 1px solid #cbd9e7; padding-top: 1rem; font-weight: 700; }.resumen-compra .total dt { font-weight: 700; }
+@media (max-width: 700px) { .compra-grid { grid-template-columns: 1fr; }.linea-carrito img { width: 72px; height: 101px; } }
 @media (max-width: 1000px) { .libros-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .navegacion { flex-direction: column; } .nav-enlaces { justify-content: flex-start; } .libros-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; } .filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filtros .orden { grid-column: span 2; } .detalle-libro { grid-template-columns: 1fr; } .detalle-portada { max-width: 260px; } .hero { padding: 3rem 0; } }

@@ -9,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ServicioCatalogo>();
+builder.Services.AddScoped<ServicioCarrito>();
+builder.Services.AddScoped<ServicioDescuentos>();
 builder.Services.AddDbContext<ContextoAplicacion>(opciones =>
     opciones.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<UsuarioAplicacion, IdentityRole>()
