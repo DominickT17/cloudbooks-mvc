@@ -1,0 +1,14 @@
+@model CloudBooks.Web.Modelos.Libro
+@using CloudBooks.Web.Modelos
+@{ ViewData["Title"] = Model.Titulo; }
+<section class="container pagina">
+    <a class="volver" asp-action="Index">← Volver al catálogo</a>
+    <div class="detalle-libro"><img class="detalle-portada" src="@Model.ImagenPortada" alt="Portada de @Model.Titulo" />
+    <div><p class="etiqueta">@Model.Categoria.Nombre</p><h1>@Model.Titulo</h1><p class="detalle-autor">@string.Join(", ", Model.Autores.Select(a => a.Nombre))</p>
+        <p class="detalle-precio">Q@(Model.PrecioBase.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</p>
+        <p class="disponibilidad">@(Model.Formato == FormatoLibro.Ebook ? "Formato digital disponible" : Model.Stock == 0 ? "Sin existencias" : Model.Stock <= 5 ? $"Últimas {Model.Stock} unidades" : "Disponible")</p>
+        <h2>Sobre este libro</h2><p>@Model.Sinopsis</p><h2>Ficha técnica</h2>
+        <dl class="ficha"><div><dt>ISBN</dt><dd>@Model.ISBN</dd></div><div><dt>Editorial</dt><dd>@Model.Editorial.Nombre</dd></div><div><dt>Año</dt><dd>@Model.AnioEdicion</dd></div><div><dt>Categoría</dt><dd>@Model.Categoria.Nombre</dd></div><div><dt>Formato</dt><dd>@(Model.Formato == FormatoLibro.TapaBlanda ? "Tapa blanda" : Model.Formato == FormatoLibro.TapaDura ? "Tapa dura" : "E-book")</dd></div>
+        @if (Model.Formato != FormatoLibro.Ebook) { <div><dt>Existencias</dt><dd>@Model.Stock</dd></div> }</dl>
+    </div></div>
+</section>

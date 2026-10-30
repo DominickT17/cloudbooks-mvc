@@ -32,3 +32,33 @@ h1 { max-width: 680px; font-size: clamp(2.6rem, 6vw, 4.7rem); font-weight: 700; 
 .errores { color: #aa2525; font-size: .9rem; }
 .pagina { padding-top: 4rem; padding-bottom: 5rem; min-height: 45vh; }
 @media (max-width: 700px) { .navegacion { padding-top: .75rem; padding-bottom: .75rem; gap: 1rem; align-items: flex-start; } .marca { width: 125px; } .nav-enlaces { justify-content: flex-end; gap: .6rem 1rem; } }
+.catalogo h1 { font-size: clamp(2.2rem, 4vw, 3.6rem); }
+.intro { color: #52677c; }
+.filtros { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end; gap: .9rem; background: #f2f7fd; padding: 1.25rem; border-radius: 12px; margin: 2rem 0; }
+.filtros .busqueda { grid-column: span 2; }
+.filtros label { display: block; font-size: .8rem; font-weight: 650; margin-bottom: .4rem; }
+.filtros input, .filtros select { width: 100%; min-width: 0; border: 1px solid #cbd9e7; border-radius: 6px; padding: .65rem; background: white; }
+.limpiar, .volver { color: #176bb9; font-weight: 600; }
+.resultados { color: #52677c; font-size: .9rem; margin: 2rem 0 1rem; }
+.libros-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.5rem; }
+.libro-tarjeta { min-width: 0; }
+.libro-tarjeta img { width: 100%; aspect-ratio: 5 / 7; object-fit: cover; border-radius: 5px; background: #eaf2f9; }
+.libro-info { padding-top: .8rem; }
+.libro-info h2 { font-size: 1rem; line-height: 1.35; font-weight: 700; margin: .3rem 0; }
+.libro-info h2 a { color: var(--tinta); text-decoration: none; }
+.libro-info p { font-size: .86rem; color: #607386; margin-bottom: .5rem; }
+.libro-info .libro-formato { text-transform: uppercase; font-size: .68rem; letter-spacing: .08em; color: #1675d0; font-weight: 700; }
+.libro-info strong { font-size: 1.05rem; }
+.libro-info .disponibilidad, .disponibilidad { color: #37745d; font-size: .87rem; margin: .4rem 0 .7rem; }
+.enlace-libro { color: #176bb9; text-decoration: none; font-size: .86rem; font-weight: 700; }
+.detalle-libro { display: grid; grid-template-columns: minmax(200px, 320px) minmax(0, 1fr); gap: clamp(2rem, 6vw, 5rem); margin-top: 2rem; max-width: 1040px; }
+.detalle-portada { width: 100%; border-radius: 6px; }
+.detalle-libro h1 { font-size: clamp(2rem, 4vw, 3.4rem); }
+.detalle-libro h2 { font-size: 1.1rem; margin-top: 2rem; font-weight: 700; }
+.detalle-autor { color: #52677c; font-size: 1.1rem; }
+.detalle-precio { font-size: 1.6rem; font-weight: 700; margin-bottom: 0; }
+.ficha { max-width: 550px; }
+.ficha div { display: grid; grid-template-columns: 1fr 2fr; border-bottom: 1px solid #edf1f5; padding: .5rem 0; }
+.ficha dt { color: #607386; font-weight: 500; }.ficha dd { margin: 0; }
+@media (max-width: 1000px) { .libros-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .navegacion { flex-direction: column; } .nav-enlaces { justify-content: flex-start; } .libros-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; } .filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filtros .orden { grid-column: span 2; } .detalle-libro { grid-template-columns: 1fr; } .detalle-portada { max-width: 260px; } .hero { padding: 3rem 0; } }

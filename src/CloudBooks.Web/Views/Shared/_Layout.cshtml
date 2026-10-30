@@ -13,6 +13,9 @@
             <a asp-controller="Inicio" asp-action="Index" aria-label="CloudBooks, inicio"><img class="marca" src="~/imagenes/marca/cloudbooks.png" alt="CloudBooks" /></a>
             <div class="nav-enlaces">
                 <a asp-controller="Inicio" asp-action="Index">Inicio</a>
+                <a asp-controller="Catalogo" asp-action="Index">Catálogo</a>
+                <a asp-controller="Inicio" asp-action="Instituciones">Instituciones</a>
+                <a asp-controller="Inicio" asp-action="Carrito">Carrito</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a>
@@ -29,6 +32,7 @@
     </header>
     <main>@RenderBody()</main>
     <footer class="pie"><div class="container">CloudBooks · Zona 1, Quetzaltenango, Guatemala<br /><a href="mailto:dominickt1703@gmail.com">dominickt1703@gmail.com</a> · +502 5575 1509</div></footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
