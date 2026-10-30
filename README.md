@@ -32,6 +32,8 @@ Abre la dirección que indique la consola.
 
 La solución se encuentra en `CloudBooks.sln` y la aplicación en `src/CloudBooks.Web`. Se conservan `Controllers`, `Models` y `Views` por las convenciones de ASP.NET Core; el código propio utiliza nombres en español. El controlador recibe la petición y selecciona la vista; la lógica comercial se ubicará en servicios del modelo.
 
+El servicio de descuentos calcula volumen, descuento institucional e impuesto en ese orden. La integración con carrito y pedidos está pendiente. Sus pruebas se ejecutan con `dotnet test`.
+
 ## Integrantes
 
 - Dóminick Ricardo Cifuentes Tomás
