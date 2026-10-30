@@ -1,0 +1,5 @@
+@model CloudBooks.Web.Modelos.Pedido
+@{ ViewData["Title"] = Model.Codigo; }
+<section class="container pagina"><a asp-action="Index">← Mis pedidos</a><h1>@Model.Codigo</h1><p>Estado: <strong>@Model.Estado</strong> · @Model.FechaUtc.ToString("dd/MM/yyyy HH:mm") UTC</p>
+@if (TempData["Exito"] != null) { <p class="alert alert-success">@TempData["Exito"]</p> }
+<partial name="_DetallePedido" model="Model" /></section>

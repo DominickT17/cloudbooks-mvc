@@ -1,0 +1,10 @@
+@model CloudBooks.Web.Modelos.Pedido
+@using CloudBooks.Web.Modelos
+@{ ViewData["Title"] = Model.Codigo; ViewData["Administracion"] = true; }
+<section class="container pagina"><a asp-action="Pedidos">← Pedidos</a><h1>@Model.Codigo</h1><p>Cliente: @Model.Usuario.NombreCompleto (@Model.Usuario.Email)</p><p>Estado: <strong>@Model.Estado</strong> · @Model.FechaUtc.ToString("dd/MM/yyyy HH:mm") UTC</p>
+@if (TempData["Error"] != null) { <p class="alert alert-danger" role="alert">@TempData["Error"]</p> }
+@if (TempData["Exito"] != null) { <p class="alert alert-success" role="status">@TempData["Exito"]</p> }
+<partial name="_DetallePedido" model="Model" />
+<div class="acciones-pedido">
+@if (Model.Estado == EstadoPedido.Pendiente) { <form asp-action="CambiarEstado" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="Aprobado" /><button class="boton" type="submit">Aprobar pedido</button></form><form asp-action="CambiarEstado" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="Cancelado" /><button type="submit">Cancelar pedido</button></form> }
+@if (Model.Estado == EstadoPedido.Aprobado) { <form asp-action="CambiarEstado" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="Enviado" /><button class="boton" type="submit">Marcar enviado</button></form> }</div></section>

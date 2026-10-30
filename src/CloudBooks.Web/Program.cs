@@ -11,6 +11,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ServicioCatalogo>();
 builder.Services.AddScoped<ServicioCarrito>();
 builder.Services.AddScoped<ServicioDescuentos>();
+builder.Services.AddScoped<ServicioPedidos>();
 builder.Services.AddDbContext<ContextoAplicacion>(opciones =>
     opciones.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<UsuarioAplicacion, IdentityRole>()

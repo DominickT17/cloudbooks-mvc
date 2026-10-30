@@ -1,0 +1,8 @@
+@model List<CloudBooks.Web.Modelos.Pedido>
+@using CloudBooks.Web.Modelos
+@{ ViewData["Title"] = "Administrar pedidos"; string Dinero(decimal n) => "Q" + n.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture); }
+<section class="container pagina"><a asp-action="Index">← Administración</a><h1>Pedidos</h1>
+<form method="get" class="filtro-estado"><label for="estado">Estado</label><select id="estado" name="estado"><option value="">Todos</option>@foreach (var estado in Enum.GetValues<EstadoPedido>()) { <option value="@estado" selected="@(ViewBag.Estado == estado)">@estado</option> }</select><button type="submit">Filtrar</button></form>
+<div class="tabla-responsive"><table class="tabla-pedidos"><thead><tr><th>Pedido</th><th>Cliente</th><th>Fecha (UTC)</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>
+@foreach (var pedido in Model) { <tr><td>@pedido.Codigo</td><td>@pedido.Usuario.NombreCompleto</td><td>@pedido.FechaUtc.ToString("dd/MM/yyyy HH:mm")</td><td>@Dinero(pedido.Total)</td><td>@pedido.Estado</td><td><a asp-action="DetallePedido" asp-route-id="@pedido.Id">Ver</a></td></tr> }
+</tbody></table></div></section>

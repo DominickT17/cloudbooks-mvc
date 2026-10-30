@@ -8,7 +8,7 @@ public class InicioController : Controller
 {
     public IActionResult Index() => View();
     public IActionResult Instituciones() => View();
-    public IActionResult Carrito() => View();
+    public IActionResult Carrito() => RedirectToAction("Index", "Carrito");
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

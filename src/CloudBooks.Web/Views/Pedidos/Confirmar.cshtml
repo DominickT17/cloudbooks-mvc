@@ -1,0 +1,17 @@
+@model CloudBooks.Web.ModelosVista.CarritoModelo
+@using CloudBooks.Web.Servicios
+@{ ViewData["Title"] = "Confirmar compra"; string Dinero(decimal n) => "Q" + n.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture); }
+<section class="container pagina"><p class="etiqueta">ÚLTIMO PASO</p><h1>Confirmar compra</h1><p class="alert alert-info">Entorno académico: no se procesará dinero real.</p>
+@if (TempData["Error"] != null) { <p class="alert alert-danger" role="alert">@TempData["Error"]</p> }
+<div class="compra-grid"><div><h2>Productos</h2>
+@foreach (var detalle in Model.Detalles) { <div class="linea-resumen"><strong>@detalle.Libro.Titulo</strong><span>@detalle.Cantidad × @Dinero(detalle.Libro.PrecioBase) = @Dinero(detalle.Cantidad * detalle.Libro.PrecioBase)</span></div> }
+<form asp-action="Crear" method="post"><fieldset><legend>Método de pago simulado</legend>
+<label><input type="radio" name="metodo" value="0" required /> Tarjeta simulada</label><br />
+<label><input type="radio" name="metodo" value="1" required /> Transferencia simulada</label></fieldset>
+<button class="boton" type="submit">Confirmar pedido</button></form></div>
+<aside class="resumen-compra"><h2>Resumen</h2><dl>
+<div><dt>Subtotal</dt><dd>@Dinero(Model.Resumen!.Subtotal)</dd></div>
+<div><dt>Descuento por volumen (@(ServicioDescuentos.ObtenerTasaVolumen(Model.CantidadTotal) * 100) %)</dt><dd>−@Dinero(Model.Resumen.DescuentoVolumen)</dd></div>
+@if (Model.Institucional) { <div><dt>Descuento institucional (8 %)</dt><dd>−@Dinero(Model.Resumen.DescuentoInstitucional)</dd></div> }
+<div><dt>IVA (12 %)</dt><dd>@Dinero(Model.Resumen.Impuesto)</dd></div><div class="total"><dt>Total</dt><dd>@Dinero(Model.Resumen.Total)</dd></div></dl>
+<a asp-controller="Carrito" asp-action="Index">Volver al carrito</a></aside></div></section>
