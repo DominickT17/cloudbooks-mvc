@@ -1,0 +1,4 @@
+@model List<CloudBooks.Web.Modelos.Cotizacion>
+@{ ViewData["Title"] = User.IsInRole("Administrador") ? "Cotizaciones" : "Mis cotizaciones"; string Dinero(decimal n) => "Q" + n.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture); }
+<section class="container pagina"><h1>@ViewData["Title"]</h1><div class="tabla-responsive"><table class="tabla-pedidos"><thead><tr><th>Código</th><th>Institución</th><th>Asesor</th><th>Fecha (UTC)</th><th>Vence</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>
+@foreach (var c in Model) { <tr><td>@c.Codigo</td><td>@c.Solicitud.PerfilInstitucional.Institucion</td><td>@c.Solicitud.Asesor?.NombreCompleto</td><td>@c.FechaUtc.ToString("dd/MM/yyyy")</td><td>@c.FechaVencimiento.ToString("dd/MM/yyyy")</td><td>@Dinero(c.Total)</td><td>@c.Estado</td><td><a asp-action="Detalle" asp-route-id="@c.Id">Ver</a></td></tr> }</tbody></table></div></section>

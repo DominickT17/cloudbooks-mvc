@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -15,6 +16,8 @@ builder.Services.AddScoped<ServicioPedidos>();
 builder.Services.AddScoped<ServicioInstituciones>();
 builder.Services.AddScoped<ServicioAsignacionAsesores>();
 builder.Services.AddScoped<ServicioSolicitudesCotizacion>();
+builder.Services.AddScoped<ServicioCotizaciones>();
+builder.Services.AddScoped<ServicioPdfCotizaciones>();
 builder.Services.AddDbContext<ContextoAplicacion>(opciones =>
     opciones.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<UsuarioAplicacion, IdentityRole>()

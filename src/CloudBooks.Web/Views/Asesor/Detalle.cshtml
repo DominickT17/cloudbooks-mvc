@@ -2,4 +2,6 @@
 @using CloudBooks.Web.Modelos
 @{ ViewData["Title"] = Model.Codigo; }
 <section class="container pagina"><a asp-action="Index">← Mis solicitudes</a><h1>@Model.Codigo</h1><partial name="_SolicitudEspecial" model="Model" />
-@if (Model.Estado == EstadoSolicitudCotizacion.Solicitada) { <form asp-action="IniciarRevision" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="boton" type="submit">Iniciar revisión</button></form> }</section>
+@if (TempData["Exito"] != null) { <p class="alert alert-success">@TempData["Exito"]</p> }
+@if (Model.Estado == EstadoSolicitudCotizacion.Solicitada) { <form asp-action="IniciarRevision" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="boton" type="submit">Iniciar revisión</button></form> }
+@if (Model.Estado == EstadoSolicitudCotizacion.EnRevision) { <a class="boton" asp-action="Cotizar" asp-route-id="@Model.Id">Crear cotización</a> }</section>

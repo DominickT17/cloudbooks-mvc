@@ -17,6 +17,8 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
     public DbSet<SolicitudInstitucional> SolicitudesInstitucionales => Set<SolicitudInstitucional>();
     public DbSet<PerfilInstitucional> PerfilesInstitucionales => Set<PerfilInstitucional>();
     public DbSet<SolicitudCotizacion> SolicitudesCotizacion => Set<SolicitudCotizacion>();
+    public DbSet<Cotizacion> Cotizaciones => Set<Cotizacion>();
+    public DbSet<DetalleCotizacion> DetallesCotizacion => Set<DetalleCotizacion>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
@@ -45,5 +47,12 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
         modelo.Entity<SolicitudCotizacion>().HasOne(s => s.Asesor).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelo.Entity<SolicitudCotizacion>().HasOne(s => s.PerfilInstitucional).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelo.Entity<SolicitudCotizacion>().ToTable(t => t.HasCheckConstraint("CK_SolicitudCotizacion_Cantidad", "[Cantidad] > 0"));
+        modelo.Entity<Cotizacion>().HasIndex(c => c.SolicitudCotizacionId).IsUnique();
+        modelo.Entity<Cotizacion>().HasOne(c => c.Solicitud).WithMany().HasForeignKey(c => c.SolicitudCotizacionId).OnDelete(DeleteBehavior.Restrict);
+        foreach (var propiedad in new[] { nameof(Cotizacion.Subtotal), nameof(Cotizacion.DescuentoVolumen), nameof(Cotizacion.DescuentoInstitucional), nameof(Cotizacion.Impuesto), nameof(Cotizacion.Total) })
+            modelo.Entity<Cotizacion>().Property<decimal>(propiedad).HasPrecision(18, 2);
+        modelo.Entity<DetalleCotizacion>().Property(d => d.PrecioUnitario).HasPrecision(18, 2);
+        modelo.Entity<DetalleCotizacion>().Property(d => d.Subtotal).HasPrecision(18, 2);
+        modelo.Entity<DetalleCotizacion>().ToTable(t => t.HasCheckConstraint("CK_DetalleCotizacion_Cantidad", "[Cantidad] > 0"));
     }
 }

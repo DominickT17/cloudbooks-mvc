@@ -93,6 +93,54 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.ToTable("Categorias");
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.Cotizacion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("DescuentoInstitucional")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("DescuentoVolumen")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly>("FechaVencimiento")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Impuesto")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("SolicitudCotizacionId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SolicitudCotizacionId")
+                        .IsUnique();
+
+                    b.ToTable("Cotizaciones");
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.DetalleCarrito", b =>
                 {
                     b.Property<int>("Id")
@@ -120,6 +168,43 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.ToTable("DetallesCarrito", t =>
                         {
                             t.HasCheckConstraint("CK_DetalleCarrito_Cantidad", "[Cantidad] >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.DetalleCotizacion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Concepto")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("CotizacionId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CotizacionId");
+
+                    b.ToTable("DetallesCotizacion", t =>
+                        {
+                            t.HasCheckConstraint("CK_DetalleCotizacion_Cantidad", "[Cantidad] > 0");
                         });
                 });
 
@@ -698,6 +783,17 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.Cotizacion", b =>
+                {
+                    b.HasOne("CloudBooks.Web.Modelos.SolicitudCotizacion", "Solicitud")
+                        .WithMany()
+                        .HasForeignKey("SolicitudCotizacionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Solicitud");
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.DetalleCarrito", b =>
                 {
                     b.HasOne("CloudBooks.Web.Modelos.Carrito", "Carrito")
@@ -715,6 +811,17 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Navigation("Carrito");
 
                     b.Navigation("Libro");
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.DetalleCotizacion", b =>
+                {
+                    b.HasOne("CloudBooks.Web.Modelos.Cotizacion", "Cotizacion")
+                        .WithMany("Detalles")
+                        .HasForeignKey("CotizacionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cotizacion");
                 });
 
             modelBuilder.Entity("CloudBooks.Web.Modelos.DetallePedido", b =>
@@ -866,6 +973,11 @@ namespace CloudBooks.Web.Datos.Migraciones
                 });
 
             modelBuilder.Entity("CloudBooks.Web.Modelos.Carrito", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.Cotizacion", b =>
                 {
                     b.Navigation("Detalles");
                 });
