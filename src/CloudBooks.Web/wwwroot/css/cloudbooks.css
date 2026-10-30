@@ -72,6 +72,7 @@ h1 { max-width: 680px; font-size: clamp(2.6rem, 6vw, 4.7rem); font-weight: 700; 
 fieldset { margin: 2rem 0; } fieldset legend { font-size: 1.1rem; font-weight: 700; }
 .tabla-responsive { overflow-x: auto; margin-top: 1.5rem; }.tabla-pedidos { width: 100%; border-collapse: collapse; min-width: 600px; }.tabla-pedidos th, .tabla-pedidos td { padding: .85rem; border-bottom: 1px solid #e2eaf2; text-align: left; }
 .filtro-estado, .acciones-pedido { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; margin: 1.5rem 0; }
+.formulario-institucional { max-width: 580px; }
 @media (max-width: 700px) { .compra-grid { grid-template-columns: 1fr; }.linea-carrito img { width: 72px; height: 101px; } }
 @media (max-width: 1000px) { .libros-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .navegacion { flex-direction: column; } .nav-enlaces { justify-content: flex-start; } .libros-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; } .filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filtros .orden { grid-column: span 2; } .detalle-libro { grid-template-columns: 1fr; } .detalle-portada { max-width: 260px; } .hero { padding: 3rem 0; } }

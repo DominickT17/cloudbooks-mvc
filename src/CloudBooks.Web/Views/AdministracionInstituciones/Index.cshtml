@@ -1,0 +1,6 @@
+@model List<CloudBooks.Web.Modelos.SolicitudInstitucional>
+@{ ViewData["Title"] = "Solicitudes institucionales"; }
+<section class="container pagina"><a asp-controller="Administracion" asp-action="Index">← Administración</a><h1>Solicitudes institucionales</h1>
+<div class="tabla-responsive"><table class="tabla-pedidos"><thead><tr><th>Usuario</th><th>Institución</th><th>NIT</th><th>Tipo</th><th>Fecha (UTC)</th><th>Estado</th><th></th></tr></thead><tbody>
+@foreach (var s in Model) { <tr><td>@s.Usuario.NombreCompleto</td><td>@s.Institucion</td><td>@s.Nit</td><td>@s.TipoInstitucion</td><td>@s.FechaUtc.ToString("dd/MM/yyyy")</td><td>@s.Estado</td><td><a asp-action="Detalle" asp-route-id="@s.Id">Ver</a></td></tr> }
+</tbody></table></div></section>

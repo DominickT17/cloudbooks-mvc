@@ -1,2 +1,6 @@
 @{ ViewData["Title"] = "Instituciones"; }
-<section class="container pagina"><p class="etiqueta">CLOUDBOOKS PARA INSTITUCIONES</p><h1>Lecturas que llegan más lejos</h1><p>Estamos preparando una experiencia para instituciones. Para consultas, escríbenos a <a href="mailto:dominickt1703@gmail.com">dominickt1703@gmail.com</a>.</p><a class="boton" asp-controller="Catalogo" asp-action="Index">Explorar catálogo</a></section>
+<section class="container pagina"><p class="etiqueta">CLOUDBOOKS PARA INSTITUCIONES</p><h1>Lecturas que llegan más lejos</h1><p>Conectamos instituciones con lecturas y soluciones editoriales para sus necesidades.</p><div class="acciones-pedido">
+@if (User.IsInRole("ClienteMinorista") && !User.IsInRole("ClienteInstitucional")) { <a class="boton" asp-controller="Instituciones" asp-action="Solicitar">Solicitar cuenta institucional</a><a asp-controller="Instituciones" asp-action="MisSolicitudes">Mis solicitudes institucionales</a> }
+else if (User.IsInRole("Administrador")) { <a class="boton" asp-controller="AdministracionInstituciones" asp-action="Index">Revisar solicitudes</a> }
+else if (User.Identity?.IsAuthenticated != true) { <a class="boton" asp-controller="Cuenta" asp-action="Ingresar" asp-route-returnUrl="/Inicio/Instituciones">Iniciar sesión</a> }
+</div><a asp-controller="Catalogo" asp-action="Index">Explorar catálogo</a></section>

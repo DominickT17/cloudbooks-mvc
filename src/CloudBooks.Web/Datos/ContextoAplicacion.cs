@@ -14,6 +14,8 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
     public DbSet<DetalleCarrito> DetallesCarrito => Set<DetalleCarrito>();
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<DetallePedido> DetallesPedido => Set<DetallePedido>();
+    public DbSet<SolicitudInstitucional> SolicitudesInstitucionales => Set<SolicitudInstitucional>();
+    public DbSet<PerfilInstitucional> PerfilesInstitucionales => Set<PerfilInstitucional>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
@@ -33,5 +35,9 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
             modelo.Entity<Pedido>().Property<decimal>(propiedad).HasPrecision(18, 2);
         modelo.Entity<DetallePedido>().Property(d => d.PrecioUnitario).HasPrecision(18, 2);
         modelo.Entity<DetallePedido>().Property(d => d.Subtotal).HasPrecision(18, 2);
+        modelo.Entity<SolicitudInstitucional>().HasIndex(s => s.UsuarioId).IsUnique().HasFilter("[Estado] = 0");
+        modelo.Entity<SolicitudInstitucional>().HasOne(s => s.Usuario).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<PerfilInstitucional>().HasIndex(p => p.UsuarioId).IsUnique();
+        modelo.Entity<PerfilInstitucional>().HasOne(p => p.Usuario).WithMany().OnDelete(DeleteBehavior.Restrict);
     }
 }
