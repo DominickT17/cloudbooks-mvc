@@ -1,0 +1,15 @@
+:root { color-scheme: light; --azul: #2188ef; --tinta: #25364b; }
+body { color: var(--tinta); font-family: system-ui, sans-serif; }
+.cabecera { border-bottom: 1px solid #e8eef5; background: #fff; }
+.navegacion { min-height: 90px; display: flex; align-items: center; justify-content: space-between; }
+.marca { width: 170px; height: auto; display: block; }
+.enlace-inicio { color: var(--tinta); font-weight: 600; text-decoration: none; }
+.hero { background: #f1f7ff; padding: 5rem 0; }
+.etiqueta { color: #1675d0; font-size: .75rem; font-weight: 700; letter-spacing: .13em; }
+h1 { max-width: 680px; font-size: clamp(2.6rem, 6vw, 4.7rem); font-weight: 700; letter-spacing: -.045em; }
+.hero-contenido > p:not(.etiqueta) { max-width: 550px; font-size: 1.1rem; }
+.aviso { color: #52677c; }
+.bienvenida { padding-top: 5rem; padding-bottom: 5rem; }
+.bienvenida h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); }
+.pie { border-top: 1px solid #e8eef5; padding: 2rem 0; color: #52677c; font-size: .9rem; }
+.pie a { color: inherit; }

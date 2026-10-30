@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - CloudBooks</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/cloudbooks.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="cabecera">
+        <nav class="container navegacion" aria-label="Navegación principal">
+            <a asp-controller="Inicio" asp-action="Index" aria-label="CloudBooks, inicio"><img class="marca" src="~/imagenes/marca/cloudbooks.png" alt="CloudBooks" /></a>
+            <a class="enlace-inicio" asp-controller="Inicio" asp-action="Index">Inicio</a>
+        </nav>
+    </header>
+    <main>@RenderBody()</main>
+    <footer class="pie"><div class="container">CloudBooks · Zona 1, Quetzaltenango, Guatemala<br /><a href="mailto:dominickt1703@gmail.com">dominickt1703@gmail.com</a> · +502 5575 1509</div></footer>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
