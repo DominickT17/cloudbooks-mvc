@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Servicios;
 
-public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos descuentos)
+public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null)
 {
     public async Task<(Pedido? Pedido, string? Error)> CrearAsync(string usuarioId, bool institucional, MetodoPagoSimulado metodo)
     {
@@ -16,9 +16,10 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         if (carrito.Detalles.Any(d => !d.Libro.Activo || d.Cantidad < 1 || (d.Libro.Formato != FormatoLibro.Ebook && d.Cantidad > d.Libro.Stock)))
             return (null, "Revisa tu carrito: un libro ya no está disponible o no tiene existencias suficientes.");
         var totalUnidades = carrito.Detalles.Sum(d => d.Cantidad);
-        var resumen = descuentos.Calcular(carrito.Detalles.Sum(d => d.Libro.PrecioBase * d.Cantidad), totalUnidades, institucional);
+        var tasa = parametros == null ? ParametrosSistema.ImpuestoInicial : (await parametros.ObtenerAsync()).TasaImpuesto;
+        var resumen = descuentos.Calcular(carrito.Detalles.Sum(d => d.Libro.PrecioBase * d.Cantidad), totalUnidades, institucional, tasa);
         var pedido = new Pedido { UsuarioId = usuarioId, FechaUtc = DateTime.UtcNow, Estado = EstadoPedido.Pendiente, MetodoPago = metodo,
-            Subtotal = resumen.Subtotal, DescuentoVolumen = resumen.DescuentoVolumen, DescuentoInstitucional = resumen.DescuentoInstitucional, Impuesto = resumen.Impuesto, Total = resumen.Total,
+            Subtotal = resumen.Subtotal, DescuentoVolumen = resumen.DescuentoVolumen, DescuentoInstitucional = resumen.DescuentoInstitucional, Impuesto = resumen.Impuesto, TasaImpuesto = resumen.TasaImpuesto, Total = resumen.Total,
             Detalles = carrito.Detalles.Select(d => new DetallePedido { LibroId = d.LibroId, Titulo = d.Libro.Titulo, Formato = d.Libro.Formato, Cantidad = d.Cantidad, PrecioUnitario = d.Libro.PrecioBase, Subtotal = d.Libro.PrecioBase * d.Cantidad }).ToList() };
         contexto.Pedidos.Add(pedido);
         contexto.DetallesCarrito.RemoveRange(carrito.Detalles);

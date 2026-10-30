@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Servicios;
 
-public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuentos descuentos)
+public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null)
 {
-    public const int DiasVigencia = 15;
     private static DateOnly Hoy => DateOnly.FromDateTime(DateTime.UtcNow);
 
     public async Task<string?> EmitirAsync(string asesorId, CotizacionModelo datos)
@@ -18,9 +17,10 @@ public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuento
             .ExecuteUpdateAsync(c => c.SetProperty(s => s.Estado, EstadoSolicitudCotizacion.Cotizada));
         if (actualizado != 1) return "La solicitud no está asignada a ti o no está en revisión.";
         var subtotal = datos.Cantidad * datos.PrecioUnitario;
-        var resumen = descuentos.Calcular(subtotal, datos.Cantidad, true);
-        contexto.Cotizaciones.Add(new Cotizacion { SolicitudCotizacionId = datos.SolicitudId, FechaUtc = DateTime.UtcNow, FechaVencimiento = Hoy.AddDays(DiasVigencia), Estado = EstadoSolicitudCotizacion.Cotizada,
-            Subtotal = resumen.Subtotal, DescuentoVolumen = resumen.DescuentoVolumen, DescuentoInstitucional = resumen.DescuentoInstitucional, Impuesto = resumen.Impuesto, Total = resumen.Total,
+        var configuracion = parametros == null ? new ParametrosSistema() : await parametros.ObtenerAsync();
+        var resumen = descuentos.Calcular(subtotal, datos.Cantidad, true, configuracion.TasaImpuesto);
+        contexto.Cotizaciones.Add(new Cotizacion { SolicitudCotizacionId = datos.SolicitudId, FechaUtc = DateTime.UtcNow, FechaVencimiento = Hoy.AddDays(configuracion.DiasVigencia), Estado = EstadoSolicitudCotizacion.Cotizada,
+            Subtotal = resumen.Subtotal, DescuentoVolumen = resumen.DescuentoVolumen, DescuentoInstitucional = resumen.DescuentoInstitucional, Impuesto = resumen.Impuesto, TasaImpuesto = resumen.TasaImpuesto, Total = resumen.Total,
             Detalles = [new DetalleCotizacion { Concepto = datos.Concepto.Trim(), Cantidad = datos.Cantidad, PrecioUnitario = datos.PrecioUnitario, Subtotal = subtotal }] });
         await contexto.SaveChangesAsync();
         await transaccion.CommitAsync();

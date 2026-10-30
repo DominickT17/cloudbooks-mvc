@@ -19,6 +19,7 @@ public class Pedido
     public decimal DescuentoVolumen { get; set; }
     public decimal DescuentoInstitucional { get; set; }
     public decimal Impuesto { get; set; }
+    public decimal TasaImpuesto { get; set; } = ParametrosSistema.ImpuestoInicial;
     public decimal Total { get; set; }
     public List<DetallePedido> Detalles { get; set; } = [];
 }

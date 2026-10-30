@@ -6,7 +6,7 @@
     <div class="detalle-libro"><img class="detalle-portada" src="@Model.ImagenPortada" alt="Portada de @Model.Titulo" />
     <div><p class="etiqueta">@Model.Categoria.Nombre</p><h1>@Model.Titulo</h1><p class="detalle-autor">@string.Join(", ", Model.Autores.Select(a => a.Nombre))</p>
         <p class="detalle-precio">Q@(Model.PrecioBase.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</p>
-        <p class="disponibilidad">@(Model.Formato == FormatoLibro.Ebook ? "Formato digital disponible" : Model.Stock == 0 ? "Sin existencias" : Model.Stock <= 5 ? $"Últimas {Model.Stock} unidades" : "Disponible")</p>
+        <p class="disponibilidad">@(Model.Formato == FormatoLibro.Ebook ? "Formato digital disponible" : Model.Stock == 0 ? "Sin existencias" : Model.Stock <= (int)ViewBag.Umbral ? $"Últimas {Model.Stock} unidades" : "Disponible")</p>
         @if (Model.Formato == FormatoLibro.Ebook || Model.Stock > 0)
         {
             if (User.Identity?.IsAuthenticated == true)

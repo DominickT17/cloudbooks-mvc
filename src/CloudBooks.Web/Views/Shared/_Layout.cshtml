@@ -1,3 +1,7 @@
+@{
+    var controladorActual = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var panelAdministrativo = User.IsInRole("Administrador") && (controladorActual.StartsWith("Administracion", StringComparison.Ordinal) || controladorActual == "Cotizaciones");
+}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -32,7 +36,23 @@
             </div>
         </nav>
     </header>
-    <main>@RenderBody()</main>
+    <div class="@(panelAdministrativo ? "marco-administracion" : "marco-publico")">
+        @if (panelAdministrativo)
+        {
+            <aside class="barra-administracion"><nav aria-label="Administración">
+                <a asp-controller="Administracion" asp-action="Index">Dashboard</a>
+                <a asp-controller="AdministracionCatalogo" asp-action="Index">Catálogo</a>
+                <a asp-controller="AdministracionInventario" asp-action="Index">Inventario</a>
+                <a asp-controller="Administracion" asp-action="Pedidos">Pedidos</a>
+                <a asp-controller="AdministracionInstituciones" asp-action="Index">Solicitudes institucionales</a>
+                <a asp-controller="AdministracionSolicitudes" asp-action="Index">Solicitudes comerciales</a>
+                <a asp-controller="Cotizaciones" asp-action="Administracion">Cotizaciones</a>
+                <a asp-controller="AdministracionUsuarios" asp-action="Index">Usuarios</a>
+                <a asp-controller="AdministracionConfiguracion" asp-action="Index">Configuración</a>
+            </nav></aside>
+        }
+        <main>@RenderBody()</main>
+    </div>
     <footer class="pie"><div class="container">CloudBooks · Zona 1, Quetzaltenango, Guatemala<br /><a href="mailto:dominickt1703@gmail.com">dominickt1703@gmail.com</a> · +502 5575 1509</div></footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

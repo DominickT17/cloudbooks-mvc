@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CloudBooks.Web.Controllers;
 
 [Authorize]
-public class CarritoController(ServicioCarrito carrito, ServicioDescuentos descuentos) : Controller
+public class CarritoController(ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros) : Controller
 {
     private string UsuarioId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -17,7 +17,7 @@ public class CarritoController(ServicioCarrito carrito, ServicioDescuentos descu
         var cantidad = detalles.Sum(d => d.Cantidad);
         var institucional = User.IsInRole("ClienteInstitucional");
         return View(new CarritoModelo { Detalles = detalles, CantidadTotal = cantidad, Institucional = institucional,
-            Resumen = cantidad == 0 ? null : descuentos.Calcular(detalles.Sum(d => d.Cantidad * d.Libro.PrecioBase), cantidad, institucional) });
+            Resumen = cantidad == 0 ? null : descuentos.Calcular(detalles.Sum(d => d.Cantidad * d.Libro.PrecioBase), cantidad, institucional, (await parametros.ObtenerAsync()).TasaImpuesto) });
     }
 
     [HttpPost, ValidateAntiForgeryToken]

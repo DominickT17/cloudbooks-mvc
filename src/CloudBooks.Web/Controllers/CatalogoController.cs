@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CloudBooks.Web.Controllers;
 
-public class CatalogoController(ServicioCatalogo catalogo) : Controller
+public class CatalogoController(ServicioCatalogo catalogo, ServicioParametros parametros) : Controller
 {
     public async Task<IActionResult> Index([FromQuery] CatalogoModelo filtros)
     {
@@ -22,6 +22,7 @@ public class CatalogoController(ServicioCatalogo catalogo) : Controller
     public async Task<IActionResult> Detalle(int id)
     {
         var libro = await catalogo.ObtenerAsync(id);
+        ViewBag.Umbral = (await parametros.ObtenerAsync()).UmbralStockBajo;
         return libro == null ? NotFound() : View(libro);
     }
 }

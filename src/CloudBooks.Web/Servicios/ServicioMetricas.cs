@@ -5,12 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Servicios;
 
-public class ServicioMetricas(ContextoAplicacion contexto)
+public class ServicioMetricas(ContextoAplicacion contexto, ServicioParametros? parametros = null)
 {
     public async Task<DashboardModelo> ObtenerAsync()
     {
         var porEstado = await contexto.Pedidos.AsNoTracking().GroupBy(p => p.Estado).Select(g => new { Estado = g.Key, Cantidad = g.Count() }).ToListAsync();
         var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+        var umbral = parametros == null ? ParametrosSistema.UmbralInicial : (await parametros.ObtenerAsync()).UmbralStockBajo;
         var clientes = from asignacion in contexto.UserRoles join rol in contexto.Roles on asignacion.RoleId equals rol.Id
             where rol.NormalizedName == "CLIENTEMINORISTA" || rol.NormalizedName == "CLIENTEINSTITUCIONAL" select asignacion.UserId;
         var institucionales = from asignacion in contexto.UserRoles join rol in contexto.Roles on asignacion.RoleId equals rol.Id
@@ -28,7 +29,7 @@ public class ServicioMetricas(ContextoAplicacion contexto)
             Cancelados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Cancelado)?.Cantidad ?? 0,
             CotizacionesPendientes = await contexto.Cotizaciones.CountAsync(c => c.Estado == EstadoSolicitudCotizacion.Cotizada && c.FechaVencimiento >= hoy),
             Clientes = await clientes.Distinct().CountAsync(), Institucionales = await institucionales.Distinct().CountAsync(),
-            StockBajo = await contexto.Libros.AsNoTracking().Where(l => l.Activo && l.Formato != FormatoLibro.Ebook && l.Stock <= ServicioInventario.UmbralStockBajo).OrderBy(l => l.Stock).ThenBy(l => l.Titulo).ToListAsync(),
+            StockBajo = await contexto.Libros.AsNoTracking().Where(l => l.Activo && l.Formato != FormatoLibro.Ebook && l.Stock <= umbral).OrderBy(l => l.Stock).ThenBy(l => l.Titulo).ToListAsync(),
             MasVendidos = masVendidos.Select(x => new LibroVendido(x.LibroId, x.Titulo, x.Unidades)).ToList()
         };
     }

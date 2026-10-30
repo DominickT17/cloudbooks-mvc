@@ -129,6 +129,10 @@ namespace CloudBooks.Web.Datos.Migraciones
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("TasaImpuesto")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
                     b.Property<decimal>("Total")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -333,6 +337,38 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.ToTable("Libros");
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.ParametrosSistema", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DiasVigencia")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TasaImpuesto")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<int>("UmbralStockBajo")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracionSistema");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            DiasVigencia = 15,
+                            TasaImpuesto = 0.12m,
+                            UmbralStockBajo = 5
+                        });
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.Pedido", b =>
                 {
                     b.Property<int>("Id")
@@ -365,6 +401,10 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Property<decimal>("Subtotal")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TasaImpuesto")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
 
                     b.Property<decimal>("Total")
                         .HasPrecision(18, 2)

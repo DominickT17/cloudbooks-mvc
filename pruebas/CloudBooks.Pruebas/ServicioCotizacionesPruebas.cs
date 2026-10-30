@@ -74,5 +74,18 @@ public class ServicioCotizacionesPruebas : IDisposable
         Assert.Equal(EstadoSolicitudCotizacion.Rechazada, (await contexto.Cotizaciones.AsNoTracking().SingleAsync()).Estado);
     }
 
+    [Fact]
+    public async Task CotizacionRespetaVigenciaYTasaConfiguradas()
+    {
+        var parametros = new ServicioParametros(contexto);
+        Assert.Null(await parametros.GuardarAsync(new ParametrosSistema { TasaImpuesto = 0.16m, UmbralStockBajo = 5, DiasVigencia = 30 }));
+        var cotizaciones = new ServicioCotizaciones(contexto, new ServicioDescuentos(), parametros);
+        Assert.Null(await cotizaciones.EmitirAsync("asesor", Datos()));
+        var cotizacion = await contexto.Cotizaciones.AsNoTracking().SingleAsync();
+        Assert.Equal(0.16m, cotizacion.TasaImpuesto);
+        Assert.Equal(331.20m, cotizacion.Impuesto);
+        Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), cotizacion.FechaVencimiento);
+    }
+
     public void Dispose() { contexto.Dispose(); conexion.Dispose(); }
 }

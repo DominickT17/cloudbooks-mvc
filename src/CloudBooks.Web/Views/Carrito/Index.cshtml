@@ -19,7 +19,7 @@ else {
 <div><dt>Subtotal</dt><dd>@Dinero(Model.Resumen!.Subtotal)</dd></div>
 <div><dt>Descuento por volumen (@(ServicioDescuentos.ObtenerTasaVolumen(Model.CantidadTotal) * 100) %)</dt><dd>−@Dinero(Model.Resumen.DescuentoVolumen)</dd></div>
 @if (Model.Institucional) { <div><dt>Descuento institucional (8 %)</dt><dd>−@Dinero(Model.Resumen.DescuentoInstitucional)</dd></div> }
-<div><dt>IVA (12 %)</dt><dd>@Dinero(Model.Resumen.Impuesto)</dd></div><div class="total"><dt>Total</dt><dd>@Dinero(Model.Resumen.Total)</dd></div></dl>
+<div><dt>IVA (@((Model.Resumen.TasaImpuesto * 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)) %)</dt><dd>@Dinero(Model.Resumen.Impuesto)</dd></div><div class="total"><dt>Total</dt><dd>@Dinero(Model.Resumen.Total)</dd></div></dl>
 <a class="boton" asp-controller="Pedidos" asp-action="Confirmar">Continuar compra</a></aside></div>
 }
 </section>

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CloudBooks.Web.Controllers;
 
 [Authorize(Roles = "AsesorVentas")]
-public class AsesorController(ServicioSolicitudesCotizacion solicitudes, ServicioCotizaciones cotizaciones) : Controller
+public class AsesorController(ServicioSolicitudesCotizacion solicitudes, ServicioCotizaciones cotizaciones, ServicioParametros parametros) : Controller
 {
     private string UsuarioId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     public async Task<IActionResult> Index() => View(await solicitudes.PorAsesorAsync(UsuarioId));
@@ -31,12 +31,14 @@ public class AsesorController(ServicioSolicitudesCotizacion solicitudes, Servici
     {
         var solicitud = await solicitudes.ObtenerAsesorAsync(id, UsuarioId);
         if (solicitud == null || solicitud.Estado != EstadoSolicitudCotizacion.EnRevision) return NotFound();
+        ViewBag.DiasVigencia = (await parametros.ObtenerAsync()).DiasVigencia;
         return View(new CotizacionModelo { SolicitudId = id, Concepto = solicitud.Titulo, Cantidad = solicitud.Cantidad });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Cotizar(CotizacionModelo modelo)
     {
+        ViewBag.DiasVigencia = (await parametros.ObtenerAsync()).DiasVigencia;
         if (!ModelState.IsValid) return View(modelo);
         var error = await cotizaciones.EmitirAsync(UsuarioId, modelo);
         if (error != null) { ModelState.AddModelError("", error); return View(modelo); }

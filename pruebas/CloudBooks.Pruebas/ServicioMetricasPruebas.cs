@@ -34,5 +34,14 @@ public class ServicioMetricasPruebas : IDisposable
         Assert.Equal(5, Assert.Single(metricas.StockBajo).Stock);
     }
 
+    [Fact]
+    public async Task StockBajoUsaUmbralConfigurado()
+    {
+        var parametros = new ServicioParametros(contexto);
+        Assert.Null(await parametros.GuardarAsync(new ParametrosSistema { TasaImpuesto = 0.12m, UmbralStockBajo = 4, DiasVigencia = 15 }));
+        var metricas = await new ServicioMetricas(contexto, parametros).ObtenerAsync();
+        Assert.Empty(metricas.StockBajo);
+    }
+
     public void Dispose() { contexto.Dispose(); conexion.Dispose(); }
 }

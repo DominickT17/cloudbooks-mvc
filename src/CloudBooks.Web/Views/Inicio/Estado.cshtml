@@ -1,0 +1,2 @@
+@{ var codigo = (int)(ViewData["Codigo"] ?? 0); ViewData["Title"] = codigo == 404 ? "Página no encontrada" : "Solicitud no disponible"; }
+<section class="container pagina"><p class="etiqueta">CLOUDBOOKS</p><h1>@ViewData["Title"]</h1><p>@(codigo == 404 ? "No encontramos la página solicitada." : "No fue posible completar la solicitud.")</p><a class="boton" asp-controller="Inicio" asp-action="Index">Volver al inicio</a></section>

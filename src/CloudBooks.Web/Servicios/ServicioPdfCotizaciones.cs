@@ -44,7 +44,7 @@ public class ServicioPdfCotizaciones(IWebHostEnvironment entorno)
                 });
                 columna.Item().AlignRight().Width(230).PaddingTop(12).Column(resumen =>
                 {
-                    foreach (var (etiqueta, importe) in new[] { ("Subtotal", cotizacion.Subtotal), ("Descuento por volumen", -cotizacion.DescuentoVolumen), ("Descuento institucional", -cotizacion.DescuentoInstitucional), ("IVA (12 %)", cotizacion.Impuesto), ("Total", cotizacion.Total) })
+                    foreach (var (etiqueta, importe) in new[] { ("Subtotal", cotizacion.Subtotal), ("Descuento por volumen", -cotizacion.DescuentoVolumen), ("Descuento institucional", -cotizacion.DescuentoInstitucional), ($"IVA ({cotizacion.TasaImpuesto * 100:0.##} %)", cotizacion.Impuesto), ("Total", cotizacion.Total) })
                         resumen.Item().PaddingVertical(3).Row(f => { f.RelativeItem().Text(etiqueta); f.ConstantItem(85).AlignRight().Text(dinero(importe)); });
                 });
             });

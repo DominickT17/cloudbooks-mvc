@@ -16,6 +16,7 @@ public class Cotizacion
     public decimal DescuentoVolumen { get; set; }
     public decimal DescuentoInstitucional { get; set; }
     public decimal Impuesto { get; set; }
+    public decimal TasaImpuesto { get; set; } = ParametrosSistema.ImpuestoInicial;
     public decimal Total { get; set; }
     public List<DetalleCotizacion> Detalles { get; set; } = [];
 }

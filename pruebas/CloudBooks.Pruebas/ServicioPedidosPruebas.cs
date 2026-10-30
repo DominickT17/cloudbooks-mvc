@@ -92,6 +92,33 @@ public class ServicioPedidosPruebas : IDisposable
     }
 
     [Fact]
+    public async Task TasaConfiguradaSeGuardaEnPedidoYNoCambiaElHistorico()
+    {
+        var parametros = new ServicioParametros(contexto);
+        Assert.Null(await parametros.GuardarAsync(new ParametrosSistema { TasaImpuesto = 0.16m, UmbralStockBajo = 3, DiasVigencia = 30 }));
+        var resultado = await new ServicioPedidos(contexto, new ServicioDescuentos(), parametros).CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada);
+        Assert.Equal(40m, resultado.Pedido!.Impuesto);
+        Assert.Equal(0.16m, resultado.Pedido.TasaImpuesto);
+        Assert.Null(await parametros.GuardarAsync(new ParametrosSistema { TasaImpuesto = 0m, UmbralStockBajo = 5, DiasVigencia = 15 }));
+        Assert.Equal(0.16m, (await contexto.Pedidos.AsNoTracking().SingleAsync()).TasaImpuesto);
+        Assert.NotNull(await parametros.GuardarAsync(new ParametrosSistema { TasaImpuesto = 1.1m, UmbralStockBajo = 5, DiasVigencia = 15 }));
+        Assert.NotNull(await parametros.GuardarAsync(new ParametrosSistema { TasaImpuesto = 0m, UmbralStockBajo = -1, DiasVigencia = 0 }));
+    }
+
+    [Fact]
+    public async Task InventarioRechazaCambiosObsoletosNegativosYDigitales()
+    {
+        var fisico = await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123");
+        var digital = await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "456");
+        var inventario = new ServicioInventario(contexto);
+        Assert.NotNull(await inventario.ActualizarAsync(fisico.Id, fisico.Stock, -1));
+        Assert.NotNull(await inventario.ActualizarAsync(digital.Id, digital.Stock, 3));
+        Assert.Null(await inventario.ActualizarAsync(fisico.Id, fisico.Stock, 8));
+        Assert.NotNull(await inventario.ActualizarAsync(fisico.Id, fisico.Stock, 9));
+        Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.Id == fisico.Id)).Stock);
+    }
+
+    [Fact]
     public async Task FallaEnSegundoLibroRevierteDescuentoDelPrimero()
     {
         var primero = await contexto.Libros.Include(l => l.Categoria).Include(l => l.Editorial).SingleAsync(l => l.ISBN == "123");

@@ -15,6 +15,7 @@ builder.Services.AddScoped<ServicioCatalogos>();
 builder.Services.AddScoped<ServicioInventario>();
 builder.Services.AddScoped<ServicioMetricas>();
 builder.Services.AddScoped<ServicioUsuarios>();
+builder.Services.AddScoped<ServicioParametros>();
 builder.Services.AddScoped<ServicioCarrito>();
 builder.Services.AddScoped<ServicioDescuentos>();
 builder.Services.AddScoped<ServicioPedidos>();
@@ -45,6 +46,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Inicio/Error");
 }
+app.UseStatusCodePagesWithReExecute("/Inicio/Estado", "?codigo={0}");
 app.UseRouting();
 
 app.UseAuthentication();

@@ -19,11 +19,14 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
     public DbSet<SolicitudCotizacion> SolicitudesCotizacion => Set<SolicitudCotizacion>();
     public DbSet<Cotizacion> Cotizaciones => Set<Cotizacion>();
     public DbSet<DetalleCotizacion> DetallesCotizacion => Set<DetalleCotizacion>();
+    public DbSet<ParametrosSistema> ConfiguracionSistema => Set<ParametrosSistema>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
         base.OnModelCreating(modelo);
         modelo.Entity<UsuarioAplicacion>().Property(u => u.Activo).HasDefaultValue(true);
+        modelo.Entity<ParametrosSistema>().Property(p => p.TasaImpuesto).HasPrecision(5, 4);
+        modelo.Entity<ParametrosSistema>().HasData(new ParametrosSistema { Id = 1, TasaImpuesto = ParametrosSistema.ImpuestoInicial, UmbralStockBajo = ParametrosSistema.UmbralInicial, DiasVigencia = ParametrosSistema.VigenciaInicial });
         modelo.Entity<Libro>().Property(libro => libro.PrecioBase).HasPrecision(18, 2);
         modelo.Entity<Libro>().Property(libro => libro.Stock).IsConcurrencyToken();
         modelo.Entity<Libro>().HasIndex(libro => libro.ISBN).IsUnique();
@@ -40,6 +43,7 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
             modelo.Entity<Pedido>().Property<decimal>(propiedad).HasPrecision(18, 2);
         modelo.Entity<DetallePedido>().Property(d => d.PrecioUnitario).HasPrecision(18, 2);
         modelo.Entity<DetallePedido>().Property(d => d.Subtotal).HasPrecision(18, 2);
+        modelo.Entity<Pedido>().Property(p => p.TasaImpuesto).HasPrecision(5, 4);
         modelo.Entity<SolicitudInstitucional>().HasIndex(s => s.UsuarioId).IsUnique().HasFilter("[Estado] = 0");
         modelo.Entity<SolicitudInstitucional>().HasOne(s => s.Usuario).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelo.Entity<PerfilInstitucional>().HasIndex(p => p.UsuarioId).IsUnique();
@@ -54,6 +58,7 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
             modelo.Entity<Cotizacion>().Property<decimal>(propiedad).HasPrecision(18, 2);
         modelo.Entity<DetalleCotizacion>().Property(d => d.PrecioUnitario).HasPrecision(18, 2);
         modelo.Entity<DetalleCotizacion>().Property(d => d.Subtotal).HasPrecision(18, 2);
+        modelo.Entity<Cotizacion>().Property(c => c.TasaImpuesto).HasPrecision(5, 4);
         modelo.Entity<DetalleCotizacion>().ToTable(t => t.HasCheckConstraint("CK_DetalleCotizacion_Cantidad", "[Cantidad] > 0"));
     }
 }

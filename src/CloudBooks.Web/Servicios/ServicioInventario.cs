@@ -6,7 +6,6 @@ namespace CloudBooks.Web.Servicios;
 
 public class ServicioInventario(ContextoAplicacion contexto)
 {
-    public const int UmbralStockBajo = 5;
     public Task<List<Libro>> ListarAsync(string? buscar)
     {
         var consulta = contexto.Libros.AsNoTracking().AsQueryable();
