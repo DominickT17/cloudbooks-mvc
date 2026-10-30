@@ -1,0 +1,5 @@
+@model List<CloudBooks.Web.Modelos.SolicitudCotizacion>
+@{ ViewData["Title"] = "Mis solicitudes especiales"; }
+<section class="container pagina"><p class="etiqueta">INSTITUCIONES</p><h1>Mis solicitudes especiales</h1>@if (TempData["Exito"] != null) { <p class="alert alert-success">@TempData["Exito"]</p> }
+<a class="boton" asp-action="Crear">Nueva solicitud especial</a><div class="tabla-responsive"><table class="tabla-pedidos"><thead><tr><th>Código</th><th>Obra</th><th>Cantidad</th><th>Asesor</th><th>Estado</th></tr></thead><tbody>
+@foreach (var s in Model) { <tr><td>@s.Codigo</td><td>@s.Titulo</td><td>@s.Cantidad</td><td>@(s.Asesor?.NombreCompleto ?? "Pendiente de asignación")</td><td>@s.Estado</td></tr> }</tbody></table></div></section>

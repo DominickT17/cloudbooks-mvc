@@ -1,0 +1,3 @@
+@model CloudBooks.Web.Modelos.SolicitudCotizacion
+@{ ViewData["Title"] = Model.Codigo; }
+<section class="container pagina"><a asp-action="Index">← Solicitudes comerciales</a><h1>@Model.Codigo</h1><partial name="_SolicitudEspecial" model="Model" /></section>

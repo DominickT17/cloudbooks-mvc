@@ -1,0 +1,6 @@
+@model List<CloudBooks.Web.Modelos.SolicitudCotizacion>
+@using CloudBooks.Web.Modelos
+@{ ViewData["Title"] = "Mis solicitudes"; }
+<section class="container pagina"><p class="etiqueta">ASESOR DE VENTAS</p><h1>Mis solicitudes</h1><p>Solicitadas: @Model.Count(s => s.Estado == EstadoSolicitudCotizacion.Solicitada) · En revisión: @Model.Count(s => s.Estado == EstadoSolicitudCotizacion.EnRevision) · Cotizadas: @Model.Count(s => s.Estado == EstadoSolicitudCotizacion.Cotizada)</p>
+<div class="tabla-responsive"><table class="tabla-pedidos"><thead><tr><th>Código</th><th>Institución</th><th>Obra</th><th>Cantidad</th><th>Fecha (UTC)</th><th>Estado</th><th></th></tr></thead><tbody>
+@foreach (var s in Model) { <tr><td>@s.Codigo</td><td>@s.PerfilInstitucional.Institucion</td><td>@s.Titulo</td><td>@s.Cantidad</td><td>@s.FechaUtc.ToString("dd/MM/yyyy")</td><td>@s.Estado</td><td><a asp-action="Detalle" asp-route-id="@s.Id">Ver</a></td></tr> }</tbody></table></div></section>

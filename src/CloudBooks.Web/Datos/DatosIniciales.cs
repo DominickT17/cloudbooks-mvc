@@ -32,6 +32,13 @@ public static class DatosIniciales
             }
         }
 
+        var cuentaInstitucional = await usuarios.FindByEmailAsync("institucion@cloudbooks.local");
+        if (cuentaInstitucional != null && await usuarios.IsInRoleAsync(cuentaInstitucional, "ClienteInstitucional") && !await contexto.PerfilesInstitucionales.AnyAsync(p => p.UsuarioId == cuentaInstitucional.Id))
+        {
+            contexto.PerfilesInstitucionales.Add(new PerfilInstitucional { UsuarioId = cuentaInstitucional.Id, Institucion = "Biblioteca Horizonte", Nit = "1234567-8", TipoInstitucion = "Biblioteca", Telefono = "5555 0100", Direccion = "Zona 1, Quetzaltenango", Representante = "Carlos Méndez" });
+            await contexto.SaveChangesAsync();
+        }
+
         var datos = new[] {
             ("9789929000001", "Arquitectura para sistemas humanos", "Laura Méndez", "Tecnología", "Nube Editorial", 2024, 185m, 12, FormatoLibro.TapaBlanda, "Una mirada práctica al diseño de sistemas que responden a las necesidades de las personas."),
             ("9789929000002", "Los caminos del altiplano", "Ana Lucía Pérez", "Narrativa", "Casa del Quetzal", 2023, 140m, 3, FormatoLibro.TapaDura, "Una familia descubre sus raíces a través de los pueblos y paisajes del altiplano."),

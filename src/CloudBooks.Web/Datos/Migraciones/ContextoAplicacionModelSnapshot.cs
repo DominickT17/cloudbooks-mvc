@@ -345,6 +345,69 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.ToTable("PerfilesInstitucionales");
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.SolicitudCotizacion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Acabado")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("AsesorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("FechaRequerida")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Papel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("PerfilInstitucionalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AsesorId");
+
+                    b.HasIndex("PerfilInstitucionalId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("SolicitudesCotizacion", t =>
+                        {
+                            t.HasCheckConstraint("CK_SolicitudCotizacion_Cantidad", "[Cantidad] > 0");
+                        });
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.SolicitudInstitucional", b =>
                 {
                     b.Property<int>("Id")
@@ -409,6 +472,11 @@ namespace CloudBooks.Web.Datos.Migraciones
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -705,6 +773,32 @@ namespace CloudBooks.Web.Datos.Migraciones
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.SolicitudCotizacion", b =>
+                {
+                    b.HasOne("CloudBooks.Web.Modelos.UsuarioAplicacion", "Asesor")
+                        .WithMany()
+                        .HasForeignKey("AsesorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CloudBooks.Web.Modelos.PerfilInstitucional", "PerfilInstitucional")
+                        .WithMany()
+                        .HasForeignKey("PerfilInstitucionalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CloudBooks.Web.Modelos.UsuarioAplicacion", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Asesor");
+
+                    b.Navigation("PerfilInstitucional");
 
                     b.Navigation("Usuario");
                 });

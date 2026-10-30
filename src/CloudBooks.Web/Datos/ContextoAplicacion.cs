@@ -16,10 +16,12 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
     public DbSet<DetallePedido> DetallesPedido => Set<DetallePedido>();
     public DbSet<SolicitudInstitucional> SolicitudesInstitucionales => Set<SolicitudInstitucional>();
     public DbSet<PerfilInstitucional> PerfilesInstitucionales => Set<PerfilInstitucional>();
+    public DbSet<SolicitudCotizacion> SolicitudesCotizacion => Set<SolicitudCotizacion>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
         base.OnModelCreating(modelo);
+        modelo.Entity<UsuarioAplicacion>().Property(u => u.Activo).HasDefaultValue(true);
         modelo.Entity<Libro>().Property(libro => libro.PrecioBase).HasPrecision(18, 2);
         modelo.Entity<Libro>().HasIndex(libro => libro.ISBN).IsUnique();
         modelo.Entity<Libro>().HasOne(libro => libro.Categoria).WithMany().OnDelete(DeleteBehavior.Restrict);
@@ -39,5 +41,9 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
         modelo.Entity<SolicitudInstitucional>().HasOne(s => s.Usuario).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelo.Entity<PerfilInstitucional>().HasIndex(p => p.UsuarioId).IsUnique();
         modelo.Entity<PerfilInstitucional>().HasOne(p => p.Usuario).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<SolicitudCotizacion>().HasOne(s => s.Usuario).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<SolicitudCotizacion>().HasOne(s => s.Asesor).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<SolicitudCotizacion>().HasOne(s => s.PerfilInstitucional).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<SolicitudCotizacion>().ToTable(t => t.HasCheckConstraint("CK_SolicitudCotizacion_Cantidad", "[Cantidad] > 0"));
     }
 }

@@ -1,0 +1,5 @@
+@model CloudBooks.Web.Modelos.SolicitudCotizacion
+@using CloudBooks.Web.Modelos
+@{ ViewData["Title"] = Model.Codigo; }
+<section class="container pagina"><a asp-action="Index">← Mis solicitudes</a><h1>@Model.Codigo</h1><partial name="_SolicitudEspecial" model="Model" />
+@if (Model.Estado == EstadoSolicitudCotizacion.Solicitada) { <form asp-action="IniciarRevision" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="boton" type="submit">Iniciar revisión</button></form> }</section>

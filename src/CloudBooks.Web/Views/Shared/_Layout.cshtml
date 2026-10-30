@@ -20,6 +20,7 @@
                 {
                     <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a>
                     <a asp-controller="Pedidos" asp-action="Index">Mis pedidos</a>
+                    @if (User.IsInRole("AsesorVentas")) { <a asp-controller="Asesor" asp-action="Index">Mis solicitudes</a> }
                     @if (User.IsInRole("Administrador")) { <a asp-controller="Administracion" asp-action="Index">Administración</a> }
                     <form asp-controller="Cuenta" asp-action="Salir" method="post"><button class="enlace-boton" type="submit">Cerrar sesión</button></form>
                 }
