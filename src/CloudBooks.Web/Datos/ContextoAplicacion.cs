@@ -25,6 +25,7 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
         base.OnModelCreating(modelo);
         modelo.Entity<UsuarioAplicacion>().Property(u => u.Activo).HasDefaultValue(true);
         modelo.Entity<Libro>().Property(libro => libro.PrecioBase).HasPrecision(18, 2);
+        modelo.Entity<Libro>().Property(libro => libro.Stock).IsConcurrencyToken();
         modelo.Entity<Libro>().HasIndex(libro => libro.ISBN).IsUnique();
         modelo.Entity<Libro>().HasOne(libro => libro.Categoria).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelo.Entity<Libro>().HasOne(libro => libro.Editorial).WithMany().OnDelete(DeleteBehavior.Restrict);

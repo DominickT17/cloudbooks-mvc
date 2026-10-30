@@ -313,6 +313,7 @@ namespace CloudBooks.Web.Datos.Migraciones
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Stock")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.Property<string>("Titulo")

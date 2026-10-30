@@ -10,6 +10,8 @@ QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ServicioCatalogo>();
+builder.Services.AddScoped<ServicioAdministracionCatalogo>();
+builder.Services.AddScoped<ServicioCatalogos>();
 builder.Services.AddScoped<ServicioCarrito>();
 builder.Services.AddScoped<ServicioDescuentos>();
 builder.Services.AddScoped<ServicioPedidos>();

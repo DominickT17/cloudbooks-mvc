@@ -80,6 +80,18 @@ public class ServicioPedidosPruebas : IDisposable
     }
 
     [Fact]
+    public async Task DesactivarLibroConservaHistorialDelPedido()
+    {
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada)).Pedido!;
+        var libroId = (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Id;
+        var catalogo = new ServicioAdministracionCatalogo(contexto, null!);
+        Assert.True(await catalogo.CambiarActivoAsync(libroId, false));
+        var historico = await servicio.ObtenerAsync(pedido.Id, "cliente");
+        Assert.Contains(historico!.Detalles, d => d.LibroId == libroId && d.Titulo == "Libro físico" && d.PrecioUnitario == 100m);
+        Assert.False((await contexto.Libros.AsNoTracking().SingleAsync(l => l.Id == libroId)).Activo);
+    }
+
+    [Fact]
     public async Task FallaEnSegundoLibroRevierteDescuentoDelPrimero()
     {
         var primero = await contexto.Libros.Include(l => l.Categoria).Include(l => l.Editorial).SingleAsync(l => l.ISBN == "123");
