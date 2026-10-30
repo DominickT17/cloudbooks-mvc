@@ -4,11 +4,20 @@ Plataforma web editorial multicanal para lectores e instituciones. El proyecto e
 
 ## Tecnologías
 
-ASP.NET Core MVC y .NET 10. Se prevé utilizar Entity Framework Core, SQL Server e Identity en los siguientes bloques.
+ASP.NET Core MVC, .NET 10, Entity Framework Core, SQL Server y ASP.NET Core Identity. El contexto y las tablas de Identity están configurados; el acceso y los roles aún están pendientes.
 
 ## Requisitos
 
-SDK de .NET 10. Para las siguientes fases se utilizará SQL Server.
+SDK de .NET 10 y SQL Server. La configuración de desarrollo usa `.\SQLEXPRESS` con autenticación integrada de Windows y la base `CloudBooks`; ajusta `ConnectionStrings:DefaultConnection` para otra instancia. No incluyas contraseñas reales en archivos versionados.
+
+## Migraciones
+
+```powershell
+dotnet tool restore
+dotnet ef database update --project src/CloudBooks.Web
+```
+
+Ejecuta el comando con `ASPNETCORE_ENVIRONMENT=Development` si no se aplica el perfil de desarrollo. La migración inicial crea las tablas de Identity y catálogo, todavía sin datos semilla.
 
 ## Ejecución
 

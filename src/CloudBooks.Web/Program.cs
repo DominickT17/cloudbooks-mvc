@@ -1,7 +1,17 @@
+using CloudBooks.Web.Datos;
+using CloudBooks.Web.Modelos;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDbContext<ContextoAplicacion>(opciones =>
+    opciones.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddIdentity<UsuarioAplicacion, IdentityRole>()
+    .AddEntityFrameworkStores<ContextoAplicacion>()
+    .AddDefaultTokenProviders();
 
 var app = builder.Build();
 
@@ -12,6 +22,7 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
