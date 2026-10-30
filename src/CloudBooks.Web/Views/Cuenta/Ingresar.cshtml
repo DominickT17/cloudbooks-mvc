@@ -1,0 +1,13 @@
+@model CloudBooks.Web.ModelosVista.IngresoModelo
+@{ ViewData["Title"] = "Iniciar sesión"; }
+<section class="cuenta-contenedor"><div class="cuenta-tarjeta">
+    <img class="cuenta-marca" src="~/imagenes/marca/cloudbooks.png" alt="CloudBooks" />
+    <h1>Iniciar sesión</h1><p>Qué gusto tenerte de vuelta.</p>
+    <form asp-action="Ingresar" method="post" class="formulario">
+        <div asp-validation-summary="ModelOnly" class="errores" role="alert"></div><input asp-for="Retorno" type="hidden" />
+        <label asp-for="Correo"></label><input asp-for="Correo" type="email" autocomplete="email" /><span asp-validation-for="Correo" class="errores"></span>
+        <label asp-for="Contrasena">Contraseña</label><input asp-for="Contrasena" autocomplete="current-password" /><span asp-validation-for="Contrasena" class="errores"></span>
+        <button class="boton" type="submit">Iniciar sesión</button>
+    </form><p>¿Aún no tienes cuenta? <a asp-action="Registrar">Regístrate</a></p>
+</div></section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

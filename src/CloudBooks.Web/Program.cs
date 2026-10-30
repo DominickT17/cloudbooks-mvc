@@ -12,6 +12,12 @@ builder.Services.AddDbContext<ContextoAplicacion>(opciones =>
 builder.Services.AddIdentity<UsuarioAplicacion, IdentityRole>()
     .AddEntityFrameworkStores<ContextoAplicacion>()
     .AddDefaultTokenProviders();
+builder.Services.Configure<IdentityOptions>(opciones => opciones.User.RequireUniqueEmail = true);
+builder.Services.ConfigureApplicationCookie(opciones =>
+{
+    opciones.LoginPath = "/Cuenta/Ingresar";
+    opciones.AccessDeniedPath = "/Cuenta/AccesoDenegado";
+});
 
 var app = builder.Build();
 

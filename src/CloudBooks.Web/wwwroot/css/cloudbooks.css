@@ -13,3 +13,22 @@ h1 { max-width: 680px; font-size: clamp(2.6rem, 6vw, 4.7rem); font-weight: 700; 
 .bienvenida h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); }
 .pie { border-top: 1px solid #e8eef5; padding: 2rem 0; color: #52677c; font-size: .9rem; }
 .pie a { color: inherit; }
+.nav-enlaces { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
+.nav-enlaces a, .enlace-boton { color: var(--tinta); font-weight: 600; text-decoration: none; font-size: .92rem; }
+.enlace-boton { border: 0; background: transparent; padding: 0; }
+.nav-enlaces a:hover, .enlace-boton:hover { color: #1675d0; }
+.cuenta-contenedor { background: #f5f9fe; padding: 3rem 1rem; }
+.cuenta-tarjeta { background: white; border: 1px solid #e1ebf5; border-radius: 16px; max-width: 460px; margin: auto; padding: 2rem; }
+.cuenta-marca { display: block; width: 145px; margin: 0 auto 1rem; }
+.cuenta-tarjeta h1 { font-size: 2rem; }
+.cuenta-tarjeta p, .formulario small { color: #52677c; }
+.formulario { display: grid; gap: .4rem; margin: 1.5rem 0; }
+.formulario label { font-weight: 600; margin-top: .5rem; }
+.formulario input { width: 100%; border: 1px solid #b8c8d9; border-radius: 7px; padding: .65rem .8rem; }
+.formulario input:focus { outline: 2px solid #85bded; outline-offset: 1px; }
+.boton { display: inline-block; border: 0; border-radius: 7px; background: #167ce0; color: white; padding: .7rem 1.2rem; text-decoration: none; font-weight: 600; }
+.formulario .boton { margin-top: 1rem; }
+.boton:hover { background: #1167bb; color: white; }
+.errores { color: #aa2525; font-size: .9rem; }
+.pagina { padding-top: 4rem; padding-bottom: 5rem; min-height: 45vh; }
+@media (max-width: 700px) { .navegacion { padding-top: .75rem; padding-bottom: .75rem; gap: 1rem; align-items: flex-start; } .marca { width: 125px; } .nav-enlaces { justify-content: flex-end; gap: .6rem 1rem; } }

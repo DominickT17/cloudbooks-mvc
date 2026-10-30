@@ -11,7 +11,20 @@
     <header class="cabecera">
         <nav class="container navegacion" aria-label="Navegación principal">
             <a asp-controller="Inicio" asp-action="Index" aria-label="CloudBooks, inicio"><img class="marca" src="~/imagenes/marca/cloudbooks.png" alt="CloudBooks" /></a>
-            <a class="enlace-inicio" asp-controller="Inicio" asp-action="Index">Inicio</a>
+            <div class="nav-enlaces">
+                <a asp-controller="Inicio" asp-action="Index">Inicio</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a>
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Administracion" asp-action="Index">Administración</a> }
+                    <form asp-controller="Cuenta" asp-action="Salir" method="post"><button class="enlace-boton" type="submit">Cerrar sesión</button></form>
+                }
+                else
+                {
+                    <a asp-controller="Cuenta" asp-action="Ingresar">Iniciar sesión</a>
+                    <a asp-controller="Cuenta" asp-action="Registrar">Registrarse</a>
+                }
+            </div>
         </nav>
     </header>
     <main>@RenderBody()</main>
