@@ -97,5 +97,17 @@ public class ServicioInstitucionesPruebas : IDisposable
         Assert.Equal(EstadoSolicitudInstitucional.Pendiente, (await contexto.SolicitudesInstitucionales.AsNoTracking().SingleAsync()).Estado);
     }
 
+    [Fact]
+    public async Task CambiosDeRolProtegenAdministradoresYExigenAutorizacion()
+    {
+        var gestion = new ServicioUsuarios(contexto, usuarios);
+        Assert.NotNull(await gestion.CambiarRolAsync("cliente", "otro", "AsesorVentas"));
+        Assert.NotNull(await gestion.CambiarRolAsync("admin", "admin", "ClienteMinorista"));
+        Assert.NotNull(await gestion.CambiarRolAsync("admin", "cliente", "ClienteInstitucional"));
+        Assert.Null(await gestion.CambiarRolAsync("admin", "otro", "AsesorVentas"));
+        Assert.True(await usuarios.IsInRoleAsync((await usuarios.FindByIdAsync("otro"))!, "AsesorVentas"));
+        Assert.True(await usuarios.IsInRoleAsync((await usuarios.FindByIdAsync("admin"))!, "Administrador"));
+    }
+
     public void Dispose() { alcance.Dispose(); proveedor.Dispose(); conexion.Dispose(); }
 }

@@ -6,9 +6,9 @@ using CloudBooks.Web.Servicios;
 namespace CloudBooks.Web.Controllers;
 
 [Authorize(Roles = "Administrador")]
-public class AdministracionController(ServicioPedidos pedidos) : Controller
+public class AdministracionController(ServicioPedidos pedidos, ServicioMetricas metricas) : Controller
 {
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index() => View(await metricas.ObtenerAsync());
 
     public async Task<IActionResult> Pedidos(EstadoPedido? estado)
     {
