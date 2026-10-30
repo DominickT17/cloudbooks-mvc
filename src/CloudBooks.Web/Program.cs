@@ -15,6 +15,9 @@ builder.Services.AddIdentity<UsuarioAplicacion, IdentityRole>()
 
 var app = builder.Build();
 
+using (var alcance = app.Services.CreateScope())
+    await DatosIniciales.InicializarAsync(alcance.ServiceProvider, app.Environment.IsDevelopment());
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
