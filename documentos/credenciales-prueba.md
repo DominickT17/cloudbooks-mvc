@@ -2,6 +2,8 @@
 
 Estas cuentas se crean solamente en Development. Son exclusivamente académicas y no deben usarse en producción.
 
+La cuenta institucional incluye un perfil ficticio de demostración para probar solicitudes y cotizaciones. No representa datos reales.
+
 Contraseña de todas las cuentas: `CloudBooksDemo2026!`
 
 | Cuenta | Rol |

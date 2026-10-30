@@ -1,3 +1,6 @@
 @model CloudBooks.Web.Modelos.SolicitudCotizacion
 @{ ViewData["Title"] = Model.Codigo; }
-<section class="container pagina"><a asp-action="Index">← Solicitudes comerciales</a><h1>@Model.Codigo</h1><partial name="_SolicitudEspecial" model="Model" /></section>
+<section class="container pagina"><a asp-action="Index">← Solicitudes comerciales</a><h1>@Model.Codigo</h1>
+@if (TempData["Error"] != null) { <p class="alert alert-danger">@TempData["Error"]</p> } @if (TempData["Exito"] != null) { <p class="alert alert-success">@TempData["Exito"]</p> }
+<partial name="_SolicitudEspecial" model="Model" />
+@if (Model.AsesorId == null && Model.Estado == CloudBooks.Web.Modelos.EstadoSolicitudCotizacion.Solicitada) { <form asp-action="Asignar" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="boton" type="submit">Asignar asesor disponible</button></form> }</section>

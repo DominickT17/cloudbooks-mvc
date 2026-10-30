@@ -15,7 +15,9 @@ public class AsesorController(ServicioSolicitudesCotizacion solicitudes, Servici
     public async Task<IActionResult> Detalle(int id)
     {
         var solicitud = await solicitudes.ObtenerAsesorAsync(id, UsuarioId);
-        return solicitud == null ? NotFound() : View(solicitud);
+        if (solicitud == null) return NotFound();
+        ViewBag.CotizacionId = await cotizaciones.ObtenerIdDeSolicitudAsync(id, UsuarioId);
+        return View(solicitud);
     }
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> IniciarRevision(int id)

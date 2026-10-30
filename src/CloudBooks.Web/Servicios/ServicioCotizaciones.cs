@@ -43,6 +43,7 @@ public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuento
     private IQueryable<Cotizacion> Consulta() => contexto.Cotizaciones.AsNoTracking().Include(c => c.Detalles).Include(c => c.Solicitud).ThenInclude(s => s.PerfilInstitucional).Include(c => c.Solicitud).ThenInclude(s => s.Usuario).Include(c => c.Solicitud).ThenInclude(s => s.Asesor);
     public async Task<List<Cotizacion>> PorClienteAsync(string usuarioId) { await ExpirarAsync(); return await Consulta().Where(c => c.Solicitud.UsuarioId == usuarioId).OrderByDescending(c => c.Id).ToListAsync(); }
     public async Task<List<Cotizacion>> TodasAsync() { await ExpirarAsync(); return await Consulta().OrderByDescending(c => c.Id).ToListAsync(); }
+    public Task<int?> ObtenerIdDeSolicitudAsync(int solicitudId, string asesorId) => contexto.Cotizaciones.AsNoTracking().Where(c => c.SolicitudCotizacionId == solicitudId && c.Solicitud.AsesorId == asesorId).Select(c => (int?)c.Id).FirstOrDefaultAsync();
     public async Task<Cotizacion?> ObtenerAutorizadaAsync(int id, string usuarioId, bool administrador)
     {
         await ExpirarAsync();

@@ -13,4 +13,11 @@ public class AdministracionSolicitudesController(ServicioSolicitudesCotizacion s
         var solicitud = await solicitudes.ObtenerAsync(id);
         return solicitud == null ? NotFound() : View(solicitud);
     }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Asignar(int id)
+    {
+        var error = await solicitudes.AsignarPendienteAsync(id);
+        TempData[error == null ? "Exito" : "Error"] = error ?? "Asesor asignado.";
+        return RedirectToAction("Detalle", new { id });
+    }
 }

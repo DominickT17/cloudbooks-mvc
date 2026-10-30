@@ -1,6 +1,6 @@
 # CloudBooks
 
-Plataforma web editorial multicanal para lectores e instituciones. Incluye catálogo, cuentas, carrito y pedidos con pago simulado. Las solicitudes y cotizaciones institucionales se implementarán más adelante.
+Plataforma web editorial multicanal para lectores e instituciones. Incluye catálogo, cuentas, carrito, pedidos con pago simulado y solicitudes y cotizaciones institucionales.
 
 ## Tecnologías
 
@@ -49,6 +49,14 @@ El carrito requiere una cuenta, se conserva por usuario y valida las existencias
 La confirmación ofrece tarjeta o transferencia **simuladas** y no solicita datos financieros. El pedido conserva el título, formato, precio e importes del momento de la compra. Se crea en estado `Pendiente` sin descontar stock. Un administrador puede aprobarlo, enviarlo después de aprobar o cancelar únicamente mientras esté pendiente. El historial solo muestra pedidos propios.
 
 La aprobación usa una transacción: cambia el estado solamente si sigue pendiente y descuenta cada libro físico con una actualización condicionada a que haya existencias suficientes. Si falta stock se revierte toda la operación; los e-books no descuentan inventario. Esto evita un segundo descuento y evita stock negativo ante aprobaciones concurrentes. Las pruebas se ejecutan con `dotnet test`.
+
+## Flujo institucional
+
+Un cliente minorista solicita la cuenta desde **Instituciones**. Un administrador la aprueba o rechaza; al aprobar se crea el perfil y el rol institucional reemplaza el minorista. Para obtener el nuevo rol en la sesión, vuelve a iniciar sesión.
+
+El cliente institucional envía una solicitud especial. Se asigna al asesor activo con menos solicitudes abiertas; en empate se usa el identificador ordinal menor. Si no hay asesor disponible, queda pendiente de asignación y un administrador puede reintentarla desde el detalle de la solicitud comercial. El asesor asignado la revisa y emite una cotización con un concepto, el cálculo comercial y una vigencia de 15 días. El cliente puede descargar el PDF y aceptar o rechazar mientras esté vigente. El vencimiento se comprueba al consultar o responder y se usa la fecha UTC.
+
+Más detalles en [flujo institucional](documentos/flujo-institucional.md), [arquitectura](documentos/arquitectura.md) y [modelo de datos](documentos/modelo-datos.md).
 
 ## Integrantes
 

@@ -15,7 +15,11 @@ public class ServicioInstituciones(ContextoAplicacion contexto, UserManager<Usua
         if (usuario == null || !await usuarios.IsInRoleAsync(usuario, "ClienteMinorista") || await usuarios.IsInRoleAsync(usuario, "ClienteInstitucional")) return "Solo un cliente minorista puede solicitar una cuenta institucional.";
         if (await contexto.SolicitudesInstitucionales.AnyAsync(s => s.UsuarioId == usuarioId && s.Estado == EstadoSolicitudInstitucional.Pendiente)) return "Ya tienes una solicitud pendiente.";
         contexto.SolicitudesInstitucionales.Add(new SolicitudInstitucional { UsuarioId = usuarioId, Institucion = datos.Institucion.Trim(), Nit = datos.Nit.Trim(), TipoInstitucion = datos.TipoInstitucion.Trim(), Telefono = datos.Telefono.Trim(), Direccion = datos.Direccion.Trim(), Representante = datos.Representante.Trim(), FechaUtc = DateTime.UtcNow, Estado = EstadoSolicitudInstitucional.Pendiente });
-        await contexto.SaveChangesAsync();
+        try { await contexto.SaveChangesAsync(); }
+        catch (DbUpdateException error) when (error.InnerException is Microsoft.Data.SqlClient.SqlException sql && (sql.Number == 2601 || sql.Number == 2627))
+        {
+            return "Ya tienes una solicitud pendiente.";
+        }
         return null;
     }
 

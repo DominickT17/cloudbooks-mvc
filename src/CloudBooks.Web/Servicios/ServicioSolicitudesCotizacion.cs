@@ -34,5 +34,18 @@ public class ServicioSolicitudesCotizacion(ContextoAplicacion contexto, UserMana
     public async Task<bool> IniciarRevisionAsync(int id, string asesorId) => await contexto.SolicitudesCotizacion.Where(s => s.Id == id && s.AsesorId == asesorId && s.Estado == EstadoSolicitudCotizacion.Solicitada)
         .ExecuteUpdateAsync(c => c.SetProperty(s => s.Estado, EstadoSolicitudCotizacion.EnRevision)) == 1;
 
+    public async Task<string?> AsignarPendienteAsync(int id)
+    {
+        await using var transaccion = await contexto.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var solicitud = await contexto.SolicitudesCotizacion.SingleOrDefaultAsync(s => s.Id == id && s.AsesorId == null && s.Estado == EstadoSolicitudCotizacion.Solicitada);
+        if (solicitud == null) return "La solicitud ya está asignada o no se encuentra pendiente.";
+        var asesorId = await asignacion.SeleccionarAsync();
+        if (asesorId == null) return "Aún no hay asesores activos disponibles.";
+        solicitud.AsesorId = asesorId;
+        await contexto.SaveChangesAsync();
+        await transaccion.CommitAsync();
+        return null;
+    }
+
     private IQueryable<SolicitudCotizacion> Consulta() => contexto.SolicitudesCotizacion.AsNoTracking().Include(s => s.PerfilInstitucional).Include(s => s.Usuario).Include(s => s.Asesor);
 }
