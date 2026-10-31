@@ -25,6 +25,19 @@ public class ServicioMetricasPruebas : IDisposable
     }
 
     [Fact]
+    public async Task DashboardCuentaRevisionYCancelacionDeSeguridadSinSumarlasAVentas()
+    {
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.EnRevision, Total = 800m });
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.CanceladoPorSeguridad, Total = 900m });
+        await contexto.SaveChangesAsync();
+        var metricas = await new ServicioMetricas(contexto).ObtenerAsync();
+        Assert.Equal(1, metricas.EnRevision);
+        Assert.Equal(2, metricas.Cancelados);
+        Assert.Equal(500m, metricas.Ventas);
+        Assert.Equal(5, metricas.PedidosRecientes.Count);
+    }
+
+    [Fact]
     public async Task VentasYRankingSoloCuentanPedidosAprobadosYEnviados()
     {
         var metricas = await new ServicioMetricas(contexto).ObtenerAsync();

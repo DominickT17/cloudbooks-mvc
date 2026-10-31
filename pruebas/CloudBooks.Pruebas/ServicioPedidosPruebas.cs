@@ -30,6 +30,19 @@ public class ServicioPedidosPruebas : IDisposable
     }
 
     [Fact]
+    public async Task DiezUnidadesDeUnLibroActivanRevisionSinPrioridadAlta()
+    {
+        var detalle = await contexto.DetallesCarrito.Include(d => d.Libro).SingleAsync(d => d.Libro.ISBN == "456");
+        detalle.Cantidad = 10;
+        await contexto.SaveChangesAsync();
+        contexto.ChangeTracker.Clear();
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
+        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.False(pedido.AltaPrioridad);
+        Assert.Contains("Diez", pedido.MotivosRevision!);
+    }
+
+    [Fact]
     public async Task CantidadAltaRequiereRevisionYRegistraAvisosAntesDeAprobar()
     {
         var detalle = await contexto.DetallesCarrito.Include(d => d.Libro).SingleAsync(d => d.Libro.ISBN == "456");
