@@ -13,7 +13,7 @@ else {
     <p>@(detalle.Libro.Formato == CloudBooks.Web.Modelos.FormatoLibro.Ebook ? "E-book" : detalle.Libro.Formato == CloudBooks.Web.Modelos.FormatoLibro.TapaDura ? "Tapa dura" : "Tapa blanda") · @Dinero(detalle.Libro.PrecioBase) por unidad · Subtotal @Dinero(detalle.Libro.PrecioBase * detalle.Cantidad)</p>
     @if (!detalle.Libro.Activo) { <p class="errores">Este libro ya no está disponible.</p> }
     <form asp-action="Actualizar" method="post" class="cantidad-form"><input type="hidden" name="detalleId" value="@detalle.Id" /><label for="cantidad-@detalle.Id">Cantidad</label><div class="control-cantidad"><button type="button" data-cantidad="-1" aria-label="Reducir cantidad">−</button><input id="cantidad-@detalle.Id" type="number" name="cantidad" min="1" max="10000" value="@detalle.Cantidad" required /><button type="button" data-cantidad="1" aria-label="Aumentar cantidad">+</button></div><button class="boton-secundario" type="submit">Actualizar</button></form>
-    <form asp-action="Eliminar" method="post"><input type="hidden" name="detalleId" value="@detalle.Id" /><button class="enlace-boton" type="submit">Eliminar</button></form></div></article>
+    <form asp-action="Eliminar" method="post"><input type="hidden" name="detalleId" value="@detalle.Id" /><button class="enlace-boton eliminar-carrito" type="submit"><i data-lucide="trash-2" aria-hidden="true"></i> Eliminar</button></form></div></article>
 }
 </div><aside class="resumen-compra"><h2>Resumen</h2><dl>
 <div><dt>Subtotal</dt><dd>@Dinero(Model.Resumen!.Subtotal)</dd></div>

@@ -121,3 +121,10 @@ svg.lucide { width:1.15em; height:1.15em; vertical-align:-.2em; stroke-width:1.9
 @media(max-width:700px) { .filtros-interior { position:fixed; top:auto; bottom:0; left:0; width:100%; z-index:25; border-radius:16px 16px 0 0; box-shadow:0 -10px 35px #20364f38; padding:1.2rem; }.filtros-interior .boton { grid-column:1 / -1; } }
 @media(min-width:701px) and (max-width:900px) { .navegacion { min-height:68px; flex-direction:row; align-items:center; flex-wrap:wrap; padding-top:0; padding-bottom:0; }.marca { width:140px; height:60px; }.menu-boton { display:flex; align-items:center; gap:.4rem; border:1px solid var(--borde); background:white; border-radius:8px; padding:.5rem .7rem; }.nav-enlaces { display:none; width:100%; padding:0 0 1rem; flex-direction:column; align-items:stretch; gap:.7rem; }.nav-enlaces.abierto { display:flex; }.menu-cuenta-panel { position:static; box-shadow:none; margin-top:.5rem; } }
 @media(max-width:700px) { body:has(.barra-compra-movil) { padding-bottom:4.5rem; } }
+/* Acabado de tienda */
+.container { width:min(calc(100% - 48px),1500px); max-width:1500px; padding-inline:0; }.marca { width:175px; object-fit:contain; }.nav-enlaces .nav-ingreso { color:#126ec4; }.nav-enlaces .nav-ingreso:hover { color:#084c8e; }.hero h1 { font-size:clamp(2.6rem,4.5vw,4.6rem); }.seccion { padding-top:3.3rem; }.eliminar-carrito { color:#a33737; }.eliminar-carrito:hover { color:#792424; }.pie { margin-top:3rem; background:#20364f; color:#dbe8f4; border:0; padding:3rem 0 1.5rem; }.pie strong { color:white; }.pie a { color:#dbe8f4; }.pie a:hover { color:#9bd5ff; }.pie-contacto { display:flex; flex-wrap:wrap; gap:.7rem 1.5rem; border-color:#587088; }.pie-contacto p { flex-basis:100%; margin:.3rem 0 0; color:#b5c9db; }.pie-contacto svg { color:#8dcbff; }
+@media(max-width:900px) { .container { width:calc(100% - 48px); }.marca { width:155px; } }
+@media(max-width:700px) { .container { width:calc(100% - 32px); }.marca { width:145px; }.pie-columnas { gap:1.5rem; } }
+.marca { object-fit:cover; }
+/* La marca completa conserva su proporción en el encabezado. */
+.marca { object-fit:contain; }
