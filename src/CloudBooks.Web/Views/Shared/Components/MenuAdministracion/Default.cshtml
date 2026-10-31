@@ -1,0 +1,17 @@
+@model CloudBooks.Web.Servicios.PendientesAdministrativos
+@{
+    var controlador = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var accion = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string Activo(bool condicion) => condicion ? "activo" : "";
+}
+<nav aria-label="Administración">
+<a class="@Activo(controlador == "Administracion" && accion == "Index")" asp-controller="Administracion" asp-action="Index"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+<a class="@Activo(controlador.StartsWith("AdministracionCatalogo"))" asp-controller="AdministracionCatalogo" asp-action="Index"><i data-lucide="book-open"></i> Catálogo</a>
+<a class="@Activo(controlador == "AdministracionInventario")" asp-controller="AdministracionInventario" asp-action="Index"><i data-lucide="boxes"></i> Inventario</a>
+<a class="@Activo(controlador == "Administracion" && accion != "Index")" asp-controller="Administracion" asp-action="Pedidos"><i data-lucide="shopping-bag"></i> Pedidos @if (Model.Pedidos > 0) { <span class="admin-contador" aria-label="@Model.Pedidos pendientes">@Model.Pedidos</span> }</a>
+<a class="@Activo(controlador == "AdministracionInstituciones")" asp-controller="AdministracionInstituciones" asp-action="Index"><i data-lucide="building-2"></i> Instituciones @if (Model.Instituciones > 0) { <span class="admin-contador" aria-label="@Model.Instituciones pendientes">@Model.Instituciones</span> }</a>
+<a class="@Activo(controlador == "AdministracionSolicitudes")" asp-controller="AdministracionSolicitudes" asp-action="Index"><i data-lucide="clipboard-list"></i> Solicitudes comerciales</a>
+<a class="@Activo(controlador == "Cotizaciones")" asp-controller="Cotizaciones" asp-action="Administracion"><i data-lucide="file-text"></i> Cotizaciones @if (Model.Cotizaciones > 0) { <span class="admin-contador" aria-label="@Model.Cotizaciones en espera de respuesta">@Model.Cotizaciones</span> }</a>
+<a class="@Activo(controlador == "AdministracionUsuarios")" asp-controller="AdministracionUsuarios" asp-action="Index"><i data-lucide="users-round"></i> Usuarios</a>
+<a class="@Activo(controlador == "AdministracionConfiguracion")" asp-controller="AdministracionConfiguracion" asp-action="Index"><i data-lucide="settings"></i> Configuración</a>
+<a class="volver-tienda" asp-controller="Inicio" asp-action="Index">← Volver a la tienda</a></nav>

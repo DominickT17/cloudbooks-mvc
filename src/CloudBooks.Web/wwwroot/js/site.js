@@ -47,4 +47,9 @@ document.querySelectorAll('form[data-mini-carrito]').forEach(formulario => formu
  catch { location.href = "/Carrito"; } finally { if (boton) boton.disabled = false; }
 }));
 const menuAdministrativo = document.querySelector('.admin-menu');
-if (menuAdministrativo && window.matchMedia('(max-width: 900px)').matches) menuAdministrativo.open = false;
+if (menuAdministrativo) {
+ const anchoCompacto = window.matchMedia('(max-width: 900px)');
+ const ajustarMenu = () => { menuAdministrativo.open = !anchoCompacto.matches; };
+ ajustarMenu();
+ anchoCompacto.addEventListener('change', ajustarMenu);
+}

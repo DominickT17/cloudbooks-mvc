@@ -9,7 +9,7 @@ public class ServicioAdministracionCatalogo(ContextoAplicacion contexto, IWebHos
 {
     public async Task<List<Libro>> ListarAsync(string? buscar, string? estado)
     {
-        var consulta = contexto.Libros.AsNoTracking().Include(l => l.Categoria).Include(l => l.Editorial).AsQueryable();
+        var consulta = contexto.Libros.AsNoTracking().Include(l => l.Categoria).Include(l => l.Editorial).Include(l => l.Autores).AsQueryable();
         if (!string.IsNullOrWhiteSpace(buscar)) { var texto = buscar.Trim(); consulta = consulta.Where(l => l.Titulo.Contains(texto) || l.ISBN.Contains(texto)); }
         if (estado == "activos") consulta = consulta.Where(l => l.Activo);
         if (estado == "inactivos") consulta = consulta.Where(l => !l.Activo);

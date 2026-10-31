@@ -18,6 +18,7 @@ builder.Services.AddScoped<ServicioAdministracionCatalogo>();
 builder.Services.AddScoped<ServicioCatalogos>();
 builder.Services.AddScoped<ServicioInventario>();
 builder.Services.AddScoped<ServicioMetricas>();
+builder.Services.AddScoped<ServicioPendientesAdministrativos>();
 builder.Services.AddScoped<ServicioUsuarios>();
 builder.Services.AddScoped<ServicioParametros>();
 builder.Services.AddScoped<ServicioCarrito>();

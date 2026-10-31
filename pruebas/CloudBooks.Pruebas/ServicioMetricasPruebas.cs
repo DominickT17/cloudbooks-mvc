@@ -62,5 +62,17 @@ public class ServicioMetricasPruebas : IDisposable
         Assert.Equal(0, (await new ServicioMetricas(contexto).ObtenerAsync()).SolicitudesInstitucionalesPendientes);
     }
 
+    [Fact]
+    public async Task ContadoresDeMenuReflejanEstadosPendientes()
+    {
+        var solicitud = new SolicitudInstitucional { UsuarioId = "cliente", Institucion = "Institución", Nit = "1", TipoInstitucion = "Educativa", Telefono = "123", Direccion = "Dirección", Representante = "Representante", Estado = EstadoSolicitudInstitucional.Pendiente };
+        contexto.SolicitudesInstitucionales.Add(solicitud); await contexto.SaveChangesAsync();
+        var servicio = new ServicioPendientesAdministrativos(contexto);
+        var antes = await servicio.ObtenerAsync(); Assert.Equal(1, antes.Pedidos); Assert.Equal(1, antes.Instituciones);
+        solicitud.Estado = EstadoSolicitudInstitucional.Rechazada;
+        var pedido = await contexto.Pedidos.FirstAsync(p => p.Estado == EstadoPedido.Pendiente); pedido.Estado = EstadoPedido.Cancelado;
+        await contexto.SaveChangesAsync(); var despues = await servicio.ObtenerAsync(); Assert.Equal(0, despues.Pedidos); Assert.Equal(0, despues.Instituciones);
+    }
+
     public void Dispose() { contexto.Dispose(); conexion.Dispose(); }
 }
