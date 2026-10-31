@@ -52,4 +52,7 @@ if (menuAdministrativo) {
  const ajustarMenu = () => { menuAdministrativo.open = !anchoCompacto.matches; };
  ajustarMenu();
  anchoCompacto.addEventListener('change', ajustarMenu);
+ menuAdministrativo.addEventListener('keydown', evento => {
+  if (evento.key === 'Escape' && anchoCompacto.matches && menuAdministrativo.open) { menuAdministrativo.open = false; menuAdministrativo.querySelector('summary')?.focus(); }
+ });
 }
