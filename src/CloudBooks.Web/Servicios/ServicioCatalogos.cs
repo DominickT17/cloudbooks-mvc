@@ -21,7 +21,15 @@ public class ServicioCatalogos(ContextoAplicacion contexto)
     {
         nombre = nombre.Trim();
         if (nombre.Length == 0 || nombre.Length > (tipo == "categorias" ? 100 : 150)) return "Ingresa un nombre válido.";
-        if ((await ListarAsync(tipo)).Any(e => e.Id != id && string.Equals(e.Nombre, nombre, StringComparison.OrdinalIgnoreCase))) return "Ya existe un registro con ese nombre.";
+        var normalizado = nombre.ToLowerInvariant();
+        var duplicado = tipo switch
+        {
+            "autores" => await contexto.Autores.AnyAsync(e => e.Id != id && e.Nombre.ToLower() == normalizado),
+            "categorias" => await contexto.Categorias.AnyAsync(e => e.Id != id && e.Nombre.ToLower() == normalizado),
+            "editoriales" => await contexto.Editoriales.AnyAsync(e => e.Id != id && e.Nombre.ToLower() == normalizado),
+            _ => false
+        };
+        if (duplicado) return "Ya existe un registro con ese nombre.";
         switch (tipo)
         {
             case "autores":

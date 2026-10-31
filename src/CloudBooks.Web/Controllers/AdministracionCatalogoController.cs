@@ -11,6 +11,7 @@ public class AdministracionCatalogoController(ServicioAdministracionCatalogo cat
     public async Task<IActionResult> Index(string? buscar, string? estado) => View(await catalogo.ListarAsync(buscar, estado));
     [HttpGet] public async Task<IActionResult> Crear() { var modelo = new LibroAdministracionModelo { AnioEdicion = DateTime.UtcNow.Year }; await catalogo.PrepararAsync(modelo); return View("Formulario", modelo); }
     [HttpGet] public async Task<IActionResult> Editar(int id) { var modelo = await catalogo.ObtenerAsync(id); if (modelo == null) return NotFound(); await catalogo.PrepararAsync(modelo); return View("Formulario", modelo); }
+    [HttpGet] public async Task<IActionResult> Detalle(int id) { var modelo = await catalogo.ObtenerAsync(id); if (modelo == null) return NotFound(); await catalogo.PrepararAsync(modelo); return View(modelo); }
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Guardar(LibroAdministracionModelo modelo)
     {

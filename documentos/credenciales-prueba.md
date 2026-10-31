@@ -1,6 +1,6 @@
-# CREDENCIALES DE PRUEBA
+# CREDENCIALES DE PRUEBA — SOLO PARA DEMOSTRACIÓN ACADÉMICA
 
-Estas cuentas se crean solamente en Development. Son exclusivamente académicas y no deben usarse en producción.
+El inicializador automático crea estas cuentas solamente en Development. El SQL de entrega también las incluye para reconstruir la demostración. Son exclusivamente académicas y no deben usarse en producción.
 
 La cuenta institucional incluye un perfil ficticio de demostración para probar solicitudes y cotizaciones. No representa datos reales.
 

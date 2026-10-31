@@ -19,7 +19,7 @@ public class ServicioAdministracionCatalogo(ContextoAplicacion contexto, IWebHos
     public async Task<LibroAdministracionModelo?> ObtenerAsync(int id)
     {
         var libro = await contexto.Libros.AsNoTracking().Include(l => l.Autores).SingleOrDefaultAsync(l => l.Id == id);
-        return libro == null ? null : new LibroAdministracionModelo { Id = libro.Id, ISBN = libro.ISBN, Titulo = libro.Titulo, Sinopsis = libro.Sinopsis, AnioEdicion = libro.AnioEdicion, PrecioBase = libro.PrecioBase, Stock = libro.Stock, StockOriginal = libro.Stock, ImagenPortada = libro.ImagenPortada, Formato = libro.Formato, EditorialId = libro.EditorialId, CategoriaId = libro.CategoriaId, AutoresIds = libro.Autores.Select(a => a.Id).ToArray() };
+        return libro == null ? null : new LibroAdministracionModelo { Id = libro.Id, Activo = libro.Activo, ISBN = libro.ISBN, Titulo = libro.Titulo, Sinopsis = libro.Sinopsis, AnioEdicion = libro.AnioEdicion, PrecioBase = libro.PrecioBase, Stock = libro.Stock, StockOriginal = libro.Stock, ImagenPortada = libro.ImagenPortada, Formato = libro.Formato, EditorialId = libro.EditorialId, CategoriaId = libro.CategoriaId, AutoresIds = libro.Autores.Select(a => a.Id).ToArray() };
     }
 
     public async Task PrepararAsync(LibroAdministracionModelo modelo)

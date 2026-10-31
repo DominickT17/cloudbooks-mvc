@@ -43,5 +43,14 @@ public class ServicioMetricasPruebas : IDisposable
         Assert.Empty(metricas.StockBajo);
     }
 
+    [Fact]
+    public async Task CatalogosRechazanNombresDuplicadosYVacios()
+    {
+        var catalogos = new ServicioCatalogos(contexto);
+        Assert.NotNull(await catalogos.GuardarAsync("categorias", 0, "narrativa"));
+        Assert.NotNull(await catalogos.GuardarAsync("categorias", 0, "   "));
+        Assert.Null(await catalogos.GuardarAsync("categorias", 0, "Literatura"));
+    }
+
     public void Dispose() { contexto.Dispose(); conexion.Dispose(); }
 }

@@ -1,62 +1,89 @@
 # CloudBooks
 
-Plataforma web editorial multicanal para lectores e instituciones. Incluye catálogo, cuentas, carrito, pedidos con pago simulado y solicitudes y cotizaciones institucionales.
+## Descripción
+
+Plataforma editorial multicanal para lectores e instituciones. Permite explorar libros, realizar compras simuladas y gestionar pedidos, inventario y cotizaciones institucionales. Es un proyecto universitario; no procesa dinero real.
 
 ## Tecnologías
 
-ASP.NET Core MVC, .NET 10, Entity Framework Core, SQL Server y ASP.NET Core Identity.
+.NET 10, ASP.NET Core MVC, Razor, Entity Framework Core, SQL Server, Identity, Bootstrap, CSS propio, Chart.js y QuestPDF.
 
 ## Requisitos
 
-SDK de .NET 10 y SQL Server. La configuración de desarrollo usa `.\SQLEXPRESS` con autenticación integrada de Windows y la base `CloudBooks`; ajusta `ConnectionStrings:DefaultConnection` para otra instancia. No incluyas contraseñas reales en archivos versionados.
+SDK .NET 10, SQL Server y `sqlcmd` si se utiliza la alternativa SQL. Para desarrollo Windows se probó `.\SQLEXPRESS` con autenticación integrada. La base se llama `CloudBooks`.
 
-## Migraciones
+## Instalación
 
 ```powershell
+dotnet restore
 dotnet tool restore
+```
+
+## Configuración de SQL Server
+
+En `src/CloudBooks.Web/appsettings.Development.json`, ajusta `ConnectionStrings:DefaultConnection` a tu instancia. La configuración incluida usa autenticación integrada. No agregues contraseñas reales a archivos versionados.
+
+## Crear base mediante migraciones
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = 'Development'
 dotnet ef database update --project src/CloudBooks.Web
 ```
 
-Ejecuta el comando con `ASPNETCORE_ENVIRONMENT=Development` si no se aplica el perfil de desarrollo. La migración inicial crea las tablas de Identity y catálogo. No se aplican migraciones automáticamente al iniciar.
+Al iniciar en Development, el inicializador agrega datos académicos faltantes sin duplicar libros por ISBN ni usuarios por correo. Los roles se preparan al arrancar. Las migraciones no se aplican automáticamente.
+
+## Alternativa mediante CloudBooks.sql
+
+Usa [CloudBooks.sql](base-datos/CloudBooks.sql) **solo en una base vacía y dedicada**: incluye esquema, historial de migraciones y datos de demostración con hashes de contraseñas académicas. No lo ejecutes sobre una base existente ni lo vuelvas a ejecutar sobre la misma base.
+
+```powershell
+sqlcmd -S '.\SQLEXPRESS' -E -b -Q "CREATE DATABASE [CloudBooks];"
+sqlcmd -S '.\SQLEXPRESS' -d CloudBooks -E -b -I -f 65001 -i base-datos/CloudBooks.sql
+```
+
+El primer comando requiere que `CloudBooks` no exista. Si usas otra base o instancia, ajusta ambos comandos y la cadena de conexión. SQL Server puede advertir sobre el tamaño máximo teórico de índices de Identity.
 
 ## Ejecución
 
 ```powershell
-dotnet restore
 dotnet run --project src/CloudBooks.Web
 ```
 
-Abre la dirección que indique la consola.
+Abre la dirección indicada en consola. Las portadas y Chart.js se sirven localmente.
 
-## Datos y cuentas de prueba
+## Credenciales de prueba
 
-En Development, al arrancar por primera vez se agregan diez libros ficticios con portadas locales y cinco cuentas de demostración. El inicializador evita duplicar libros por ISBN y cuentas por correo; no modifica los roles de cuentas existentes. Los cuatro roles se preparan al arrancar. Consulta los correos y la contraseña exclusivamente académica en [credenciales de prueba](documentos/credenciales-prueba.md). No uses esas cuentas ni contraseñas en producción.
+Consulta [credenciales de prueba](documentos/credenciales-prueba.md). Son **solo para demostración académica**; no se deben usar en producción. La semilla contiene diez obras ficticias con portadas locales.
 
-Desde **Iniciar sesión** se accede con una de esas cuentas; también puedes registrarte como cliente minorista. El enlace **Administración** y su página están protegidos para administradores.
+## Roles
 
-## Catálogo
+Visitante anónimo, `ClienteMinorista`, `ClienteInstitucional`, `AsesorVentas` y `Administrador`. El registro público asigna el rol minorista; la cuenta institucional requiere aprobación. Las cuentas administradoras no se pueden modificar desde la pantalla de roles.
 
-El catálogo busca en SQL Server por título, autor, ISBN o editorial y permite combinar categoría, formato y rango de precio. Cada ficha muestra sus datos y disponibilidad; los libros digitales no muestran existencias físicas. Las portadas y obras son de demostración.
+## Arquitectura MVC
 
-## Estructura y arquitectura MVC
+Los controladores autorizan y reciben peticiones, los servicios concentran las reglas, EF Core accede a SQL Server y Razor presenta los resultados. Identity gestiona cuentas, QuestPDF genera cotizaciones y Chart.js muestra los estados de pedidos. Véanse [arquitectura](documentos/arquitectura.md) y [modelo de datos](documentos/modelo-datos.md).
 
-La solución se encuentra en `CloudBooks.sln` y la aplicación en `src/CloudBooks.Web`. Se conservan `Controllers`, `Models` y `Views` por las convenciones de ASP.NET Core; el código propio utiliza nombres en español. Los controladores reciben peticiones, los servicios consultan datos o aplican reglas y las vistas presentan el resultado.
+## Estructura de carpetas
 
-## Carrito y pedidos
+- `src/CloudBooks.Web/Controllers`: controladores MVC.
+- `Modelos`, `ModelosVista`, `Servicios` y `Datos`: entidades, datos para vistas, reglas y contexto/migraciones.
+- `Views` y `wwwroot`: vistas, estilos, imágenes y bibliotecas locales.
+- `pruebas`: pruebas automatizadas; `documentos`: guías; `base-datos`: SQL de entrega.
 
-El carrito requiere una cuenta, se conserva por usuario y valida las existencias físicas. El resumen aplica el descuento por volumen a la cantidad total, después el 8 % institucional cuando corresponde y finalmente el IVA académico del 12 %. Los importes se calculan en el servidor.
+## Funcionalidades
 
-La confirmación ofrece tarjeta o transferencia **simuladas** y no solicita datos financieros. El pedido conserva el título, formato, precio e importes del momento de la compra. Se crea en estado `Pendiente` sin descontar stock. Un administrador puede aprobarlo, enviarlo después de aprobar o cancelar únicamente mientras esté pendiente. El historial solo muestra pedidos propios.
+Catálogo con búsqueda y filtros; carrito persistente; descuentos e impuesto; pago simulado; pedidos y aprobación transaccional; inventario; gestión administrativa de libros, autores, categorías, editoriales y usuarios; dashboard; solicitudes institucionales; asignación de asesores; cotizaciones, respuesta y PDF.
 
-La aprobación usa una transacción: cambia el estado solamente si sigue pendiente y descuenta cada libro físico con una actualización condicionada a que haya existencias suficientes. Si falta stock se revierte toda la operación; los e-books no descuentan inventario. Esto evita un segundo descuento y evita stock negativo ante aprobaciones concurrentes. Las pruebas se ejecutan con `dotnet test`.
+El administrador configura la tasa de impuesto, el umbral de stock bajo y la vigencia de nuevas cotizaciones. Los valores iniciales son 12 %, 5 unidades y 15 días. Pedidos y cotizaciones existentes conservan sus importes, tasa y fecha de vencimiento. Las ventas del dashboard incluyen solo pedidos aprobados y enviados. Para el flujo institucional consulta [su guía](documentos/flujo-institucional.md).
 
-## Flujo institucional
+## Pruebas
 
-Un cliente minorista solicita la cuenta desde **Instituciones**. Un administrador la aprueba o rechaza; al aprobar se crea el perfil y el rol institucional reemplaza el minorista. Para obtener el nuevo rol en la sesión, vuelve a iniciar sesión.
+```powershell
+dotnet build
+dotnet test
+```
 
-El cliente institucional envía una solicitud especial. Se asigna al asesor activo con menos solicitudes abiertas; en empate se usa el identificador ordinal menor. Si no hay asesor disponible, queda pendiente de asignación y un administrador puede reintentarla desde el detalle de la solicitud comercial. El asesor asignado la revisa y emite una cotización con un concepto, el cálculo comercial y una vigencia de 15 días. El cliente puede descargar el PDF y aceptar o rechazar mientras esté vigente. El vencimiento se comprueba al consultar o responder y se usa la fecha UTC.
-
-Más detalles en [flujo institucional](documentos/flujo-institucional.md), [arquitectura](documentos/arquitectura.md) y [modelo de datos](documentos/modelo-datos.md).
+Las pruebas automatizadas usan SQLite aislado para reglas y servicios; las operaciones de SQL Server y recorridos de navegador se deben verificar también en el entorno de destino. Recorrido sugerido: [guía de demostración](documentos/guia-demostracion.md).
 
 ## Integrantes
 

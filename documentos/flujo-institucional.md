@@ -6,4 +6,4 @@
 4. Sin asesores disponibles, la solicitud se guarda sin asignación. Un administrador puede usar **Asignar asesor disponible** en su detalle para volver a intentar cuando haya uno activo.
 5. El asesor asignado inicia la revisión y emite la propuesta. El cliente puede consultar y descargar su PDF y aceptar o rechazar antes del vencimiento. Una cotización Cotizada se marca Vencida cuando se consulta o se intenta responder después de su fecha límite.
 
-La propuesta utiliza el motor comercial compartido y tiene una vigencia de 15 días, con fecha UTC. El PDF se genera al solicitarlo; no se guardan archivos públicos.
+La propuesta utiliza el motor comercial compartido y la vigencia configurada por el administrador (15 días inicialmente), con fecha UTC. El PDF se genera al solicitarlo; no se guardan archivos públicos.

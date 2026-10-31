@@ -1,7 +1,25 @@
 # Modelo de datos
 
-`UsuarioAplicacion` se relaciona con solicitudes institucionales y, tras la aprobación, con un `PerfilInstitucional`. Un índice filtrado impide más de una solicitud pendiente por usuario; el perfil es único por usuario.
+```mermaid
+erDiagram
+    USUARIO ||--o{ SOLICITUD_INSTITUCIONAL : solicita
+    USUARIO ||--o| PERFIL_INSTITUCIONAL : tiene
+    USUARIO ||--o| CARRITO : posee
+    CARRITO ||--o{ DETALLE_CARRITO : contiene
+    LIBRO ||--o{ DETALLE_CARRITO : aparece
+    CATEGORIA ||--o{ LIBRO : clasifica
+    EDITORIAL ||--o{ LIBRO : publica
+    AUTOR }o--o{ LIBRO : escribe
+    USUARIO ||--o{ PEDIDO : realiza
+    PEDIDO ||--|{ DETALLE_PEDIDO : contiene
+    LIBRO ||--o{ DETALLE_PEDIDO : referencia
+    USUARIO ||--o{ SOLICITUD_COTIZACION : solicita
+    PERFIL_INSTITUCIONAL ||--o{ SOLICITUD_COTIZACION : identifica
+    USUARIO o|--o{ SOLICITUD_COTIZACION : asesora
+    SOLICITUD_COTIZACION ||--o| COTIZACION : origina
+    COTIZACION ||--|{ DETALLE_COTIZACION : contiene
+```
 
-`SolicitudCotizacion` vincula cliente, perfil y asesor opcional. Una `Cotizacion` pertenece a una única solicitud y contiene uno o más `DetalleCotizacion`; la interfaz actual emite un solo concepto. Los importes se guardan como `decimal` y el identificador numérico produce códigos visibles como `SOL-000001` y `COT-000001`.
+Identity relaciona usuarios y roles mediante sus propias tablas. Un índice filtrado impide más de una solicitud institucional pendiente por usuario; el perfil y el carrito son únicos por usuario. Los libros se desactivan lógicamente; los detalles de pedidos conservan título y precio históricos.
 
-Los estados son Solicitada, EnRevision, Cotizada, Aceptada, Rechazada y Vencida. La emisión y la respuesta actualizan ambos registros de forma transaccional. Las fechas de emisión y vencimiento se evalúan en UTC.
+La solicitud comercial vincula cliente, perfil y asesor opcional. La interfaz emite una cotización con un concepto. La emisión y respuesta actualizan estados de solicitud y cotización en transacción. Los importes son `decimal`; la tasa aplicada y el vencimiento se conservan en cada operación. La fila `ConfiguracionSistema` contiene los valores vigentes para nuevas operaciones.
