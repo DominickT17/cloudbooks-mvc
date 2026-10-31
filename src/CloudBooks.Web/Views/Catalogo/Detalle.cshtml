@@ -2,6 +2,7 @@
 @using CloudBooks.Web.Modelos
 @{ ViewData["Title"] = Model.Titulo; }
 <section class="container pagina">
+    <nav aria-label="Ruta de navegación" class="migas"><a asp-controller="Inicio" asp-action="Index">Inicio</a> / <a asp-action="Index">Catálogo</a> / <span aria-current="page">@Model.Titulo</span></nav>
     <a class="volver" asp-action="Index">← Volver al catálogo</a>
     <div class="detalle-libro"><img class="detalle-portada" src="@Model.ImagenPortada" alt="Portada de @Model.Titulo" />
     <div><p class="etiqueta">@Model.Categoria.Nombre</p><h1>@Model.Titulo</h1><p class="detalle-autor">@string.Join(", ", Model.Autores.Select(a => a.Nombre))</p>
@@ -9,18 +10,11 @@
         <p class="disponibilidad">@(Model.Formato == FormatoLibro.Ebook ? "Formato digital disponible" : Model.Stock == 0 ? "Sin existencias" : Model.Stock <= (int)ViewBag.Umbral ? $"Últimas {Model.Stock} unidades" : "Disponible")</p>
         @if (Model.Formato == FormatoLibro.Ebook || Model.Stock > 0)
         {
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                <form asp-controller="Carrito" asp-action="Agregar" method="post" class="agregar-carrito">
-                    <input type="hidden" name="libroId" value="@Model.Id" />
-                    <label for="cantidad">Cantidad</label><input id="cantidad" name="cantidad" type="number" min="1" max="@(Model.Formato == FormatoLibro.Ebook ? 10000 : Model.Stock)" value="1" required />
-                    <button class="boton" type="submit">Agregar al carrito</button>
-                </form>
-            }
-            else
-            {
-                <a class="boton" asp-controller="Cuenta" asp-action="Ingresar" asp-route-returnUrl="@Url.Action("Detalle", "Catalogo", new { id = Model.Id })">Inicia sesión para comprar</a>
-            }
+            <form asp-controller="Carrito" asp-action="Agregar" method="post" class="agregar-carrito">
+                <input type="hidden" name="libroId" value="@Model.Id" />
+                <label for="cantidad">Cantidad</label><div class="control-cantidad"><button type="button" data-cantidad="-1" aria-label="Reducir cantidad">−</button><input id="cantidad" name="cantidad" type="number" min="1" max="@(Model.Formato == FormatoLibro.Ebook ? 10000 : Model.Stock)" value="1" required /><button type="button" data-cantidad="1" aria-label="Aumentar cantidad">+</button></div>
+                <button class="boton" type="submit">Agregar al carrito</button>
+            </form>
         }
         <h2>Sobre este libro</h2><p>@Model.Sinopsis</p><h2>Ficha técnica</h2>
         <dl class="ficha"><div><dt>ISBN</dt><dd>@Model.ISBN</dd></div><div><dt>Editorial</dt><dd>@Model.Editorial.Nombre</dd></div><div><dt>Año</dt><dd>@Model.AnioEdicion</dd></div><div><dt>Categoría</dt><dd>@Model.Categoria.Nombre</dd></div><div><dt>Formato</dt><dd>@(Model.Formato == FormatoLibro.TapaBlanda ? "Tapa blanda" : Model.Formato == FormatoLibro.TapaDura ? "Tapa dura" : "E-book")</dd></div>

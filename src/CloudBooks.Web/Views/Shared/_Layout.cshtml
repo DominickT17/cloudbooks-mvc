@@ -15,23 +15,25 @@
     <header class="cabecera">
         <nav class="container navegacion" aria-label="Navegación principal">
             <a asp-controller="Inicio" asp-action="Index" aria-label="CloudBooks, inicio"><img class="marca" src="~/imagenes/marca/cloudbooks.png" alt="CloudBooks" /></a>
-            <div class="nav-enlaces">
+            <button class="menu-boton" type="button" aria-expanded="false" aria-controls="menu-principal"><i data-lucide="menu"></i><span>Menú</span></button>
+            <div class="nav-enlaces" id="menu-principal">
                 <a asp-controller="Inicio" asp-action="Index">Inicio</a>
                 <a asp-controller="Catalogo" asp-action="Index">Catálogo</a>
                 <a asp-controller="Inicio" asp-action="Instituciones">Instituciones</a>
                 @await Component.InvokeAsync("ContadorCarrito")
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a>
-                    <a asp-controller="Pedidos" asp-action="Index">Mis pedidos</a>
+                    <details class="menu-cuenta"><summary><i data-lucide="user-round"></i> Mi cuenta</summary><div class="menu-cuenta-panel">
+                    <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a><a asp-controller="Pedidos" asp-action="Index">Mis pedidos</a>
+                    @if (User.IsInRole("ClienteInstitucional")) { <a asp-controller="Cotizaciones" asp-action="Index">Mis cotizaciones</a> }
                     @if (User.IsInRole("AsesorVentas")) { <a asp-controller="Asesor" asp-action="Index">Mis solicitudes</a> }
                     @if (User.IsInRole("Administrador")) { <a asp-controller="Administracion" asp-action="Index">Administración</a> }
-                    <form asp-controller="Cuenta" asp-action="Salir" method="post"><button class="enlace-boton" type="submit">Cerrar sesión</button></form>
+                    <form asp-controller="Cuenta" asp-action="Salir" method="post"><button class="enlace-boton" type="submit">Cerrar sesión</button></form></div></details>
                 }
                 else
                 {
                     <a asp-controller="Cuenta" asp-action="Ingresar">Iniciar sesión</a>
-                    <a asp-controller="Cuenta" asp-action="Registrar">Registrarse</a>
+                    <a class="nav-registro" asp-controller="Cuenta" asp-action="Registrar">Registrarse</a>
                 }
             </div>
         </nav>
@@ -56,6 +58,8 @@
     <footer class="pie"><div class="container">CloudBooks · Zona 1, Quetzaltenango, Guatemala<br /><a href="mailto:dominickt1703@gmail.com">dominickt1703@gmail.com</a> · +502 5575 1509</div></footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/lucide/umd/lucide.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

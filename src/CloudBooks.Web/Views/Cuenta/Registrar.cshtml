@@ -1,17 +1,18 @@
 @model CloudBooks.Web.ModelosVista.RegistroModelo
 @{ ViewData["Title"] = "Crear cuenta"; }
 <section class="cuenta-contenedor"><div class="cuenta-tarjeta">
-    <img class="cuenta-marca" src="~/imagenes/marca/cloudbooks.png" alt="CloudBooks" />
+    <p class="etiqueta">TU ESPACIO DE LECTURA</p>
     <h1>Crear cuenta</h1><p>Comienza a descubrir nuevas lecturas.</p>
     <form asp-action="Registrar" method="post" class="formulario">
+        <input asp-for="Retorno" type="hidden" />
         <div asp-validation-summary="ModelOnly" class="errores" role="alert"></div>
         <label asp-for="Nombre"></label><input asp-for="Nombre" autocomplete="given-name" /><span asp-validation-for="Nombre" class="errores"></span>
         <label asp-for="Apellido"></label><input asp-for="Apellido" autocomplete="family-name" /><span asp-validation-for="Apellido" class="errores"></span>
         <label asp-for="Correo"></label><input asp-for="Correo" type="email" autocomplete="email" /><span asp-validation-for="Correo" class="errores"></span>
         <label asp-for="Contrasena">Contraseña</label><input asp-for="Contrasena" autocomplete="new-password" /><span asp-validation-for="Contrasena" class="errores"></span>
-        <small>Usa al menos 6 caracteres, mayúscula, minúscula, número y símbolo.</small>
+        <ul class="requisitos" aria-label="Requisitos de contraseña"><li data-regla="longitud">6 caracteres</li><li data-regla="mayuscula">Mayúscula</li><li data-regla="minuscula">Minúscula</li><li data-regla="numero">Número</li><li data-regla="simbolo">Símbolo</li></ul>
         <label asp-for="Confirmacion"></label><input asp-for="Confirmacion" autocomplete="new-password" /><span asp-validation-for="Confirmacion" class="errores"></span>
         <button class="boton" type="submit">Crear cuenta</button>
-    </form><p>¿Ya tienes cuenta? <a asp-action="Ingresar">Inicia sesión</a></p>
+    </form><p>¿Ya tienes cuenta? <a asp-action="Ingresar" asp-route-returnUrl="@Model.Retorno">Inicia sesión</a></p>
 </div></section>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

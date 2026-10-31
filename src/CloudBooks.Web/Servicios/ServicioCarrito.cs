@@ -16,11 +16,11 @@ public class ServicioCarrito(ContextoAplicacion contexto)
         var libro = await contexto.Libros.FirstOrDefaultAsync(l => l.Id == libroId && l.Activo);
         if (libro == null) return "El libro no está disponible.";
         var carrito = await contexto.Carritos.Include(c => c.Detalles).FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
-        if (carrito == null) { carrito = new Carrito { UsuarioId = usuarioId }; contexto.Carritos.Add(carrito); }
-        var detalle = carrito.Detalles.FirstOrDefault(d => d.LibroId == libroId);
+        var detalle = carrito?.Detalles.FirstOrDefault(d => d.LibroId == libroId);
         long cantidadFinal = (long)(detalle?.Cantidad ?? 0) + cantidad;
-        if (cantidadFinal > 10000 || carrito.Detalles.Sum(d => (long)d.Cantidad) + cantidad > 10000 || libro.Formato != FormatoLibro.Ebook && cantidadFinal > libro.Stock)
+        if (cantidadFinal > 10000 || (carrito?.Detalles.Sum(d => (long)d.Cantidad) ?? 0) + cantidad > 10000 || libro.Formato != FormatoLibro.Ebook && cantidadFinal > libro.Stock)
             return "La cantidad supera las existencias disponibles.";
+        if (carrito == null) { carrito = new Carrito { UsuarioId = usuarioId }; contexto.Carritos.Add(carrito); }
         if (detalle == null) carrito.Detalles.Add(new DetalleCarrito { LibroId = libroId, Cantidad = (int)cantidadFinal });
         else detalle.Cantidad = (int)cantidadFinal;
         await contexto.SaveChangesAsync();

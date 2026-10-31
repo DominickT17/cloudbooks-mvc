@@ -16,15 +16,7 @@
     </form>
     <p class="resultados">@Model.Libros.Count @(Model.Libros.Count == 1 ? "libro encontrado" : "libros encontrados")</p>
     <div class="libros-grid">
-    @foreach (var libro in Model.Libros) {
-        <article class="libro-tarjeta">
-            <a asp-action="Detalle" asp-route-id="@libro.Id"><img src="@libro.ImagenPortada" alt="Portada de @libro.Titulo" loading="lazy" /></a>
-            <div class="libro-info"><p class="libro-formato">@(libro.Formato == FormatoLibro.TapaBlanda ? "Tapa blanda" : libro.Formato == FormatoLibro.TapaDura ? "Tapa dura" : "E-book")</p>
-            <h2><a asp-action="Detalle" asp-route-id="@libro.Id">@libro.Titulo</a></h2><p>@string.Join(", ", libro.Autores.Select(a => a.Nombre))</p>
-            <strong>Q@(libro.PrecioBase.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</strong><p class="disponibilidad">@(libro.Formato == FormatoLibro.Ebook ? "Disponible en digital" : libro.Stock > 0 ? "Disponible" : "Sin existencias")</p>
-            <a class="enlace-libro" asp-action="Detalle" asp-route-id="@libro.Id">Ver libro <span aria-hidden="true">→</span></a></div>
-        </article>
-    }
+    @foreach (var libro in Model.Libros) { <partial name="_TarjetaLibro" model="libro" /> }
     </div>
-    @if (Model.Libros.Count == 0 && ViewData.ModelState.IsValid) { <p>No encontramos libros con esos filtros. Prueba otra búsqueda.</p> }
+    @if (Model.Libros.Count == 0 && ViewData.ModelState.IsValid) { <div class="estado-vacio"><h2>No encontramos coincidencias</h2><p>Prueba otra búsqueda o elimina los filtros.</p><a class="boton-secundario" asp-action="Index">Ver todo el catálogo</a></div> }
 </section>

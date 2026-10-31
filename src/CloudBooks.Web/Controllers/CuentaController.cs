@@ -1,14 +1,15 @@
 using CloudBooks.Web.Modelos;
 using CloudBooks.Web.ModelosVista;
+using CloudBooks.Web.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CloudBooks.Web.Controllers;
 
-public class CuentaController(UserManager<UsuarioAplicacion> usuarios, SignInManager<UsuarioAplicacion> acceso) : Controller
+public class CuentaController(UserManager<UsuarioAplicacion> usuarios, SignInManager<UsuarioAplicacion> acceso, ServicioCarritoInvitado invitado) : Controller
 {
-    [HttpGet] public IActionResult Registrar() => View(new RegistroModelo());
+    [HttpGet] public IActionResult Registrar(string? returnUrl) => View(new RegistroModelo { Retorno = returnUrl });
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Registrar(RegistroModelo modelo)
@@ -30,7 +31,8 @@ public class CuentaController(UserManager<UsuarioAplicacion> usuarios, SignInMan
             return View(modelo);
         }
         await acceso.SignInAsync(usuario, isPersistent: false);
-        return RedirectToAction("Index", "Inicio");
+        if (!await invitado.FusionarAsync(HttpContext.Session, usuario.Id)) { TempData["Error"] = "Revisa los productos pendientes de tu carrito."; return RedirectToAction("Index", "Carrito"); }
+        return Url.IsLocalUrl(modelo.Retorno) ? LocalRedirect(modelo.Retorno!) : RedirectToAction("Index", "Inicio");
     }
 
     [HttpGet] public IActionResult Ingresar(string? returnUrl) => View(new IngresoModelo { Retorno = returnUrl });
@@ -40,12 +42,13 @@ public class CuentaController(UserManager<UsuarioAplicacion> usuarios, SignInMan
     {
         if (!ModelState.IsValid) return View(modelo);
         var usuario = await usuarios.FindByEmailAsync(modelo.Correo.Trim());
-        var resultado = usuario == null ? Microsoft.AspNetCore.Identity.SignInResult.Failed : await acceso.PasswordSignInAsync(usuario, modelo.Contrasena, false, lockoutOnFailure: true);
+        var resultado = usuario == null ? Microsoft.AspNetCore.Identity.SignInResult.Failed : await acceso.PasswordSignInAsync(usuario, modelo.Contrasena, modelo.Recordarme, lockoutOnFailure: true);
         if (!resultado.Succeeded)
         {
             ModelState.AddModelError("", "No fue posible iniciar sesión. Revisa tus datos o inténtalo más tarde.");
             return View(modelo);
         }
+        if (!await invitado.FusionarAsync(HttpContext.Session, usuario!.Id)) { TempData["Error"] = "Revisa los productos pendientes de tu carrito."; return RedirectToAction("Index", "Carrito"); }
         return Url.IsLocalUrl(modelo.Retorno) ? LocalRedirect(modelo.Retorno!) : RedirectToAction("Index", "Inicio");
     }
 

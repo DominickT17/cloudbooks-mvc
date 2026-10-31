@@ -8,12 +8,17 @@ using Microsoft.AspNetCore.Mvc;
 namespace CloudBooks.Web.Controllers;
 
 [Authorize]
-public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros) : Controller
+public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros, ServicioCarritoInvitado invitado) : Controller
 {
     private string UsuarioId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
     public async Task<IActionResult> Confirmar()
     {
+        if (invitado.Cantidad(HttpContext.Session) > 0 && !await invitado.FusionarAsync(HttpContext.Session, UsuarioId))
+        {
+            TempData["Error"] = "Revisa los productos pendientes de tu carrito: alguno supera las existencias disponibles.";
+            return RedirectToAction("Index", "Carrito");
+        }
         var detalles = (await carrito.ObtenerAsync(UsuarioId))?.Detalles ?? [];
         if (detalles.Count == 0) return RedirectToAction("Index", "Carrito");
         var cantidad = detalles.Sum(d => d.Cantidad);
@@ -25,6 +30,7 @@ public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito,
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Crear(MetodoPagoSimulado? metodo)
     {
+        if (invitado.Cantidad(HttpContext.Session) > 0) { TempData["Error"] = "Revisa los productos pendientes de tu carrito."; return RedirectToAction("Index", "Carrito"); }
         if (!ModelState.IsValid || metodo == null || !Enum.IsDefined(metodo.Value))
         {
             TempData["Error"] = "Selecciona un método de pago simulado válido.";

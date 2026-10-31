@@ -1,13 +1,14 @@
 @model CloudBooks.Web.ModelosVista.IngresoModelo
 @{ ViewData["Title"] = "Iniciar sesión"; }
 <section class="cuenta-contenedor"><div class="cuenta-tarjeta">
-    <img class="cuenta-marca" src="~/imagenes/marca/cloudbooks.png" alt="CloudBooks" />
-    <h1>Iniciar sesión</h1><p>Qué gusto tenerte de vuelta.</p>
+    <p class="etiqueta">TU ESPACIO DE LECTURA</p>
+    <h1>Iniciar sesión</h1><p>@(Model.Retorno?.Contains("/Pedidos/Confirmar", StringComparison.OrdinalIgnoreCase) == true ? "Inicia sesión para completar tu compra. Tu carrito se conservará." : "Qué gusto tenerte de vuelta.")</p>
     <form asp-action="Ingresar" method="post" class="formulario">
         <div asp-validation-summary="ModelOnly" class="errores" role="alert"></div><input asp-for="Retorno" type="hidden" />
         <label asp-for="Correo"></label><input asp-for="Correo" type="email" autocomplete="email" /><span asp-validation-for="Correo" class="errores"></span>
         <label asp-for="Contrasena">Contraseña</label><input asp-for="Contrasena" autocomplete="current-password" /><span asp-validation-for="Contrasena" class="errores"></span>
+        <label class="recordarme"><input asp-for="Recordarme" /> Recordarme</label>
         <button class="boton" type="submit">Iniciar sesión</button>
-    </form><p>¿Aún no tienes cuenta? <a asp-action="Registrar">Regístrate</a></p>
+    </form><p>¿Aún no tienes cuenta? <a asp-action="Registrar" asp-route-returnUrl="@Model.Retorno">Regístrate</a></p>
 </div></section>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

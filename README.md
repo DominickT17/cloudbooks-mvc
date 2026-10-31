@@ -89,3 +89,5 @@ Las pruebas automatizadas usan SQLite aislado para reglas y servicios; las opera
 
 - Dóminick Ricardo Cifuentes Tomás
 - Yeisson Alexander Poroj Toc
+
+El carrito de visitantes se guarda en la sesión del navegador. Al iniciar sesión o registrarse, sus cantidades se suman al carrito de la cuenta. Si un artículo ya no está disponible o supera las existencias, permanece en la sesión para que el cliente lo ajuste o retire antes de finalizar la compra. El resumen de visitante es estimado; el descuento institucional se aplica después de iniciar sesión. La sesión utiliza la memoria de la aplicación y puede perderse al reiniciar el servidor o al caducar.

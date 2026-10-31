@@ -16,6 +16,7 @@ public class CatalogoController(ServicioCatalogo catalogo, ServicioParametros pa
             filtros.Libros.Clear();
             return View(filtros);
         }
+        ViewData["Umbral"] = (await parametros.ObtenerAsync()).UmbralStockBajo;
         return View(await catalogo.BuscarAsync(filtros));
     }
 

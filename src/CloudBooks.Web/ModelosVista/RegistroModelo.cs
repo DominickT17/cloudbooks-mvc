@@ -4,6 +4,7 @@ namespace CloudBooks.Web.ModelosVista;
 
 public class RegistroModelo
 {
+    public string? Retorno { get; set; }
     [Required(ErrorMessage = "Ingresa tu nombre."), StringLength(80)] public string Nombre { get; set; } = "";
     [Required(ErrorMessage = "Ingresa tu apellido."), StringLength(80)] public string Apellido { get; set; } = "";
     [Required(ErrorMessage = "Ingresa tu correo."), EmailAddress(ErrorMessage = "Ingresa un correo válido.")] public string Correo { get; set; } = "";

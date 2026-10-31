@@ -1,2 +1,2 @@
 @model int
-<a asp-controller="Carrito" asp-action="Index">Carrito@(Model > 0 ? $" ({Model})" : "")</a>
+<a class="nav-carrito" asp-controller="Carrito" asp-action="Index"><i data-lucide="shopping-bag"></i> Carrito <span class="contador">@Model</span></a>

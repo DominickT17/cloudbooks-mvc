@@ -9,6 +9,9 @@ QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(opciones => { opciones.IdleTimeout = TimeSpan.FromDays(7); opciones.Cookie.HttpOnly = true; opciones.Cookie.IsEssential = true; });
+builder.Services.AddScoped<ServicioCarritoInvitado>();
 builder.Services.AddScoped<ServicioCatalogo>();
 builder.Services.AddScoped<ServicioAdministracionCatalogo>();
 builder.Services.AddScoped<ServicioCatalogos>();
@@ -49,6 +52,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/Inicio/Estado", "?codigo={0}");
 app.UseRouting();
 
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
