@@ -6,9 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CloudBooks.Web.Controllers;
 
-public class InicioController(ServicioCatalogo catalogo, ServicioParametros parametros) : Controller
+public class InicioController(ServicioEscaparate escaparate, ServicioParametros parametros) : Controller
 {
-    public async Task<IActionResult> Index() { ViewData["Umbral"] = (await parametros.ObtenerAsync()).UmbralStockBajo; return View((await catalogo.BuscarAsync(new CatalogoModelo())).Libros.Take(4).ToList()); }
+    public async Task<IActionResult> Index()
+    {
+        ViewData["Umbral"] = (await parametros.ObtenerAsync()).UmbralStockBajo;
+        var ventas = await escaparate.SeleccionarVentasAsync();
+        return View(new InicioModelo { Libros = ventas.Libros, SonMasVendidos = ventas.SonMasVendidos, Recomendados = await escaparate.RecomendadosAsync(), Recientes = await escaparate.RecientesAsync(HttpContext.Session), Categorias = await escaparate.CategoriasAsync() });
+    }
     public IActionResult Instituciones() => View();
     public IActionResult Carrito() => RedirectToAction("Index", "Carrito");
     public IActionResult Estado(int codigo) { ViewData["Codigo"] = codigo; return View(); }

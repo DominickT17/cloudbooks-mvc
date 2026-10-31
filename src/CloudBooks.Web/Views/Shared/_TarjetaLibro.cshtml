@@ -3,10 +3,10 @@
 @{ var umbral = ViewData["Umbral"] as int? ?? 5; var disponible = Model.Formato == FormatoLibro.Ebook || Model.Stock > 0; }
 <article class="libro-tarjeta">
     <a asp-controller="Catalogo" asp-action="Detalle" asp-route-id="@Model.Id"><img src="@Model.ImagenPortada" alt="Portada de @Model.Titulo" loading="lazy" /></a>
-    <div class="libro-info"><p class="libro-formato">@(Model.Formato == FormatoLibro.Ebook ? "E-book" : Model.Formato == FormatoLibro.TapaDura ? "Tapa dura" : "Tapa blanda")</p>
+    <div class="libro-info">@if (Model.Destacado) { <span class="insignia-destacado">Destacado</span> }<p class="libro-formato">@(Model.Formato == FormatoLibro.Ebook ? "E-book" : Model.Formato == FormatoLibro.TapaDura ? "Tapa dura" : "Tapa blanda")</p>
     <h2><a asp-controller="Catalogo" asp-action="Detalle" asp-route-id="@Model.Id">@Model.Titulo</a></h2><p>@string.Join(", ", Model.Autores.Select(a => a.Nombre))</p>
     <strong>Q@(Model.PrecioBase.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</strong>
     <p class="disponibilidad">@(Model.Formato == FormatoLibro.Ebook ? "Disponible en digital" : Model.Stock == 0 ? "Sin existencias" : Model.Stock <= umbral ? $"Últimas {Model.Stock} unidades" : "Disponible")</p>
-    @if (disponible) { <form asp-controller="Carrito" asp-action="Agregar" method="post"><input type="hidden" name="libroId" value="@Model.Id" /><button class="boton" type="submit">Comprar ahora</button></form> }
+    @if (disponible) { <form asp-controller="Carrito" asp-action="Agregar" method="post" data-mini-carrito><input type="hidden" name="libroId" value="@Model.Id" /><button class="boton" type="submit">Comprar ahora</button></form> }
     <a class="enlace-libro" asp-controller="Catalogo" asp-action="Detalle" asp-route-id="@Model.Id">Ver ficha →</a></div>
 </article>

@@ -13,6 +13,7 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(opciones => { opciones.IdleTimeout = TimeSpan.FromDays(7); opciones.Cookie.HttpOnly = true; opciones.Cookie.IsEssential = true; });
 builder.Services.AddScoped<ServicioCarritoInvitado>();
 builder.Services.AddScoped<ServicioCatalogo>();
+builder.Services.AddScoped<ServicioEscaparate>();
 builder.Services.AddScoped<ServicioAdministracionCatalogo>();
 builder.Services.AddScoped<ServicioCatalogos>();
 builder.Services.AddScoped<ServicioInventario>();

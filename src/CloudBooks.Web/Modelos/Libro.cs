@@ -14,6 +14,7 @@ public class Libro
     [StringLength(300)] public string ImagenPortada { get; set; } = string.Empty;
     public FormatoLibro Formato { get; set; }
     public bool Activo { get; set; } = true;
+    public bool Destacado { get; set; }
     public int EditorialId { get; set; }
     public Editorial Editorial { get; set; } = null!;
     public int CategoriaId { get; set; }

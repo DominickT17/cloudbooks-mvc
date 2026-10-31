@@ -292,6 +292,9 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Property<int>("CategoriaId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Destacado")
+                        .HasColumnType("bit");
+
                     b.Property<int>("EditorialId")
                         .HasColumnType("int");
 

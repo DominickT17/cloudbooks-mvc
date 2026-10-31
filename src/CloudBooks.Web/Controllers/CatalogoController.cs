@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CloudBooks.Web.Controllers;
 
-public class CatalogoController(ServicioCatalogo catalogo, ServicioParametros parametros) : Controller
+public class CatalogoController(ServicioCatalogo catalogo, ServicioParametros parametros, ServicioEscaparate escaparate) : Controller
 {
     public async Task<IActionResult> Index([FromQuery] CatalogoModelo filtros)
     {
@@ -24,6 +24,8 @@ public class CatalogoController(ServicioCatalogo catalogo, ServicioParametros pa
     {
         var libro = await catalogo.ObtenerAsync(id);
         ViewBag.Umbral = (await parametros.ObtenerAsync()).UmbralStockBajo;
-        return libro == null ? NotFound() : View(libro);
+        if (libro == null) return NotFound();
+        escaparate.RegistrarVista(HttpContext.Session, libro.Id);
+        return View(libro);
     }
 }

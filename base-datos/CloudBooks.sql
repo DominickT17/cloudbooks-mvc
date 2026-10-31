@@ -720,6 +720,27 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031042724_LibrosDestacados'
+)
+BEGIN
+    ALTER TABLE [Libros] ADD [Destacado] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031042724_LibrosDestacados'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261031042724_LibrosDestacados', N'10.0.14');
+END;
+
+COMMIT;
+GO
+
 
 -- Datos de demostración académica; ejecutar solo en una base vacía.
 SET XACT_ABORT ON;

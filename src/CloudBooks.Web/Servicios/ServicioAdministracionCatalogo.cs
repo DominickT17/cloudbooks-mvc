@@ -19,7 +19,7 @@ public class ServicioAdministracionCatalogo(ContextoAplicacion contexto, IWebHos
     public async Task<LibroAdministracionModelo?> ObtenerAsync(int id)
     {
         var libro = await contexto.Libros.AsNoTracking().Include(l => l.Autores).SingleOrDefaultAsync(l => l.Id == id);
-        return libro == null ? null : new LibroAdministracionModelo { Id = libro.Id, Activo = libro.Activo, ISBN = libro.ISBN, Titulo = libro.Titulo, Sinopsis = libro.Sinopsis, AnioEdicion = libro.AnioEdicion, PrecioBase = libro.PrecioBase, Stock = libro.Stock, StockOriginal = libro.Stock, ImagenPortada = libro.ImagenPortada, Formato = libro.Formato, EditorialId = libro.EditorialId, CategoriaId = libro.CategoriaId, AutoresIds = libro.Autores.Select(a => a.Id).ToArray() };
+        return libro == null ? null : new LibroAdministracionModelo { Id = libro.Id, Activo = libro.Activo, Destacado = libro.Destacado, ISBN = libro.ISBN, Titulo = libro.Titulo, Sinopsis = libro.Sinopsis, AnioEdicion = libro.AnioEdicion, PrecioBase = libro.PrecioBase, Stock = libro.Stock, StockOriginal = libro.Stock, ImagenPortada = libro.ImagenPortada, Formato = libro.Formato, EditorialId = libro.EditorialId, CategoriaId = libro.CategoriaId, AutoresIds = libro.Autores.Select(a => a.Id).ToArray() };
     }
 
     public async Task PrepararAsync(LibroAdministracionModelo modelo)
@@ -51,7 +51,7 @@ public class ServicioAdministracionCatalogo(ContextoAplicacion contexto, IWebHos
             if (libro.Stock != modelo.StockOriginal) return "El stock cambió durante la edición. Recarga el formulario antes de guardar.";
             contexto.Entry(libro).Property(l => l.Stock).OriginalValue = modelo.StockOriginal;
         }
-        libro.ISBN = isbn; libro.Titulo = modelo.Titulo.Trim(); libro.Sinopsis = modelo.Sinopsis.Trim(); libro.AnioEdicion = modelo.AnioEdicion;
+        libro.Destacado = modelo.Destacado; libro.ISBN = isbn; libro.Titulo = modelo.Titulo.Trim(); libro.Sinopsis = modelo.Sinopsis.Trim(); libro.AnioEdicion = modelo.AnioEdicion;
         libro.PrecioBase = modelo.PrecioBase; libro.Stock = modelo.Formato == FormatoLibro.Ebook ? 0 : modelo.Stock;
         libro.ImagenPortada = modelo.ImagenPortada; libro.Formato = modelo.Formato; libro.EditorialId = modelo.EditorialId; libro.CategoriaId = modelo.CategoriaId;
         libro.Autores = autores;

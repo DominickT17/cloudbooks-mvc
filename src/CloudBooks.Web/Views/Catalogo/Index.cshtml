@@ -1,22 +1,23 @@
 @model CloudBooks.Web.ModelosVista.CatalogoModelo
 @using CloudBooks.Web.Modelos
-@{ ViewData["Title"] = "Catálogo"; }
-<section class="container pagina catalogo">
-    <p class="etiqueta">ENCUENTRA TU PRÓXIMA LECTURA</p><h1>Explora el catálogo</h1>
-    <p class="intro">Historias e ideas para cada curiosidad.</p>
-    <form method="get" class="filtros" role="search">
-        <div class="busqueda"><label asp-for="Buscar">Buscar</label><input asp-for="Buscar" placeholder="Título, autor, ISBN o editorial" /></div>
-        <div><label asp-for="CategoriaId">Categoría</label><select asp-for="CategoriaId"><option value="">Todas</option>@foreach (var categoria in Model.Categorias) { <option value="@categoria.Id">@categoria.Nombre</option> }</select></div>
-        <div><label asp-for="Formato">Formato</label><select asp-for="Formato"><option value="">Todos</option><option value="0">Tapa blanda</option><option value="1">Tapa dura</option><option value="2">E-book</option></select></div>
-        <div><label asp-for="PrecioMinimo">Precio mínimo (Q)</label><input asp-for="PrecioMinimo" type="number" min="0" step="0.01" /></div>
-        <div><label asp-for="PrecioMaximo">Precio máximo (Q)</label><input asp-for="PrecioMaximo" type="number" min="0" step="0.01" /></div>
-        <div class="orden"><label asp-for="Orden">Ordenar</label><select asp-for="Orden"><option value="">Predeterminado</option><option value="menor">Precio menor</option><option value="mayor">Precio mayor</option><option value="titulo">Título A-Z</option></select></div>
-        <button class="boton" type="submit">Buscar libros</button><a class="limpiar" asp-action="Index">Limpiar</a>
-        <div asp-validation-summary="All" class="errores"></div>
-    </form>
-    <p class="resultados">@Model.Libros.Count @(Model.Libros.Count == 1 ? "libro encontrado" : "libros encontrados")</p>
-    <div class="libros-grid">
-    @foreach (var libro in Model.Libros) { <partial name="_TarjetaLibro" model="libro" /> }
-    </div>
-    @if (Model.Libros.Count == 0 && ViewData.ModelState.IsValid) { <div class="estado-vacio"><h2>No encontramos coincidencias</h2><p>Prueba otra búsqueda o elimina los filtros.</p><a class="boton-secundario" asp-action="Index">Ver todo el catálogo</a></div> }
-</section>
+@using Microsoft.AspNetCore.Routing
+@{
+    ViewData["Title"] = "Catálogo";
+    string Quitar(params string[] claves) { var valores = new RouteValueDictionary(); foreach (var par in Context.Request.Query) { if (!claves.Contains(par.Key, StringComparer.OrdinalIgnoreCase)) valores[par.Key] = par.Value.ToString(); } return Url.Action("Index", valores)!; }
+    var filtrosActivos = (Model.CategoriaId.HasValue ? 1 : 0) + (Model.Formato.HasValue ? 1 : 0) + (Model.PrecioMinimo.HasValue || Model.PrecioMaximo.HasValue ? 1 : 0);
+}
+<section class="container pagina catalogo"><p class="etiqueta">ENCUENTRA TU PRÓXIMA LECTURA</p><h1>Explora el catálogo</h1><p class="intro">Historias e ideas para cada curiosidad.</p>
+<form method="get" class="filtros-compactos" role="search"><div class="busqueda-catalogo"><label asp-for="Buscar">Buscar</label><div><input asp-for="Buscar" placeholder="Título, autor, ISBN o editorial" /><button class="boton" type="submit">Buscar</button></div></div>
+<details class="panel-filtros"><summary><i data-lucide="sliders-horizontal"></i> Filtros @(filtrosActivos > 0 ? $"({filtrosActivos})" : "")</summary><div class="filtros-interior">
+<div><label asp-for="CategoriaId">Categoría</label><select asp-for="CategoriaId"><option value="">Todas</option>@foreach (var categoria in Model.Categorias) { <option value="@categoria.Id">@categoria.Nombre</option> }</select></div>
+<div><label asp-for="Formato">Formato</label><select asp-for="Formato"><option value="">Todos</option><option value="0">Tapa blanda</option><option value="1">Tapa dura</option><option value="2">E-book</option></select></div>
+<div><label asp-for="PrecioMinimo">Precio mínimo (Q)</label><input asp-for="PrecioMinimo" type="number" min="0" step="0.01" /></div><div><label asp-for="PrecioMaximo">Precio máximo (Q)</label><input asp-for="PrecioMaximo" type="number" min="0" step="0.01" /></div><button class="boton" type="submit">Aplicar filtros</button></div></details>
+<div class="orden-compacto"><label asp-for="Orden">Ordenar</label><select asp-for="Orden"><option value="">Recomendados</option><option value="menor">Precio: menor a mayor</option><option value="mayor">Precio: mayor a menor</option><option value="titulo">Título A-Z</option></select><button class="boton-secundario" type="submit">Aplicar orden</button></div><div asp-validation-summary="All" class="errores"></div></form>
+@if (filtrosActivos > 0 || !string.IsNullOrWhiteSpace(Model.Buscar)) { <div class="chips-filtros" aria-label="Filtros activos">
+@if (!string.IsNullOrWhiteSpace(Model.Buscar)) { <a href="@Quitar("Buscar")">Búsqueda: @Model.Buscar ×</a> }
+@if (Model.CategoriaId.HasValue) { <a href="@Quitar("CategoriaId")">@(Model.Categorias.FirstOrDefault(c => c.Id == Model.CategoriaId)?.Nombre ?? "Categoría") ×</a> }
+@if (Model.Formato.HasValue) { <a href="@Quitar("Formato")">@(Model.Formato == FormatoLibro.Ebook ? "E-book" : Model.Formato == FormatoLibro.TapaDura ? "Tapa dura" : "Tapa blanda") ×</a> }
+@if (Model.PrecioMinimo.HasValue || Model.PrecioMaximo.HasValue) { <a href="@Quitar("PrecioMinimo", "PrecioMaximo")">Precio: @(Model.PrecioMinimo?.ToString("0.00") ?? "0") – @(Model.PrecioMaximo?.ToString("0.00") ?? "sin límite") ×</a> }
+<a asp-action="Index">Limpiar todo</a></div> }
+<p class="resultados">@Model.Libros.Count @(Model.Libros.Count == 1 ? "libro encontrado" : "libros encontrados")</p><div class="libros-grid">@foreach (var libro in Model.Libros) { <partial name="_TarjetaLibro" model="libro" /> }</div>
+@if (Model.Libros.Count == 0 && ViewData.ModelState.IsValid) { <div class="estado-vacio"><h2>No encontramos coincidencias</h2><p>Prueba con otro término o elimina algunos filtros.</p><a class="boton-secundario" asp-action="Index">Ver todo el catálogo</a></div> }</section>

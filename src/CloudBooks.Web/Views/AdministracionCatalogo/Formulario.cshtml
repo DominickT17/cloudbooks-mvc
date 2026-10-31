@@ -2,6 +2,7 @@
 @{ ViewData["Title"] = Model.Id == 0 ? "Crear libro" : "Editar libro"; }
 <section class="container pagina"><a asp-action="Index">← Catálogo</a><h1>@ViewData["Title"]</h1><p>Selecciona una portada local. Los libros digitales no usan stock físico.</p>
 <form asp-action="Guardar" method="post" class="formulario formulario-institucional"><div asp-validation-summary="All" class="errores" role="alert"></div><input asp-for="Id" type="hidden" /><input asp-for="StockOriginal" type="hidden" />
+<label class="recordarme"><input asp-for="Destacado" /> Recomendado por CloudBooks</label>
 <label asp-for="ISBN"></label><input asp-for="ISBN" /><label asp-for="Titulo"></label><input asp-for="Titulo" /><label asp-for="Sinopsis"></label><textarea asp-for="Sinopsis" rows="4"></textarea>
 <label asp-for="AnioEdicion"></label><input asp-for="AnioEdicion" type="number" /><label asp-for="PrecioBase"></label><input asp-for="PrecioBase" type="number" min="0.01" step="0.01" /><label asp-for="Stock"></label><input asp-for="Stock" type="number" min="0" />
 <label asp-for="Formato"></label><select asp-for="Formato"><option value="0">Tapa blanda</option><option value="1">Tapa dura</option><option value="2">E-book</option></select>

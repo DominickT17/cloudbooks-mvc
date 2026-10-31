@@ -23,7 +23,8 @@ public class ServicioCatalogo(ContextoAplicacion contexto)
         {
             "menor" => consulta.OrderBy(libro => libro.PrecioBase).ThenBy(libro => libro.Titulo),
             "mayor" => consulta.OrderByDescending(libro => libro.PrecioBase).ThenBy(libro => libro.Titulo),
-            _ => consulta.OrderBy(libro => libro.Titulo)
+            "titulo" => consulta.OrderBy(libro => libro.Titulo),
+            _ => consulta.OrderByDescending(libro => libro.Destacado).ThenBy(libro => libro.Titulo)
         };
         filtros.Libros = await consulta.Include(libro => libro.Autores).ToListAsync();
         filtros.Categorias = await contexto.Categorias.AsNoTracking().OrderBy(categoria => categoria.Nombre).ToListAsync();

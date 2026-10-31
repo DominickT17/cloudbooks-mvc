@@ -10,20 +10,30 @@ public class CarritoController(ServicioCarrito carrito, ServicioDescuentos descu
 {
     private string? UsuarioId => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index() => View(await PrepararAsync());
+
+    [HttpGet] public async Task<IActionResult> Mini() => PartialView("_MiniCarrito", await PrepararAsync());
+
+    private async Task<CarritoModelo> PrepararAsync()
     {
         var detalles = UsuarioId == null ? new List<CloudBooks.Web.Modelos.DetalleCarrito>() : (await carrito.ObtenerAsync(UsuarioId))?.Detalles ?? [];
         detalles.AddRange(await invitado.ObtenerAsync(HttpContext.Session));
         var cantidad = detalles.Sum(d => d.Cantidad);
         var institucional = User.IsInRole("ClienteInstitucional");
-        return View(new CarritoModelo { Detalles = detalles, CantidadTotal = cantidad, Institucional = institucional,
-            Resumen = cantidad == 0 ? null : descuentos.Calcular(detalles.Sum(d => d.Cantidad * d.Libro.PrecioBase), cantidad, institucional, (await parametros.ObtenerAsync()).TasaImpuesto) });
+        return new CarritoModelo { Detalles = detalles, CantidadTotal = cantidad, Institucional = institucional,
+            Resumen = cantidad == 0 ? null : descuentos.Calcular(detalles.Sum(d => d.Cantidad * d.Libro.PrecioBase), cantidad, institucional, (await parametros.ObtenerAsync()).TasaImpuesto) };
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Agregar(int libroId, int cantidad = 1)
+    public async Task<IActionResult> Agregar(int libroId, int cantidad = 1, bool comprarAhora = false)
     {
         var error = UsuarioId == null ? await invitado.AgregarAsync(HttpContext.Session, libroId, cantidad) : await carrito.AgregarAsync(UsuarioId, libroId, cantidad);
+        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+        {
+            ViewData["MensajeCarrito"] = error ?? "Libro agregado al carrito.";
+            ViewData["ErrorCarrito"] = error != null;
+            return PartialView("_MiniCarrito", await PrepararAsync());
+        }
         TempData[error == null ? "Exito" : "Error"] = error ?? "Libro agregado al carrito.";
         return RedirectToAction("Index");
     }

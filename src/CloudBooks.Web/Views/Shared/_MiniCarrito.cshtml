@@ -1,0 +1,10 @@
+@model CloudBooks.Web.ModelosVista.CarritoModelo
+@{ string Dinero(decimal valor) => "Q" + valor.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture); }
+<div class="mini-contenido" data-total-carrito="@Model.CantidadTotal">
+<header><div><p class="etiqueta">TUS LECTURAS</p><h2 id="titulo-mini-carrito">Tu carrito <small>(@Model.CantidadTotal)</small></h2></div><button type="button" class="cerrar-mini" aria-label="Cerrar carrito" data-cerrar-mini>×</button></header>
+@if (ViewData["MensajeCarrito"] != null) { <p class="@(ViewData["ErrorCarrito"] as bool? == true ? "alert alert-danger" : "alert alert-success")" role="status">@ViewData["MensajeCarrito"]</p> }
+@if (Model.Detalles.Count == 0) { <p>Tu carrito está vacío. Explora el catálogo y encuentra tu próxima lectura.</p> }
+else { <div class="mini-lineas">@foreach (var detalle in Model.Detalles) { <article class="mini-linea"><img src="@detalle.Libro.ImagenPortada" alt="Portada de @detalle.Libro.Titulo" /><div><strong>@detalle.Libro.Titulo</strong><p>@detalle.Cantidad × @Dinero(detalle.Libro.PrecioBase)</p><span>Subtotal @Dinero(detalle.Cantidad * detalle.Libro.PrecioBase)</span></div></article> }</div>
+<div class="mini-total"><span>Subtotal</span><strong>@Dinero(Model.Resumen!.Subtotal)</strong></div><p class="texto-secundario">Los descuentos y el impuesto se detallan en el carrito.</p> }
+<div class="mini-acciones"><a class="boton" asp-controller="Carrito" asp-action="Index">Ver carrito</a>@if (Model.Detalles.Count > 0) { <a class="boton-secundario" asp-controller="Pedidos" asp-action="Confirmar">Finalizar compra</a> }<button type="button" class="enlace-boton" data-cerrar-mini>Seguir comprando</button></div>
+</div>

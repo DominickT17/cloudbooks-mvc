@@ -4,7 +4,7 @@
 <section class="container pagina"><p class="etiqueta">TUS LECTURAS</p><h1>Tu carrito</h1>
 @if (TempData["Error"] != null) { <p class="alert alert-danger" role="alert">@TempData["Error"]</p> }
 @if (TempData["Exito"] != null) { <p class="alert alert-success" role="status">@TempData["Exito"]</p> }
-@if (Model.Detalles.Count == 0) { <p>Tu carrito está vacío.</p><a class="boton" asp-controller="Catalogo" asp-action="Index">Explorar catálogo</a> }
+@if (Model.Detalles.Count == 0) { <div class="estado-vacio"><h2>Tu carrito está vacío</h2><p>Explora el catálogo y encuentra tu próxima lectura.</p></div><a class="boton" asp-controller="Catalogo" asp-action="Index">Explorar catálogo</a> }
 else {
 <div class="compra-grid"><div>
 @foreach (var detalle in Model.Detalles) {
@@ -19,6 +19,7 @@ else {
 <div><dt>Subtotal</dt><dd>@Dinero(Model.Resumen!.Subtotal)</dd></div>
 <div><dt>Descuento por volumen (@(ServicioDescuentos.ObtenerTasaVolumen(Model.CantidadTotal) * 100) %)</dt><dd>−@Dinero(Model.Resumen.DescuentoVolumen)</dd></div>
 @if (Model.Institucional) { <div><dt>Descuento institucional (8 %)</dt><dd>−@Dinero(Model.Resumen.DescuentoInstitucional)</dd></div> }
+@if (Model.Resumen.DescuentoVolumen + Model.Resumen.DescuentoInstitucional > 0) { <div><dt>Ahorraste</dt><dd>@Dinero(Model.Resumen.DescuentoVolumen + Model.Resumen.DescuentoInstitucional)</dd></div> }
 <div><dt>IVA (@((Model.Resumen.TasaImpuesto * 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)) %)</dt><dd>@Dinero(Model.Resumen.Impuesto)</dd></div><div class="total"><dt>Total estimado</dt><dd>@Dinero(Model.Resumen.Total)</dd></div></dl>
 @if (User.Identity?.IsAuthenticated != true) { <p>Podrás iniciar sesión al finalizar. Tu carrito se conservará.</p> }
 <a class="boton" asp-controller="Pedidos" asp-action="Confirmar">Finalizar compra</a><a class="boton-secundario" asp-controller="Catalogo" asp-action="Index">Seguir comprando</a></aside></div>

@@ -10,14 +10,15 @@
         <p class="disponibilidad">@(Model.Formato == FormatoLibro.Ebook ? "Formato digital disponible" : Model.Stock == 0 ? "Sin existencias" : Model.Stock <= (int)ViewBag.Umbral ? $"Últimas {Model.Stock} unidades" : "Disponible")</p>
         @if (Model.Formato == FormatoLibro.Ebook || Model.Stock > 0)
         {
-            <form asp-controller="Carrito" asp-action="Agregar" method="post" class="agregar-carrito">
+            <form asp-controller="Carrito" asp-action="Agregar" method="post" class="agregar-carrito" id="formulario-compra" data-mini-carrito>
                 <input type="hidden" name="libroId" value="@Model.Id" />
                 <label for="cantidad">Cantidad</label><div class="control-cantidad"><button type="button" data-cantidad="-1" aria-label="Reducir cantidad">−</button><input id="cantidad" name="cantidad" type="number" min="1" max="@(Model.Formato == FormatoLibro.Ebook ? 10000 : Model.Stock)" value="1" required /><button type="button" data-cantidad="1" aria-label="Aumentar cantidad">+</button></div>
-                <button class="boton" type="submit">Agregar al carrito</button>
+                <span class="mensaje-cantidad" aria-live="polite"></span><button class="boton" type="submit">Agregar al carrito</button><button class="boton-secundario" type="submit" name="comprarAhora" value="true">Comprar ahora</button>
             </form>
         }
         <h2>Sobre este libro</h2><p>@Model.Sinopsis</p><h2>Ficha técnica</h2>
         <dl class="ficha"><div><dt>ISBN</dt><dd>@Model.ISBN</dd></div><div><dt>Editorial</dt><dd>@Model.Editorial.Nombre</dd></div><div><dt>Año</dt><dd>@Model.AnioEdicion</dd></div><div><dt>Categoría</dt><dd>@Model.Categoria.Nombre</dd></div><div><dt>Formato</dt><dd>@(Model.Formato == FormatoLibro.TapaBlanda ? "Tapa blanda" : Model.Formato == FormatoLibro.TapaDura ? "Tapa dura" : "E-book")</dd></div>
         @if (Model.Formato != FormatoLibro.Ebook) { <div><dt>Existencias</dt><dd>@Model.Stock</dd></div> }</dl>
     </div></div>
+    @if (Model.Formato == FormatoLibro.Ebook || Model.Stock > 0) { <div class="barra-compra-movil"><strong>Q@(Model.PrecioBase.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</strong><button form="formulario-compra" class="boton" type="submit">Agregar al carrito</button></div> }
 </section>

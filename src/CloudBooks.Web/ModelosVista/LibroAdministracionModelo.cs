@@ -7,6 +7,7 @@ public class LibroAdministracionModelo
 {
     public int Id { get; set; }
     public bool Activo { get; set; }
+    [Display(Name = "Recomendado por CloudBooks")] public bool Destacado { get; set; }
     [Required(ErrorMessage = "Ingresa el ISBN."), StringLength(20), RegularExpression(@"[0-9Xx-]+", ErrorMessage = "El ISBN solo puede contener dígitos, guiones o X.")] public string ISBN { get; set; } = "";
     [Required(ErrorMessage = "Ingresa el título."), StringLength(200), Display(Name = "Título")] public string Titulo { get; set; } = "";
     [Required(ErrorMessage = "Ingresa la sinopsis."), StringLength(4000)] public string Sinopsis { get; set; } = "";
