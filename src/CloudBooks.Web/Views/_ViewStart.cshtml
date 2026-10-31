@@ -1,3 +1,4 @@
-﻿@{
-    Layout = "_Layout";
+@{
+    var controlador = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    Layout = User.IsInRole("Administrador") && (controlador.StartsWith("Administracion", StringComparison.Ordinal) || controlador == "Cotizaciones") ? "_LayoutAdministracion" : "_Layout";
 }

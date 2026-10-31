@@ -11,6 +11,7 @@ public class DashboardModelo
     public int Aprobados { get; set; }
     public int Enviados { get; set; }
     public int Cancelados { get; set; }
+    public int SolicitudesInstitucionalesPendientes { get; set; }
     public int CotizacionesPendientes { get; set; }
     public int Clientes { get; set; }
     public int Institucionales { get; set; }

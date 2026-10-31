@@ -46,3 +46,5 @@ document.querySelectorAll('form[data-mini-carrito]').forEach(formulario => formu
  try { const respuesta = await fetch(formulario.action, { method:'POST', body:new FormData(formulario), headers:{'X-Requested-With':'XMLHttpRequest'} }); if (!respuesta.ok) throw new Error(); abrirCarrito(await respuesta.text()); }
  catch { location.href = "/Carrito"; } finally { if (boton) boton.disabled = false; }
 }));
+const menuAdministrativo = document.querySelector('.admin-menu');
+if (menuAdministrativo && window.matchMedia('(max-width: 900px)').matches) menuAdministrativo.open = false;

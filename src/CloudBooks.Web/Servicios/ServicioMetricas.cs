@@ -27,6 +27,7 @@ public class ServicioMetricas(ContextoAplicacion contexto, ServicioParametros? p
             Aprobados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Aprobado)?.Cantidad ?? 0,
             Enviados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Enviado)?.Cantidad ?? 0,
             Cancelados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Cancelado)?.Cantidad ?? 0,
+            SolicitudesInstitucionalesPendientes = await contexto.SolicitudesInstitucionales.CountAsync(s => s.Estado == EstadoSolicitudInstitucional.Pendiente),
             CotizacionesPendientes = await contexto.Cotizaciones.CountAsync(c => c.Estado == EstadoSolicitudCotizacion.Cotizada && c.FechaVencimiento >= hoy),
             Clientes = await clientes.Distinct().CountAsync(), Institucionales = await institucionales.Distinct().CountAsync(),
             StockBajo = await contexto.Libros.AsNoTracking().Where(l => l.Activo && l.Formato != FormatoLibro.Ebook && l.Stock <= umbral).OrderBy(l => l.Stock).ThenBy(l => l.Titulo).ToListAsync(),

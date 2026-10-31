@@ -52,5 +52,15 @@ public class ServicioMetricasPruebas : IDisposable
         Assert.Null(await catalogos.GuardarAsync("categorias", 0, "Literatura"));
     }
 
+    [Fact]
+    public async Task CuentaSoloSolicitudesInstitucionalesPendientes()
+    {
+        var solicitud = new SolicitudInstitucional { UsuarioId = "cliente", Institucion = "Institución", Nit = "1", TipoInstitucion = "Educativa", Telefono = "123", Direccion = "Dirección", Representante = "Representante", Estado = EstadoSolicitudInstitucional.Pendiente };
+        contexto.SolicitudesInstitucionales.Add(solicitud); await contexto.SaveChangesAsync();
+        Assert.Equal(1, (await new ServicioMetricas(contexto).ObtenerAsync()).SolicitudesInstitucionalesPendientes);
+        solicitud.Estado = EstadoSolicitudInstitucional.Aprobada; await contexto.SaveChangesAsync();
+        Assert.Equal(0, (await new ServicioMetricas(contexto).ObtenerAsync()).SolicitudesInstitucionalesPendientes);
+    }
+
     public void Dispose() { contexto.Dispose(); conexion.Dispose(); }
 }
