@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CloudBooks.Web.Modelos;
 
-public enum EstadoPedido { Pendiente, Aprobado, Enviado, Cancelado }
+public enum EstadoPedido { Pendiente, Aprobado, Enviado, Cancelado, EnRevision, CanceladoPorSeguridad }
 public enum MetodoPagoSimulado { TarjetaSimulada, TransferenciaSimulada }
 
 public class Pedido
@@ -14,7 +14,12 @@ public class Pedido
     public UsuarioAplicacion Usuario { get; set; } = null!;
     public DateTime FechaUtc { get; set; }
     public EstadoPedido Estado { get; set; }
+    [NotMapped] public string EstadoTexto => Estado switch { EstadoPedido.EnRevision => "En revisión", EstadoPedido.CanceladoPorSeguridad => "Cancelado por seguridad", _ => Estado.ToString() };
     public MetodoPagoSimulado MetodoPago { get; set; }
+    [StringLength(150)] public string? TitularTarjeta { get; set; }
+    [StringLength(1000)] public string? MotivosRevision { get; set; }
+    public bool AltaPrioridad { get; set; }
+    public bool Revisado { get; set; }
     public decimal Subtotal { get; set; }
     public decimal DescuentoVolumen { get; set; }
     public decimal DescuentoInstitucional { get; set; }

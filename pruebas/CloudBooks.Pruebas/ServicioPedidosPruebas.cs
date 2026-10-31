@@ -30,6 +30,47 @@ public class ServicioPedidosPruebas : IDisposable
     }
 
     [Fact]
+    public async Task CantidadAltaRequiereRevisionYRegistraAvisosAntesDeAprobar()
+    {
+        var detalle = await contexto.DetallesCarrito.Include(d => d.Libro).SingleAsync(d => d.Libro.ISBN == "456");
+        detalle.Cantidad = 30;
+        await contexto.SaveChangesAsync();
+        contexto.ChangeTracker.Clear();
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
+        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.True(pedido.AltaPrioridad);
+        Assert.Equal(2, await contexto.NotificacionesPedido.CountAsync(n => n.PedidoId == pedido.Id));
+        Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+        Assert.Null(await servicio.MarcarRevisadoAsync(pedido.Id));
+        Assert.Null(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+    }
+
+    [Fact]
+    public async Task TitularDistintoPermiteCancelarPorSeguridadSinDescontar()
+    {
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona")).Pedido!;
+        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.Contains("titular", pedido.MotivosRevision!, StringComparison.OrdinalIgnoreCase);
+        Assert.Null(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.CanceladoPorSeguridad));
+        Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+    }
+
+    [Fact]
+    public async Task MontoConfiguradoMarcaRevisionYTitularIgualNoGeneraAlertaDeNombre()
+    {
+        var parametros = new ServicioParametros(contexto);
+        Assert.Null(await parametros.GuardarAsync(new ParametrosSistema { MontoRevision = 100m }));
+        var pedido = (await new ServicioPedidos(contexto, new ServicioDescuentos(), parametros).CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, " cliente ")).Pedido!;
+        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.Contains("total", pedido.MotivosRevision!, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("titular", pedido.MotivosRevision!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task CrearPendienteConservaStockYGuardaPrecios()
     {
         var resultado = await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada);

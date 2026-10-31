@@ -20,12 +20,14 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
     public DbSet<Cotizacion> Cotizaciones => Set<Cotizacion>();
     public DbSet<DetalleCotizacion> DetallesCotizacion => Set<DetalleCotizacion>();
     public DbSet<ParametrosSistema> ConfiguracionSistema => Set<ParametrosSistema>();
+    public DbSet<NotificacionPedido> NotificacionesPedido => Set<NotificacionPedido>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
         base.OnModelCreating(modelo);
         modelo.Entity<UsuarioAplicacion>().Property(u => u.Activo).HasDefaultValue(true);
         modelo.Entity<ParametrosSistema>().Property(p => p.TasaImpuesto).HasPrecision(5, 4);
+        modelo.Entity<ParametrosSistema>().Property(p => p.MontoRevision).HasPrecision(18, 2);
         modelo.Entity<ParametrosSistema>().HasData(new ParametrosSistema { Id = 1, TasaImpuesto = ParametrosSistema.ImpuestoInicial, UmbralStockBajo = ParametrosSistema.UmbralInicial, DiasVigencia = ParametrosSistema.VigenciaInicial });
         modelo.Entity<Libro>().Property(libro => libro.PrecioBase).HasPrecision(18, 2);
         modelo.Entity<Libro>().Property(libro => libro.Stock).IsConcurrencyToken();

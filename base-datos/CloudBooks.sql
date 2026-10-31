@@ -1,4 +1,4 @@
-﻿IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
 BEGIN
     CREATE TABLE [__EFMigrationsHistory] (
         [MigrationId] nvarchar(150) NOT NULL,
@@ -741,6 +741,92 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [AltaPrioridad] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [MotivosRevision] nvarchar(1000) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [Revisado] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [TitularTarjeta] nvarchar(150) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    ALTER TABLE [ConfiguracionSistema] ADD [MontoRevision] decimal(18,2) NOT NULL DEFAULT 10000.0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    CREATE TABLE [NotificacionesPedido] (
+        [Id] int NOT NULL IDENTITY,
+        [PedidoId] int NOT NULL,
+        [Destinatario] nvarchar(30) NOT NULL,
+        [Mensaje] nvarchar(500) NOT NULL,
+        [FechaUtc] datetime2 NOT NULL,
+        CONSTRAINT [PK_NotificacionesPedido] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_NotificacionesPedido_Pedidos_PedidoId] FOREIGN KEY ([PedidoId]) REFERENCES [Pedidos] ([Id]) ON DELETE CASCADE
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    EXEC(N'UPDATE [ConfiguracionSistema] SET [MontoRevision] = 10000.0
+    WHERE [Id] = 1;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    CREATE INDEX [IX_NotificacionesPedido_PedidoId] ON [NotificacionesPedido] ([PedidoId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261031225336_RevisionSeguridadPedidos'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261031225336_RevisionSeguridadPedidos', N'10.0.14');
+END;
+
+COMMIT;
+GO
 
 -- Datos de demostración académica; ejecutar solo en una base vacía.
 SET XACT_ABORT ON;

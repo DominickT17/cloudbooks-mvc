@@ -8,6 +8,7 @@
 <form asp-action="Crear" method="post"><fieldset><legend>Método de pago simulado</legend>
 <label><input type="radio" name="metodo" value="0" required /> Tarjeta simulada</label><br />
 <label><input type="radio" name="metodo" value="1" required /> Transferencia simulada</label></fieldset>
+<label for="titular">Nombre del titular de la tarjeta simulada</label><input id="titular" name="titular" maxlength="150" autocomplete="cc-name" /><small>Necesario si eliges tarjeta. No ingreses número de tarjeta ni código de seguridad.</small>
 <button class="boton" type="submit">Confirmar pedido</button></form></div>
 <aside class="resumen-compra"><h2>Resumen</h2><dl>
 <div><dt>Subtotal</dt><dd>@Dinero(Model.Resumen!.Subtotal)</dd></div>

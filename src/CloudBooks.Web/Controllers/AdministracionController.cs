@@ -10,11 +10,21 @@ public class AdministracionController(ServicioPedidos pedidos, ServicioMetricas 
 {
     public async Task<IActionResult> Index() => View(await metricas.ObtenerAsync());
 
-    public async Task<IActionResult> Pedidos(EstadoPedido? estado)
+    public async Task<IActionResult> Pedidos(EstadoPedido? estado, bool? revision)
     {
         if (!ModelState.IsValid || estado.HasValue && !Enum.IsDefined(estado.Value)) return BadRequest();
         ViewBag.Estado = estado;
-        return View(await pedidos.ObtenerTodosAsync(estado));
+        ViewBag.Revision = revision;
+        var resultados = await pedidos.ObtenerTodosAsync(estado);
+        return View(revision == true ? resultados.Where(p => p.Estado == EstadoPedido.EnRevision).ToList() : resultados);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarRevisado(int id)
+    {
+        var error = await pedidos.MarcarRevisadoAsync(id);
+        TempData[error == null ? "Exito" : "Error"] = error ?? "Revisión registrada. Ya puedes aprobar el pedido.";
+        return RedirectToAction("DetallePedido", new { id });
     }
 
     public async Task<IActionResult> DetallePedido(int id)

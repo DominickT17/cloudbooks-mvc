@@ -1,10 +1,16 @@
 @model CloudBooks.Web.Modelos.Pedido
 @using CloudBooks.Web.Modelos
 @{ ViewData["Title"] = Model.Codigo; ViewData["Administracion"] = true; }
-<section class="container pagina"><a asp-action="Pedidos">← Pedidos</a><h1>@Model.Codigo</h1><p>Cliente: @Model.Usuario.NombreCompleto (@Model.Usuario.Email)</p><p>Estado: <strong>@Model.Estado</strong> · @Model.FechaUtc.ToString("dd/MM/yyyy HH:mm") UTC</p>
+<section class="container pagina"><a asp-action="Pedidos">← Pedidos</a><h1>@Model.Codigo</h1><p>Cliente: @Model.Usuario.NombreCompleto (@Model.Usuario.Email)</p><p>Estado: <strong>@Model.EstadoTexto</strong> · @Model.FechaUtc.ToString("dd/MM/yyyy HH:mm") UTC</p>
 @if (TempData["Error"] != null) { <p class="alert alert-danger" role="alert">@TempData["Error"]</p> }
 @if (TempData["Exito"] != null) { <p class="alert alert-success" role="status">@TempData["Exito"]</p> }
 <partial name="_DetallePedido" model="Model" />
+<div class="panel-dashboard"><h2>Revisión de seguridad</h2>
+@if (Model.MotivosRevision != null) { <p><strong>Prioridad:</strong> @(Model.AltaPrioridad ? "Alta" : "Revisión")</p><p>@Model.MotivosRevision</p><p>Comprueba los datos y la cantidad solicitada antes de continuar. @(Model.Revisado ? "Revisión registrada." : "Revisión pendiente.")</p> }
+else { <p>No se detectaron alertas al crear el pedido.</p> }
+<p>Método simulado: @Model.MetodoPago @if (Model.TitularTarjeta != null) { <span>· Titular: @Model.TitularTarjeta</span> }</p></div>
 <div class="acciones-pedido">
-@if (Model.Estado == EstadoPedido.Pendiente) { <form asp-action="CambiarEstado" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="Aprobado" /><button class="boton" type="submit">Aprobar pedido</button></form><form asp-action="CambiarEstado" method="post" onsubmit="return confirm('¿Cancelar este pedido pendiente?')"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="Cancelado" /><button class="boton-peligro" type="submit">Cancelar pedido</button></form> }
+@if (Model.Estado == EstadoPedido.EnRevision && !Model.Revisado) { <form asp-action="MarcarRevisado" method="post" onsubmit="return confirm('¿Confirmas que verificaste las alertas de este pedido?')"><input type="hidden" name="id" value="@Model.Id" /><button class="boton" type="submit">Marcar como revisado</button></form> }
+@if (Model.Estado == EstadoPedido.Pendiente || (Model.Estado == EstadoPedido.EnRevision && Model.Revisado)) { <form asp-action="CambiarEstado" method="post" onsubmit="return confirm('¿Aprobar el pedido y descontar las existencias?')"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="Aprobado" /><button class="boton" type="submit">Aprobar pedido</button></form> }
+@if (Model.Estado == EstadoPedido.Pendiente || Model.Estado == EstadoPedido.EnRevision) { <form asp-action="CambiarEstado" method="post" onsubmit="return confirm('¿Cancelar este pedido?')"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="Cancelado" /><button class="boton-peligro" type="submit">Cancelar pedido</button></form><form asp-action="CambiarEstado" method="post" onsubmit="return confirm('¿Cancelar este pedido por seguridad?')"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="CanceladoPorSeguridad" /><button class="boton-peligro" type="submit">Cancelar por seguridad</button></form> }
 @if (Model.Estado == EstadoPedido.Aprobado) { <form asp-action="CambiarEstado" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="estado" value="Enviado" /><button class="boton" type="submit">Marcar enviado</button></form> }</div></section>

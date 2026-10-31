@@ -340,6 +340,37 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.ToTable("Libros");
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.NotificacionPedido", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Destinatario")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Mensaje")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("PedidoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PedidoId");
+
+                    b.ToTable("NotificacionesPedido");
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.ParametrosSistema", b =>
                 {
                     b.Property<int>("Id")
@@ -350,6 +381,10 @@ namespace CloudBooks.Web.Datos.Migraciones
 
                     b.Property<int>("DiasVigencia")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("MontoRevision")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("TasaImpuesto")
                         .HasPrecision(5, 4)
@@ -367,6 +402,7 @@ namespace CloudBooks.Web.Datos.Migraciones
                         {
                             Id = 1,
                             DiasVigencia = 15,
+                            MontoRevision = 10000m,
                             TasaImpuesto = 0.12m,
                             UmbralStockBajo = 5
                         });
@@ -379,6 +415,9 @@ namespace CloudBooks.Web.Datos.Migraciones
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AltaPrioridad")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("DescuentoInstitucional")
                         .HasPrecision(18, 2)
@@ -401,6 +440,13 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Property<int>("MetodoPago")
                         .HasColumnType("int");
 
+                    b.Property<string>("MotivosRevision")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("Revisado")
+                        .HasColumnType("bit");
+
                     b.Property<decimal>("Subtotal")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -408,6 +454,10 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Property<decimal>("TasaImpuesto")
                         .HasPrecision(5, 4)
                         .HasColumnType("decimal(5,4)");
+
+                    b.Property<string>("TitularTarjeta")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<decimal>("Total")
                         .HasPrecision(18, 2)
@@ -904,6 +954,17 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Navigation("Categoria");
 
                     b.Navigation("Editorial");
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.NotificacionPedido", b =>
+                {
+                    b.HasOne("CloudBooks.Web.Modelos.Pedido", "Pedido")
+                        .WithMany()
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Pedido");
                 });
 
             modelBuilder.Entity("CloudBooks.Web.Modelos.Pedido", b =>
