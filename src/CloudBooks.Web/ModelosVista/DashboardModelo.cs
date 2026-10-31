@@ -8,6 +8,7 @@ public class DashboardModelo
     public decimal Ventas { get; set; }
     public int Pedidos { get; set; }
     public int Pendientes { get; set; }
+    public int EnRevision { get; set; }
     public int Aprobados { get; set; }
     public int Enviados { get; set; }
     public int Cancelados { get; set; }
@@ -17,4 +18,5 @@ public class DashboardModelo
     public int Institucionales { get; set; }
     public List<Libro> StockBajo { get; set; } = [];
     public List<LibroVendido> MasVendidos { get; set; } = [];
+    public List<Pedido> PedidosRecientes { get; set; } = [];
 }

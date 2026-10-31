@@ -24,14 +24,16 @@ public class ServicioMetricas(ContextoAplicacion contexto, ServicioParametros? p
             Ventas = await contexto.Pedidos.Where(p => p.Estado == EstadoPedido.Aprobado || p.Estado == EstadoPedido.Enviado).SumAsync(p => (decimal?)p.Total) ?? 0m,
             Pedidos = porEstado.Sum(e => e.Cantidad),
             Pendientes = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Pendiente)?.Cantidad ?? 0,
+            EnRevision = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.EnRevision)?.Cantidad ?? 0,
             Aprobados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Aprobado)?.Cantidad ?? 0,
             Enviados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Enviado)?.Cantidad ?? 0,
-            Cancelados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Cancelado)?.Cantidad ?? 0,
+            Cancelados = porEstado.Where(e => e.Estado == EstadoPedido.Cancelado || e.Estado == EstadoPedido.CanceladoPorSeguridad).Sum(e => e.Cantidad),
             SolicitudesInstitucionalesPendientes = await contexto.SolicitudesInstitucionales.CountAsync(s => s.Estado == EstadoSolicitudInstitucional.Pendiente),
             CotizacionesPendientes = await contexto.Cotizaciones.CountAsync(c => c.Estado == EstadoSolicitudCotizacion.Cotizada && c.FechaVencimiento >= hoy),
             Clientes = await clientes.Distinct().CountAsync(), Institucionales = await institucionales.Distinct().CountAsync(),
             StockBajo = await contexto.Libros.AsNoTracking().Where(l => l.Activo && l.Formato != FormatoLibro.Ebook && l.Stock <= umbral).OrderBy(l => l.Stock).ThenBy(l => l.Titulo).ToListAsync(),
-            MasVendidos = masVendidos.Select(x => new LibroVendido(x.LibroId, x.Titulo, x.Unidades)).ToList()
+            MasVendidos = masVendidos.Select(x => new LibroVendido(x.LibroId, x.Titulo, x.Unidades)).ToList(),
+            PedidosRecientes = await contexto.Pedidos.AsNoTracking().OrderByDescending(p => p.Id).Take(5).ToListAsync()
         };
     }
 }
