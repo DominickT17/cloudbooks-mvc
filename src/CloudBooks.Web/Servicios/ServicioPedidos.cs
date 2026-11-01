@@ -4,6 +4,7 @@ using System.Text;
 using CloudBooks.Web.Datos;
 using CloudBooks.Web.Modelos;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace CloudBooks.Web.Servicios;
 
@@ -12,6 +13,8 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
     public async Task<(Pedido? Pedido, string? Error)> CrearAsync(string usuarioId, bool institucional, MetodoPagoSimulado metodo, string? titular = null, string? ultimosCuatro = null)
     {
         if (!Enum.IsDefined(metodo)) return (null, "Selecciona un método de pago válido.");
+        try
+        {
         await using var transaccion = await contexto.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         var carrito = await contexto.Carritos.Include(c => c.Detalles).ThenInclude(d => d.Libro).FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
         if (carrito == null || carrito.Detalles.Count == 0) return (null, "Tu carrito está vacío.");
@@ -68,6 +71,15 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         await contexto.SaveChangesAsync();
         await transaccion.CommitAsync();
         return (pedido, null);
+        }
+        catch (SqlException error) when (error.Number == 1205)
+        {
+            return (null, "Otro pedido modificó las existencias al mismo tiempo. Tu carrito se conserva; revisa la disponibilidad e inténtalo de nuevo.");
+        }
+        catch (DbUpdateException error) when (error.InnerException is SqlException { Number: 1205 })
+        {
+            return (null, "Otro pedido modificó las existencias al mismo tiempo. Tu carrito se conserva; revisa la disponibilidad e inténtalo de nuevo.");
+        }
     }
 
     public Task<List<Pedido>> ObtenerPorUsuarioAsync(string usuarioId) => contexto.Pedidos.AsNoTracking().Where(p => p.UsuarioId == usuarioId).OrderByDescending(p => p.Id).ToListAsync();
