@@ -9,6 +9,7 @@
         <label asp-for="Nombre"></label><input asp-for="Nombre" autocomplete="given-name" /><span asp-validation-for="Nombre" class="errores"></span>
         <label asp-for="Apellido"></label><input asp-for="Apellido" autocomplete="family-name" /><span asp-validation-for="Apellido" class="errores"></span>
         <label asp-for="Correo"></label><input asp-for="Correo" type="email" autocomplete="email" /><span asp-validation-for="Correo" class="errores"></span>
+        <label asp-for="Telefono"></label><input asp-for="Telefono" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="5575 1509" /><small>Ocho dígitos de Guatemala; puedes agregarlo al registrarte.</small><span asp-validation-for="Telefono" class="errores"></span>
         <label asp-for="Contrasena">Contraseña</label><input asp-for="Contrasena" autocomplete="new-password" /><span asp-validation-for="Contrasena" class="errores"></span>
         <ul class="requisitos" aria-label="Requisitos de contraseña"><li data-regla="longitud">6 caracteres</li><li data-regla="mayuscula">Mayúscula</li><li data-regla="minuscula">Minúscula</li><li data-regla="numero">Número</li><li data-regla="simbolo">Símbolo</li></ul>
         <label asp-for="Confirmacion"></label><input asp-for="Confirmacion" autocomplete="new-password" /><span asp-validation-for="Confirmacion" class="errores"></span>

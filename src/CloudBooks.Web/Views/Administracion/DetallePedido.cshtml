@@ -2,6 +2,8 @@
 @using CloudBooks.Web.Modelos
 @{ ViewData["Title"] = Model.Codigo; ViewData["Administracion"] = true; }
 <section class="container pagina"><a asp-action="Pedidos">← Pedidos</a><h1>@Model.Codigo</h1><p>Cliente: @Model.Usuario.NombreCompleto (@Model.Usuario.Email)</p><p>Estado: <strong>@Model.EstadoTexto</strong> · @Model.FechaUtc.ToString("dd/MM/yyyy HH:mm") UTC</p>
+@{ var enlaceWhatsapp = CloudBooks.Web.Servicios.ContactoWhatsapp.CrearEnlace(Model.Usuario.PhoneNumber, $"Hola {Model.Usuario.NombreCompleto}, somos CloudBooks. Nos comunicamos por tu pedido {Model.Codigo}. ¿Podrías ayudarnos a confirmar la compra?"); }
+@if (enlaceWhatsapp != null) { <p><a href="@enlaceWhatsapp" target="_blank" rel="noopener noreferrer">Contactar por WhatsApp ↗</a></p> }
 @if (TempData["Error"] != null) { <p class="alert alert-danger" role="alert">@TempData["Error"]</p> }
 @if (TempData["Exito"] != null) { <p class="alert alert-success" role="status">@TempData["Exito"]</p> }
 <partial name="_DetallePedido" model="Model" />

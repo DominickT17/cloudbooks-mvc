@@ -14,8 +14,10 @@ public class CuentaController(UserManager<UsuarioAplicacion> usuarios, SignInMan
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Registrar(RegistroModelo modelo)
     {
+        if (!string.IsNullOrWhiteSpace(modelo.Telefono) && ContactoWhatsapp.NormalizarGuatemala(modelo.Telefono) == null)
+            ModelState.AddModelError(nameof(modelo.Telefono), "Ingresa un teléfono de Guatemala de 8 dígitos.");
         if (!ModelState.IsValid) return View(modelo);
-        var usuario = new UsuarioAplicacion { UserName = modelo.Correo.Trim(), Email = modelo.Correo.Trim(), NombreCompleto = $"{modelo.Nombre.Trim()} {modelo.Apellido.Trim()}" };
+        var usuario = new UsuarioAplicacion { UserName = modelo.Correo.Trim(), Email = modelo.Correo.Trim(), NombreCompleto = $"{modelo.Nombre.Trim()} {modelo.Apellido.Trim()}", PhoneNumber = ContactoWhatsapp.NormalizarGuatemala(modelo.Telefono) };
         var resultado = await usuarios.CreateAsync(usuario, modelo.Contrasena);
         if (!resultado.Succeeded)
         {
