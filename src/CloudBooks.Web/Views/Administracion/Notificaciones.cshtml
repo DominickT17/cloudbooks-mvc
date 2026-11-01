@@ -1,0 +1,5 @@
+@model List<CloudBooks.Web.Modelos.NotificacionPedido>
+@{ ViewData["Title"] = "Avisos"; }
+<section class="container pagina"><div class="admin-pagina-encabezado"><p class="etiqueta">CENTRO DE ATENCIÓN</p><h1>Avisos</h1><p>Últimos avisos internos de pedidos que requieren atención.</p></div><section class="admin-panel">
+@if (Model.Count == 0) { <div class="admin-vacio"><i data-lucide="bell"></i><strong>No hay avisos por ahora</strong><span>Las revisiones de pedidos aparecerán aquí.</span></div> } else { <div class="admin-actividad">@foreach (var aviso in Model) { <a asp-action="DetallePedido" asp-route-id="@aviso.PedidoId"><span class="actividad-punto"></span><span><strong>@aviso.Pedido.Codigo · @aviso.Pedido.Usuario.NombreCompleto</strong><small>@aviso.Mensaje · @aviso.FechaUtc.ToString("dd/MM/yyyy HH:mm") UTC</small></span><span>Ver pedido →</span></a> }</div> }
+</section></section>

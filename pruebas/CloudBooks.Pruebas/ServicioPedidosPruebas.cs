@@ -54,6 +54,9 @@ public class ServicioPedidosPruebas : IDisposable
         Assert.Equal(TipoRevisionPedido.Comercial, pedido.TipoRevision);
         Assert.Equal(EstadoPago.Autorizado, pedido.EstadoPago);
         Assert.Equal(2, await contexto.NotificacionesPedido.CountAsync(n => n.PedidoId == pedido.Id));
+        var aviso = Assert.Single(await new ServicioAvisosAdministracion(contexto).ObtenerAsync());
+        Assert.Equal("Administración", aviso.Destinatario);
+        Assert.Equal(pedido.Id, aviso.PedidoId);
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
         Assert.Null(await servicio.MarcarRevisadoAsync(pedido.Id));

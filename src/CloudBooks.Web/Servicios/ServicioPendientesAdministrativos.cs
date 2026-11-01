@@ -9,7 +9,7 @@ public class ServicioPendientesAdministrativos(ContextoAplicacion contexto)
     {
         var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
         return new PendientesAdministrativos(
-            await contexto.Pedidos.CountAsync(p => p.Estado == EstadoPedido.Pendiente),
+            await contexto.Pedidos.CountAsync(p => p.Estado == EstadoPedido.Pendiente || p.Estado == EstadoPedido.EnRevision),
             await contexto.SolicitudesInstitucionales.CountAsync(s => s.Estado == EstadoSolicitudInstitucional.Pendiente),
             await contexto.Cotizaciones.CountAsync(c => c.Estado == EstadoSolicitudCotizacion.Cotizada && c.FechaVencimiento >= hoy));
     }

@@ -25,6 +25,7 @@ builder.Services.AddScoped<ServicioCarrito>();
 builder.Services.AddScoped<ServicioDescuentos>();
 builder.Services.AddScoped<ServicioPedidos>();
 builder.Services.AddScoped<INotificacionesPedido, NotificacionesPedido>();
+builder.Services.AddScoped<ServicioAvisosAdministracion>();
 builder.Services.AddScoped<ServicioInstituciones>();
 builder.Services.AddScoped<ServicioAsignacionAsesores>();
 builder.Services.AddScoped<ServicioSolicitudesCotizacion>();
