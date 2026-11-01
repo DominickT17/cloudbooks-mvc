@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Servicios;
 
-public record UsuarioAdministrativo(string Id, string Nombre, string Correo, bool Activo, bool TienePerfilInstitucional, List<string> Roles);
+public record UsuarioAdministrativo(string Id, string Nombre, string Correo, string? Telefono, bool Activo, bool TienePerfilInstitucional, List<string> Roles);
 
 public class ServicioUsuarios(ContextoAplicacion contexto, UserManager<UsuarioAplicacion> usuarios)
 {
@@ -16,10 +16,10 @@ public class ServicioUsuarios(ContextoAplicacion contexto, UserManager<UsuarioAp
     {
         var consulta = contexto.Users.AsNoTracking().AsQueryable();
         if (!string.IsNullOrWhiteSpace(buscar)) { var texto = buscar.Trim(); consulta = consulta.Where(u => u.NombreCompleto.Contains(texto) || (u.Email != null && u.Email.Contains(texto))); }
-        var personas = await consulta.OrderBy(u => u.NombreCompleto).Select(u => new { u.Id, u.NombreCompleto, u.Email, u.Activo, Perfil = contexto.PerfilesInstitucionales.Any(p => p.UsuarioId == u.Id) }).ToListAsync();
+        var personas = await consulta.OrderBy(u => u.NombreCompleto).Select(u => new { u.Id, u.NombreCompleto, u.Email, u.PhoneNumber, u.Activo, Perfil = contexto.PerfilesInstitucionales.Any(p => p.UsuarioId == u.Id) }).ToListAsync();
         var ids = personas.Select(u => u.Id).ToArray();
         var roles = await (from asignacion in contexto.UserRoles join rol in contexto.Roles on asignacion.RoleId equals rol.Id where ids.Contains(asignacion.UserId) select new { asignacion.UserId, rol.Name }).ToListAsync();
-        return personas.Select(u => new UsuarioAdministrativo(u.Id, u.NombreCompleto, u.Email ?? "", u.Activo, u.Perfil, roles.Where(r => r.UserId == u.Id && r.Name != null).Select(r => r.Name!).ToList())).ToList();
+        return personas.Select(u => new UsuarioAdministrativo(u.Id, u.NombreCompleto, u.Email ?? "", u.PhoneNumber, u.Activo, u.Perfil, roles.Where(r => r.UserId == u.Id && r.Name != null).Select(r => r.Name!).ToList())).ToList();
     }
 
     public async Task<string?> CambiarRolAsync(string administradorId, string usuarioId, string rolNuevo)
