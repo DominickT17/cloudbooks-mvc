@@ -9,7 +9,7 @@ namespace CloudBooks.Web.Servicios;
 
 public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null, INotificacionesPedido? notificaciones = null)
 {
-    public async Task<(Pedido? Pedido, string? Error)> CrearAsync(string usuarioId, bool institucional, MetodoPagoSimulado metodo, string? titular = null)
+    public async Task<(Pedido? Pedido, string? Error)> CrearAsync(string usuarioId, bool institucional, MetodoPagoSimulado metodo, string? titular = null, string? ultimosCuatro = null)
     {
         if (!Enum.IsDefined(metodo)) return (null, "Selecciona un método de pago válido.");
         await using var transaccion = await contexto.Database.BeginTransactionAsync(IsolationLevel.Serializable);
@@ -22,6 +22,7 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         var tasa = configuracion.TasaImpuesto;
         var resumen = descuentos.Calcular(carrito.Detalles.Sum(d => d.Libro.PrecioBase * d.Cantidad), totalUnidades, institucional, tasa);
         var pedido = new Pedido { UsuarioId = usuarioId, FechaUtc = DateTime.UtcNow, Estado = EstadoPedido.Pendiente, MetodoPago = metodo,
+            UltimosCuatro = ultimosCuatro,
             Subtotal = resumen.Subtotal, DescuentoVolumen = resumen.DescuentoVolumen, DescuentoInstitucional = resumen.DescuentoInstitucional, Impuesto = resumen.Impuesto, TasaImpuesto = resumen.TasaImpuesto, Total = resumen.Total,
             Detalles = carrito.Detalles.Select(d => new DetallePedido { LibroId = d.LibroId, Titulo = d.Libro.Titulo, Formato = d.Libro.Formato, Cantidad = d.Cantidad, PrecioUnitario = d.Libro.PrecioBase, Subtotal = d.Libro.PrecioBase * d.Cantidad }).ToList() };
         var motivos = new List<string>();

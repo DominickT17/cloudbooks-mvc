@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CloudBooks.Web.Controllers;
 
 [Authorize]
-public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros, ServicioCarritoInvitado invitado) : Controller
+public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros, ServicioCarritoInvitado invitado, IWebHostEnvironment entorno) : Controller
 {
     private string UsuarioId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -28,7 +28,7 @@ public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito,
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Crear(MetodoPagoSimulado? metodo, string? titular)
+    public async Task<IActionResult> Crear(MetodoPagoSimulado? metodo, string? titular, string? numero, string? vencimiento, string? cvv)
     {
         if (invitado.Cantidad(HttpContext.Session) > 0) { TempData["Error"] = "Revisa los productos pendientes de tu carrito."; return RedirectToAction("Index", "Carrito"); }
         if (!ModelState.IsValid || metodo == null || !Enum.IsDefined(metodo.Value))
@@ -41,7 +41,26 @@ public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito,
             TempData["Error"] = "Indica el nombre del titular de la tarjeta simulada (máximo 150 caracteres).";
             return RedirectToAction("Confirmar");
         }
-        var resultado = await pedidos.CrearAsync(UsuarioId, User.IsInRole("ClienteInstitucional"), metodo.Value, titular);
+        string? ultimosCuatro = null;
+        if (metodo == MetodoPagoSimulado.TarjetaSimulada)
+        {
+            if (!entorno.IsDevelopment()) { TempData["Error"] = "La tarjeta ficticia solo está disponible en el entorno de demostración."; return RedirectToAction("Confirmar"); }
+            var pago = new SimuladorTarjeta().Evaluar(numero, vencimiento, cvv, DateOnly.FromDateTime(DateTime.UtcNow));
+            if (!pago.Autorizada)
+            {
+                TempData["Error"] = pago.Resultado switch
+                {
+                    ResultadoTarjetaSimulada.FondosInsuficientes => "La tarjeta simulada no dispone de fondos suficientes.",
+                    ResultadoTarjetaSimulada.Rechazado => "La tarjeta simulada fue rechazada.",
+                    ResultadoTarjetaSimulada.Bloqueado => "La tarjeta simulada está bloqueada.",
+                    ResultadoTarjetaSimulada.Vencido => "La tarjeta simulada está vencida.",
+                    _ => "Los datos de la tarjeta ficticia no son válidos."
+                } + " Tu carrito se conserva para que puedas intentar nuevamente.";
+                return RedirectToAction("Confirmar");
+            }
+            ultimosCuatro = pago.UltimosCuatro;
+        }
+        var resultado = await pedidos.CrearAsync(UsuarioId, User.IsInRole("ClienteInstitucional"), metodo.Value, titular, ultimosCuatro);
         if (resultado.Error != null) { TempData["Error"] = resultado.Error; return RedirectToAction("Index", "Carrito"); }
         TempData["Exito"] = "Tu pedido fue creado. El pago es una simulación.";
         return RedirectToAction("Detalle", new { id = resultado.Pedido!.Id });

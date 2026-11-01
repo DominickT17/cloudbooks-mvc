@@ -875,6 +875,27 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101044802_UltimosCuatroTarjeta'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [UltimosCuatro] nvarchar(4) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101044802_UltimosCuatroTarjeta'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261101044802_UltimosCuatroTarjeta', N'10.0.14');
+END;
+
+COMMIT;
+GO
+
 -- Datos de demostración académica; ejecutar solo en una base vacía.
 SET XACT_ABORT ON;
 BEGIN TRANSACTION;

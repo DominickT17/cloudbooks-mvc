@@ -18,6 +18,7 @@ public class Pedido
     [NotMapped] public string EstadoTexto => Estado switch { EstadoPedido.EnRevision => "En revisión", EstadoPedido.CanceladoPorSeguridad => "Cancelado por seguridad", _ => Estado.ToString() };
     public MetodoPagoSimulado MetodoPago { get; set; }
     [StringLength(150)] public string? TitularTarjeta { get; set; }
+    [StringLength(4)] public string? UltimosCuatro { get; set; }
     [StringLength(1000)] public string? MotivosRevision { get; set; }
     public bool AltaPrioridad { get; set; }
     public bool Revisado { get; set; }

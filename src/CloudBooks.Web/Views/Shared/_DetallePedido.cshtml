@@ -3,5 +3,5 @@
 <div class="compra-grid"><div><h2>Productos</h2>
 @foreach (var detalle in Model.Detalles) { <div class="linea-resumen"><strong>@detalle.Titulo</strong><span>@detalle.Cantidad × @Dinero(detalle.PrecioUnitario) = @Dinero(detalle.Subtotal)</span>
 @if (ViewData["Administracion"] as bool? == true) { <small>@(detalle.Formato == CloudBooks.Web.Modelos.FormatoLibro.Ebook ? "Formato digital" : $"Existencias actuales: {detalle.Libro.Stock}")</small> }</div> }
-<p>Método: @(Model.MetodoPago == CloudBooks.Web.Modelos.MetodoPagoSimulado.TarjetaSimulada ? "Tarjeta simulada" : "Transferencia simulada")</p></div>
+<p>Método: @(Model.MetodoPago == CloudBooks.Web.Modelos.MetodoPagoSimulado.TarjetaSimulada ? "Tarjeta simulada" : "Transferencia simulada") @if (Model.UltimosCuatro != null) { <span>· •••• @Model.UltimosCuatro</span> }</p></div>
 <aside class="resumen-compra"><h2>Resumen</h2><dl><div><dt>Subtotal</dt><dd>@Dinero(Model.Subtotal)</dd></div><div><dt>Descuento por volumen</dt><dd>−@Dinero(Model.DescuentoVolumen)</dd></div><div><dt>Descuento institucional</dt><dd>−@Dinero(Model.DescuentoInstitucional)</dd></div><div><dt>IVA</dt><dd>@Dinero(Model.Impuesto)</dd></div><div class="total"><dt>Total</dt><dd>@Dinero(Model.Total)</dd></div></dl></aside></div>
