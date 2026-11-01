@@ -5,8 +5,8 @@
 @if (TempData["Error"] != null) { <p class="alert alert-danger" role="alert">@TempData["Error"]</p> }
 @if (TempData["Exito"] != null) { <p class="alert alert-success" role="status">@TempData["Exito"]</p> }
 <partial name="_DetallePedido" model="Model" />
-<div class="panel-dashboard"><h2>Revisión de seguridad</h2>
-@if (Model.MotivosRevision != null) { <p><strong>Prioridad:</strong> @(Model.AltaPrioridad ? "Alta" : "Revisión")</p><p>@Model.MotivosRevision</p><p>Comprueba los datos y la cantidad solicitada antes de continuar. @(Model.Revisado ? "Revisión registrada." : "Revisión pendiente.")</p> }
+<div class="panel-dashboard"><h2>Revisión del pedido</h2>
+@if (Model.MotivosRevision != null) { <p><strong>Tipo:</strong> @(Model.TipoRevision == TipoRevisionPedido.Ninguna ? "Histórica" : Model.TipoRevision.ToString()) · <strong>Prioridad:</strong> @(Model.AltaPrioridad ? "Alta" : "Revisión")</p><p>@Model.MotivosRevision</p><p>Comprueba los datos y la cantidad solicitada antes de continuar. @(Model.Revisado ? "Revisión registrada." : "Revisión pendiente.")</p> }
 else { <p>No se detectaron alertas al crear el pedido.</p> }
 <p>Método simulado: @Model.MetodoPago @if (Model.TitularTarjeta != null) { <span>· Titular: @Model.TitularTarjeta</span> }</p></div>
 <div class="acciones-pedido">

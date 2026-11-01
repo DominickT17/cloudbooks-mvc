@@ -379,12 +379,18 @@ namespace CloudBooks.Web.Datos.Migraciones
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CantidadRevisionMinorista")
+                        .HasColumnType("int");
+
                     b.Property<int>("DiasVigencia")
                         .HasColumnType("int");
 
                     b.Property<decimal>("MontoRevision")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PorcentajeRevisionInventario")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("TasaImpuesto")
                         .HasPrecision(5, 4)
@@ -401,8 +407,10 @@ namespace CloudBooks.Web.Datos.Migraciones
                         new
                         {
                             Id = 1,
+                            CantidadRevisionMinorista = 30,
                             DiasVigencia = 15,
                             MontoRevision = 10000m,
+                            PorcentajeRevisionInventario = 70,
                             TasaImpuesto = 0.12m,
                             UmbralStockBajo = 5
                         });
@@ -454,6 +462,9 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Property<decimal>("TasaImpuesto")
                         .HasPrecision(5, 4)
                         .HasColumnType("decimal(5,4)");
+
+                    b.Property<int>("TipoRevision")
+                        .HasColumnType("int");
 
                     b.Property<string>("TitularTarjeta")
                         .HasMaxLength(150)

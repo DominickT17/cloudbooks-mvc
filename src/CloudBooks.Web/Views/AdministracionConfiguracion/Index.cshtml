@@ -6,6 +6,8 @@
 <label asp-for="TasaImpuesto"></label><input asp-for="TasaImpuesto" type="number" min="0" max="1" step="0.0001" /><small>Por ejemplo, 0.12 equivale al 12 %.</small>
 <label asp-for="UmbralStockBajo"></label><input asp-for="UmbralStockBajo" type="number" min="0" max="1000000" /><small>Los libros físicos con esta cantidad o menos aparecen con stock bajo.</small>
 <label asp-for="DiasVigencia"></label><input asp-for="DiasVigencia" type="number" min="1" max="365" /><small>Determina el plazo de respuesta de las cotizaciones nuevas.</small>
-<label asp-for="MontoRevision"></label><input asp-for="MontoRevision" type="number" min="0.01" max="1000000000" step="0.01" /><small>Los pedidos que superen este monto requieren revisión. También se revisan pedidos con 10 o más unidades de un libro; desde 30 tienen prioridad alta.</small>
+<label asp-for="MontoRevision"></label><input asp-for="MontoRevision" type="number" min="0.01" max="1000000000" step="0.01" /><small>Los pedidos superiores a este monto requieren revisión comercial.</small>
+<label asp-for="CantidadRevisionMinorista"></label><input asp-for="CantidadRevisionMinorista" type="number" min="1" max="1000000" /><small>Cantidad de un mismo libro que activa revisión comercial para clientes minoristas.</small>
+<label asp-for="PorcentajeRevisionInventario"></label><input asp-for="PorcentajeRevisionInventario" type="number" min="1" max="100" /><small>Se revisa si además las existencias restantes quedan en el umbral de stock bajo.</small>
 <button type="submit" class="boton">Guardar parámetros</button></form></section>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

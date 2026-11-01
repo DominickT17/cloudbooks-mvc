@@ -5,6 +5,7 @@ namespace CloudBooks.Web.Modelos;
 
 public enum EstadoPedido { Pendiente, Aprobado, Enviado, Cancelado, EnRevision, CanceladoPorSeguridad }
 public enum MetodoPagoSimulado { TarjetaSimulada, TransferenciaSimulada }
+[Flags] public enum TipoRevisionPedido { Ninguna = 0, Seguridad = 1, Comercial = 2, Inventario = 4 }
 
 public class Pedido
 {
@@ -20,6 +21,7 @@ public class Pedido
     [StringLength(1000)] public string? MotivosRevision { get; set; }
     public bool AltaPrioridad { get; set; }
     public bool Revisado { get; set; }
+    public TipoRevisionPedido TipoRevision { get; set; }
     public decimal Subtotal { get; set; }
     public decimal DescuentoVolumen { get; set; }
     public decimal DescuentoInstitucional { get; set; }

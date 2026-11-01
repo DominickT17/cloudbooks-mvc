@@ -30,16 +30,16 @@ public class ServicioPedidosPruebas : IDisposable
     }
 
     [Fact]
-    public async Task DiezUnidadesDeUnLibroActivanRevisionSinPrioridadAlta()
+    public async Task DiezEbooksNoActivanRevisionPorCantidad()
     {
         var detalle = await contexto.DetallesCarrito.Include(d => d.Libro).SingleAsync(d => d.Libro.ISBN == "456");
         detalle.Cantidad = 10;
         await contexto.SaveChangesAsync();
         contexto.ChangeTracker.Clear();
         var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
-        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.Equal(EstadoPedido.Pendiente, pedido.Estado);
         Assert.False(pedido.AltaPrioridad);
-        Assert.Contains("Diez", pedido.MotivosRevision!);
+        Assert.Equal(TipoRevisionPedido.Ninguna, pedido.TipoRevision);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class ServicioPedidosPruebas : IDisposable
         contexto.ChangeTracker.Clear();
         var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
         Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
-        Assert.True(pedido.AltaPrioridad);
+        Assert.Equal(TipoRevisionPedido.Comercial, pedido.TipoRevision);
         Assert.Equal(2, await contexto.NotificacionesPedido.CountAsync(n => n.PedidoId == pedido.Id));
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
@@ -59,6 +59,54 @@ public class ServicioPedidosPruebas : IDisposable
         Assert.Null(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+    }
+
+    [Fact]
+    public async Task DiezDeCienUnidadesFisicasNoActivaRevision()
+    {
+        var detalle = await contexto.DetallesCarrito.Include(d => d.Libro).SingleAsync(d => d.Libro.ISBN == "123");
+        detalle.Libro.Stock = 100;
+        detalle.Cantidad = 10;
+        await contexto.SaveChangesAsync();
+        contexto.ChangeTracker.Clear();
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
+        Assert.Equal(TipoRevisionPedido.Ninguna, pedido.TipoRevision);
+    }
+
+    [Fact]
+    public async Task DiferenciasDeAcentosYEspaciosNoActivanSeguridad()
+    {
+        var cliente = await contexto.Users.SingleAsync(u => u.Id == "cliente");
+        cliente.NombreCompleto = "José  Pérez";
+        await contexto.SaveChangesAsync();
+        contexto.ChangeTracker.Clear();
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "jose perez")).Pedido!;
+        Assert.Equal(TipoRevisionPedido.Ninguna, pedido.TipoRevision);
+    }
+
+    [Fact]
+    public async Task StockCriticoActivaRevisionDeInventarioSinMarcarSeguridad()
+    {
+        var detalle = await contexto.DetallesCarrito.Include(d => d.Libro).SingleAsync(d => d.Libro.ISBN == "123");
+        detalle.Libro.Stock = 12;
+        detalle.Cantidad = 10;
+        await contexto.SaveChangesAsync();
+        contexto.ChangeTracker.Clear();
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
+        Assert.Equal(TipoRevisionPedido.Inventario, pedido.TipoRevision);
+        Assert.Contains("10 de 12", pedido.MotivosRevision!);
+        Assert.Equal(12, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+    }
+
+    [Fact]
+    public async Task CantidadInstitucionalDeEbookNoActivaRevisionComercial()
+    {
+        var detalle = await contexto.DetallesCarrito.Include(d => d.Libro).SingleAsync(d => d.Libro.ISBN == "456");
+        detalle.Cantidad = 30;
+        await contexto.SaveChangesAsync();
+        contexto.ChangeTracker.Clear();
+        var pedido = (await servicio.CrearAsync("cliente", true, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
+        Assert.Equal(TipoRevisionPedido.Ninguna, pedido.TipoRevision);
     }
 
     [Fact]

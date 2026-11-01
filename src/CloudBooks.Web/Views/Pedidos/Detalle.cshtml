@@ -2,5 +2,5 @@
 @{ ViewData["Title"] = Model.Codigo; }
 <section class="container pagina"><a asp-action="Index">← Mis pedidos</a><h1>@Model.Codigo</h1><p>Estado: <strong>@Model.EstadoTexto</strong> · @Model.FechaUtc.ToString("dd/MM/yyyy HH:mm") UTC</p>
 @if (TempData["Exito"] != null) { <p class="alert alert-success">@TempData["Exito"]</p> }
-@if (Model.Estado == CloudBooks.Web.Modelos.EstadoPedido.EnRevision) { <p class="alert alert-info">Tu pedido fue marcado para revisión de seguridad. Nuestro equipo lo validará pronto.</p> }
+@if (Model.Estado == CloudBooks.Web.Modelos.EstadoPedido.EnRevision) { <p class="alert alert-info">Tu pedido requiere una revisión. Nuestro equipo lo validará pronto.</p> }
 <partial name="_DetallePedido" model="Model" /></section>

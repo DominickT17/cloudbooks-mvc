@@ -14,7 +14,7 @@ public class NotificacionesPedido(ContextoAplicacion contexto) : INotificaciones
     public void RegistrarRevision(Pedido pedido)
     {
         contexto.NotificacionesPedido.AddRange(
-            new NotificacionPedido { Pedido = pedido, Destinatario = "Cliente", FechaUtc = DateTime.UtcNow, Mensaje = "Tu pedido fue marcado para revisión de seguridad. Nuestro equipo lo validará pronto." },
+            new NotificacionPedido { Pedido = pedido, Destinatario = "Cliente", FechaUtc = DateTime.UtcNow, Mensaje = "Tu pedido requiere una revisión. Nuestro equipo lo validará pronto." },
             new NotificacionPedido { Pedido = pedido, Destinatario = "Administración", FechaUtc = DateTime.UtcNow, Mensaje = "Un pedido requiere validación adicional antes de continuar." });
     }
 }

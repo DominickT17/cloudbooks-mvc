@@ -1,4 +1,6 @@
 using System.Data;
+using System.Globalization;
+using System.Text;
 using CloudBooks.Web.Datos;
 using CloudBooks.Web.Modelos;
 using Microsoft.EntityFrameworkCore;
@@ -23,20 +25,29 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
             Subtotal = resumen.Subtotal, DescuentoVolumen = resumen.DescuentoVolumen, DescuentoInstitucional = resumen.DescuentoInstitucional, Impuesto = resumen.Impuesto, TasaImpuesto = resumen.TasaImpuesto, Total = resumen.Total,
             Detalles = carrito.Detalles.Select(d => new DetallePedido { LibroId = d.LibroId, Titulo = d.Libro.Titulo, Formato = d.Libro.Formato, Cantidad = d.Cantidad, PrecioUnitario = d.Libro.PrecioBase, Subtotal = d.Libro.PrecioBase * d.Cantidad }).ToList() };
         var motivos = new List<string>();
-        if (carrito.Detalles.Any(d => d.Cantidad >= 10)) motivos.Add("Diez o más unidades de un mismo libro.");
-        pedido.AltaPrioridad = carrito.Detalles.Any(d => d.Cantidad >= 30);
+        if (!institucional && carrito.Detalles.Any(d => d.Cantidad >= configuracion.CantidadRevisionMinorista))
+        {
+            pedido.TipoRevision |= TipoRevisionPedido.Comercial;
+            motivos.Add("La cantidad de un libro alcanza el límite de revisión comercial minorista.");
+        }
+        foreach (var detalle in carrito.Detalles.Where(d => d.Libro.Formato != FormatoLibro.Ebook && d.Libro.Stock > 0 && (long)d.Cantidad * 100 >= (long)d.Libro.Stock * configuracion.PorcentajeRevisionInventario && d.Libro.Stock - d.Cantidad <= configuracion.UmbralStockBajo))
+        {
+            pedido.TipoRevision |= TipoRevisionPedido.Inventario;
+            motivos.Add($"La compra consumiría {detalle.Cantidad} de {detalle.Libro.Stock} unidades de {detalle.Libro.Titulo} y dejaría {detalle.Libro.Stock - detalle.Cantidad} disponibles.");
+        }
         var cliente = await contexto.Users.AsNoTracking().SingleAsync(u => u.Id == usuarioId);
         if (metodo == MetodoPagoSimulado.TarjetaSimulada && !string.IsNullOrWhiteSpace(titular))
         {
             pedido.TitularTarjeta = titular.Trim();
-            static string Normalizar(string valor) => string.Join(' ', valor.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)).ToUpperInvariant();
-            if (Normalizar(titular) != Normalizar(cliente.NombreCompleto)) motivos.Add("El titular no coincide con el nombre del cliente.");
+            static string Normalizar(string valor) => string.Join(' ', valor.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)).Normalize(NormalizationForm.FormD).Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).Aggregate(new StringBuilder(), (texto, c) => texto.Append(char.ToUpperInvariant(c))).ToString();
+            if (Normalizar(titular) != Normalizar(cliente.NombreCompleto)) { pedido.TipoRevision |= TipoRevisionPedido.Seguridad; motivos.Add("El titular no coincide con el nombre del cliente."); }
         }
-        if (pedido.Total > configuracion.MontoRevision) motivos.Add("El total supera el monto configurado para revisión.");
+        if (pedido.Total > configuracion.MontoRevision) { pedido.TipoRevision |= TipoRevisionPedido.Comercial; motivos.Add("El total supera el monto configurado para revisión comercial."); }
         if (motivos.Count > 0)
         {
             pedido.Estado = EstadoPedido.EnRevision;
-            pedido.MotivosRevision = string.Join(" ", motivos);
+            var descripcion = string.Join(" ", motivos);
+            pedido.MotivosRevision = descripcion.Length <= 1000 ? descripcion : descripcion[..997] + "...";
             (notificaciones ?? new NotificacionesPedido(contexto)).RegistrarRevision(pedido);
         }
         contexto.Pedidos.Add(pedido);

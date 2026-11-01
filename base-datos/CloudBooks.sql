@@ -828,6 +828,53 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101044608_RevisionComercialInventario'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [TipoRevision] int NOT NULL DEFAULT 0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101044608_RevisionComercialInventario'
+)
+BEGIN
+    ALTER TABLE [ConfiguracionSistema] ADD [CantidadRevisionMinorista] int NOT NULL DEFAULT 30;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101044608_RevisionComercialInventario'
+)
+BEGIN
+    ALTER TABLE [ConfiguracionSistema] ADD [PorcentajeRevisionInventario] int NOT NULL DEFAULT 70;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101044608_RevisionComercialInventario'
+)
+BEGIN
+    EXEC(N'UPDATE [ConfiguracionSistema] SET [CantidadRevisionMinorista] = 30, [PorcentajeRevisionInventario] = 70
+    WHERE [Id] = 1;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101044608_RevisionComercialInventario'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261101044608_RevisionComercialInventario', N'10.0.14');
+END;
+
+COMMIT;
+GO
+
 -- Datos de demostración académica; ejecutar solo en una base vacía.
 SET XACT_ABORT ON;
 BEGIN TRANSACTION;
