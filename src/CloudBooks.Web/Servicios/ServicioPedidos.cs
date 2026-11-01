@@ -21,7 +21,7 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         var configuracion = parametros == null ? new ParametrosSistema() : await parametros.ObtenerAsync();
         var tasa = configuracion.TasaImpuesto;
         var resumen = descuentos.Calcular(carrito.Detalles.Sum(d => d.Libro.PrecioBase * d.Cantidad), totalUnidades, institucional, tasa);
-        var pedido = new Pedido { UsuarioId = usuarioId, FechaUtc = DateTime.UtcNow, Estado = EstadoPedido.Pendiente, MetodoPago = metodo,
+        var pedido = new Pedido { UsuarioId = usuarioId, FechaUtc = DateTime.UtcNow, Estado = EstadoPedido.Pendiente, MetodoPago = metodo, EstadoPago = EstadoPago.Autorizado, ResultadoPago = ResultadoPago.Aprobado, FechaPagoUtc = DateTime.UtcNow,
             UltimosCuatro = ultimosCuatro,
             Subtotal = resumen.Subtotal, DescuentoVolumen = resumen.DescuentoVolumen, DescuentoInstitucional = resumen.DescuentoInstitucional, Impuesto = resumen.Impuesto, TasaImpuesto = resumen.TasaImpuesto, Total = resumen.Total,
             Detalles = carrito.Detalles.Select(d => new DetallePedido { LibroId = d.LibroId, Titulo = d.Libro.Titulo, Formato = d.Libro.Formato, Cantidad = d.Cantidad, PrecioUnitario = d.Libro.PrecioBase, Subtotal = d.Libro.PrecioBase * d.Cantidad }).ToList() };
@@ -60,6 +60,7 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
                 if (cambios == 0) return (null, $"No hay existencias suficientes de {detalle.Libro.Titulo}. Tu carrito se conserva.");
             }
             pedido.Estado = EstadoPedido.Aprobado;
+            pedido.EstadoPago = EstadoPago.Confirmado;
             (notificaciones ?? new NotificacionesPedido(contexto)).RegistrarAprobacion(pedido);
         }
         contexto.Pedidos.Add(pedido);
@@ -99,7 +100,7 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
     {
         await using var transaccion = await contexto.Database.BeginTransactionAsync();
         var cambios = await contexto.Pedidos.Where(p => p.Id == id && (p.Estado == EstadoPedido.Pendiente || (p.Estado == EstadoPedido.EnRevision && p.Revisado)))
-            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Estado, EstadoPedido.Aprobado));
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Estado, EstadoPedido.Aprobado).SetProperty(p => p.EstadoPago, p => p.EstadoPago == EstadoPago.Autorizado ? EstadoPago.Confirmado : p.EstadoPago));
         if (cambios == 0) return "Solo se pueden aprobar pedidos pendientes.";
         var detalles = await contexto.DetallesPedido.AsNoTracking().Where(d => d.PedidoId == id).OrderBy(d => d.LibroId).ToListAsync();
         foreach (var detalle in detalles.Where(d => d.Formato != FormatoLibro.Ebook))

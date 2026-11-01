@@ -5,6 +5,8 @@ namespace CloudBooks.Web.Modelos;
 
 public enum EstadoPedido { Pendiente, Aprobado, Enviado, Cancelado, EnRevision, CanceladoPorSeguridad }
 public enum MetodoPagoSimulado { TarjetaSimulada, TransferenciaSimulada }
+public enum EstadoPago { NoRegistrado, Autorizado, Confirmado, Rechazado }
+public enum ResultadoPago { NoRegistrado, Aprobado, FondosInsuficientes, Rechazado, Bloqueado, Vencido, DatosInvalidos }
 [Flags] public enum TipoRevisionPedido { Ninguna = 0, Seguridad = 1, Comercial = 2, Inventario = 4 }
 
 public class Pedido
@@ -17,6 +19,9 @@ public class Pedido
     public EstadoPedido Estado { get; set; }
     [NotMapped] public string EstadoTexto => Estado switch { EstadoPedido.EnRevision => "En revisión", EstadoPedido.CanceladoPorSeguridad => "Cancelado por seguridad", _ => Estado.ToString() };
     public MetodoPagoSimulado MetodoPago { get; set; }
+    public EstadoPago EstadoPago { get; set; }
+    public ResultadoPago ResultadoPago { get; set; }
+    public DateTime? FechaPagoUtc { get; set; }
     [StringLength(150)] public string? TitularTarjeta { get; set; }
     [StringLength(4)] public string? UltimosCuatro { get; set; }
     [StringLength(1000)] public string? MotivosRevision { get; set; }

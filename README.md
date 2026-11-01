@@ -82,6 +82,8 @@ Los pedidos nuevos requieren revisión si el titular de la tarjeta simulada difi
 
 El checkout acepta únicamente tarjetas ficticias en Development y no almacena el número completo ni el CVV; solo conserva los últimos cuatro dígitos de una tarjeta autorizada. Los escenarios se describen en [credenciales de prueba](documentos/credenciales-prueba.md). Para cada alerta se registran mensajes locales dirigidos al cliente y a administración, dentro de la transacción del pedido; el detalle informa al cliente y el dashboard al administrador. No se envían correos ni mensajes externos. La interfaz de notificaciones permite incorporar un proveedor SMTP o WhatsApp en una fase futura; esa integración aún no existe.
 
+Los pedidos nuevos registran el resultado aprobado y el estado del pago simulado: autorizado mientras se revisa y confirmado al aprobar el pedido. Los pedidos antiguos muestran el pago como no registrado, porque no existe información suficiente para reconstruirlo. Los intentos rechazados conservan el carrito y actualmente no generan un registro de intento independiente.
+
 ## Pruebas
 
 ```powershell

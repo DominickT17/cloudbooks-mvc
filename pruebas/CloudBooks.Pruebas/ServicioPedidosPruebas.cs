@@ -52,11 +52,13 @@ public class ServicioPedidosPruebas : IDisposable
         var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
         Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
         Assert.Equal(TipoRevisionPedido.Comercial, pedido.TipoRevision);
+        Assert.Equal(EstadoPago.Autorizado, pedido.EstadoPago);
         Assert.Equal(2, await contexto.NotificacionesPedido.CountAsync(n => n.PedidoId == pedido.Id));
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
         Assert.Null(await servicio.MarcarRevisadoAsync(pedido.Id));
         Assert.Null(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        Assert.Equal(EstadoPago.Confirmado, (await contexto.Pedidos.AsNoTracking().SingleAsync()).EstadoPago);
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
     }
@@ -137,6 +139,8 @@ public class ServicioPedidosPruebas : IDisposable
         var resultado = await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada);
         Assert.Null(resultado.Error);
         Assert.Equal(EstadoPedido.Aprobado, resultado.Pedido!.Estado);
+        Assert.Equal(EstadoPago.Confirmado, resultado.Pedido.EstadoPago);
+        Assert.Equal(ResultadoPago.Aprobado, resultado.Pedido.ResultadoPago);
         Assert.Equal(250m, resultado.Pedido.Subtotal);
         Assert.Equal(280m, resultado.Pedido.Total);
         Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);

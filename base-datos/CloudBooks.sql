@@ -896,6 +896,43 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101045714_EstadosPagoSimulado'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [EstadoPago] int NOT NULL DEFAULT 0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101045714_EstadosPagoSimulado'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [FechaPagoUtc] datetime2 NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101045714_EstadosPagoSimulado'
+)
+BEGIN
+    ALTER TABLE [Pedidos] ADD [ResultadoPago] int NOT NULL DEFAULT 0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261101045714_EstadosPagoSimulado'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261101045714_EstadosPagoSimulado', N'10.0.14');
+END;
+
+COMMIT;
+GO
+
 -- Datos de demostración académica; ejecutar solo en una base vacía.
 SET XACT_ABORT ON;
 BEGIN TRANSACTION;

@@ -438,6 +438,12 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Property<int>("Estado")
                         .HasColumnType("int");
 
+                    b.Property<int>("EstadoPago")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaPagoUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("FechaUtc")
                         .HasColumnType("datetime2");
 
@@ -451,6 +457,9 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Property<string>("MotivosRevision")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ResultadoPago")
+                        .HasColumnType("int");
 
                     b.Property<bool>("Revisado")
                         .HasColumnType("bit");
