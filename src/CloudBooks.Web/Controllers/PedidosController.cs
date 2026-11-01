@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CloudBooks.Web.Controllers;
 
 [Authorize]
-public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros, ServicioCarritoInvitado invitado, IWebHostEnvironment entorno) : Controller
+public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros, ServicioCarritoInvitado invitado, IWebHostEnvironment entorno, ServicioComprobantePedido comprobante) : Controller
 {
     private string UsuarioId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -71,5 +71,12 @@ public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito,
     {
         var pedido = await pedidos.ObtenerAsync(id, UsuarioId);
         return pedido == null ? NotFound() : View(pedido);
+    }
+
+    public async Task<IActionResult> Comprobante(int id)
+    {
+        var pedido = await pedidos.ObtenerAsync(id, UsuarioId);
+        if (pedido == null || (pedido.Estado != EstadoPedido.Aprobado && pedido.Estado != EstadoPedido.Enviado)) return NotFound();
+        return File(comprobante.Generar(pedido), "application/pdf", $"{pedido.Codigo}.pdf");
     }
 }

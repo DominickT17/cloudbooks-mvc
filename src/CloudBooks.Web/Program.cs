@@ -30,6 +30,7 @@ builder.Services.AddScoped<ServicioAsignacionAsesores>();
 builder.Services.AddScoped<ServicioSolicitudesCotizacion>();
 builder.Services.AddScoped<ServicioCotizaciones>();
 builder.Services.AddScoped<ServicioPdfCotizaciones>();
+builder.Services.AddScoped<ServicioComprobantePedido>();
 builder.Services.AddDbContext<ContextoAplicacion>(opciones =>
     opciones.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<UsuarioAplicacion, IdentityRole>()
