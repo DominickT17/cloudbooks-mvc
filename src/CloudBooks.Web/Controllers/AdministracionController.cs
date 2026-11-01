@@ -10,13 +10,21 @@ public class AdministracionController(ServicioPedidos pedidos, ServicioMetricas 
 {
     public async Task<IActionResult> Index() => View(await metricas.ObtenerAsync());
 
-    public async Task<IActionResult> Pedidos(EstadoPedido? estado, bool? revision)
+    public async Task<IActionResult> Pedidos(EstadoPedido? estado, bool? revision, TipoRevisionPedido? tipo, string? buscar, DateOnly? fecha)
     {
         if (!ModelState.IsValid || estado.HasValue && !Enum.IsDefined(estado.Value)) return BadRequest();
         ViewBag.Estado = estado;
         ViewBag.Revision = revision;
-        var resultados = await pedidos.ObtenerTodosAsync(estado);
-        return View(revision == true ? resultados.Where(p => p.Estado == EstadoPedido.EnRevision).ToList() : resultados);
+        if (tipo.HasValue && tipo.Value != TipoRevisionPedido.Seguridad && tipo.Value != TipoRevisionPedido.Comercial && tipo.Value != TipoRevisionPedido.Inventario) return BadRequest();
+        var todos = await pedidos.ObtenerTodosAsync(null);
+        ViewBag.Resumen = todos;
+        var resultados = todos.AsEnumerable();
+        if (estado.HasValue) resultados = resultados.Where(p => p.Estado == estado);
+        if (revision == true) resultados = resultados.Where(p => p.Estado == EstadoPedido.EnRevision);
+        if (tipo.HasValue) resultados = resultados.Where(p => (p.TipoRevision & tipo.Value) != 0);
+        if (!string.IsNullOrWhiteSpace(buscar)) resultados = resultados.Where(p => p.Usuario.NombreCompleto.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase) || (p.Usuario.Email?.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase) ?? false) || p.Codigo.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (fecha.HasValue) resultados = resultados.Where(p => DateOnly.FromDateTime(p.FechaUtc) == fecha.Value);
+        return View(resultados.ToList());
     }
 
     [HttpPost, ValidateAntiForgeryToken]
