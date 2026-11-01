@@ -62,7 +62,7 @@ public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito,
         }
         var resultado = await pedidos.CrearAsync(UsuarioId, User.IsInRole("ClienteInstitucional"), metodo.Value, titular, ultimosCuatro);
         if (resultado.Error != null) { TempData["Error"] = resultado.Error; return RedirectToAction("Index", "Carrito"); }
-        TempData["Exito"] = "Tu pedido fue creado. El pago es una simulación.";
+        TempData["Exito"] = resultado.Pedido!.Estado == EstadoPedido.Aprobado ? "Tu pedido fue aprobado. El pago es una simulación." : "Tu pedido fue recibido y requiere revisión. El pago es una simulación.";
         return RedirectToAction("Detalle", new { id = resultado.Pedido!.Id });
     }
 

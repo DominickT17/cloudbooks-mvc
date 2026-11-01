@@ -37,7 +37,7 @@ public class ServicioPedidosPruebas : IDisposable
         await contexto.SaveChangesAsync();
         contexto.ChangeTracker.Clear();
         var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
-        Assert.Equal(EstadoPedido.Pendiente, pedido.Estado);
+        Assert.Equal(EstadoPedido.Aprobado, pedido.Estado);
         Assert.False(pedido.AltaPrioridad);
         Assert.Equal(TipoRevisionPedido.Ninguna, pedido.TipoRevision);
     }
@@ -132,14 +132,14 @@ public class ServicioPedidosPruebas : IDisposable
     }
 
     [Fact]
-    public async Task CrearPendienteConservaStockYGuardaPrecios()
+    public async Task CrearNormalApruebaYGuardaPrecios()
     {
         var resultado = await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada);
         Assert.Null(resultado.Error);
-        Assert.Equal(EstadoPedido.Pendiente, resultado.Pedido!.Estado);
+        Assert.Equal(EstadoPedido.Aprobado, resultado.Pedido!.Estado);
         Assert.Equal(250m, resultado.Pedido.Subtotal);
         Assert.Equal(280m, resultado.Pedido.Total);
-        Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+        Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
         Assert.Empty(await contexto.DetallesCarrito.ToListAsync());
     }
 
@@ -147,7 +147,6 @@ public class ServicioPedidosPruebas : IDisposable
     public async Task AprobarDescuentaFisicoUnaVezYSinCambiarEbook()
     {
         var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada)).Pedido!;
-        Assert.Null(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
         Assert.Equal(0, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "456")).Stock);
@@ -157,17 +156,18 @@ public class ServicioPedidosPruebas : IDisposable
     [Fact]
     public async Task StockInsuficienteRevierteTodoYConservaPendiente()
     {
-        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada)).Pedido!;
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona")).Pedido!;
+        Assert.Null(await servicio.MarcarRevisadoAsync(pedido.Id));
         await contexto.Libros.Where(l => l.ISBN == "123").ExecuteUpdateAsync(s => s.SetProperty(l => l.Stock, 1));
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(1, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
-        Assert.Equal(EstadoPedido.Pendiente, (await contexto.Pedidos.AsNoTracking().SingleAsync()).Estado);
+        Assert.Equal(EstadoPedido.EnRevision, (await contexto.Pedidos.AsNoTracking().SingleAsync()).Estado);
     }
 
     [Fact]
     public async Task CancelarPendienteNoDescuentaYNoPermiteAprobar()
     {
-        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TransferenciaSimulada)).Pedido!;
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona")).Pedido!;
         Assert.Null(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Cancelado));
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
@@ -229,11 +229,12 @@ public class ServicioPedidosPruebas : IDisposable
         carrito.Detalles.Add(new DetalleCarrito { Libro = otro, Cantidad = 2 });
         await contexto.SaveChangesAsync();
         contexto.ChangeTracker.Clear();
-        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada)).Pedido!;
+        var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona")).Pedido!;
+        Assert.Null(await servicio.MarcarRevisadoAsync(pedido.Id));
         await contexto.Libros.Where(l => l.ISBN == "789").ExecuteUpdateAsync(s => s.SetProperty(l => l.Stock, 1));
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
-        Assert.Equal(EstadoPedido.Pendiente, (await contexto.Pedidos.AsNoTracking().SingleAsync()).Estado);
+        Assert.Equal(EstadoPedido.EnRevision, (await contexto.Pedidos.AsNoTracking().SingleAsync()).Estado);
     }
 
     [Fact]

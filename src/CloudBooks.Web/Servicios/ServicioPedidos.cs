@@ -51,6 +51,17 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
             pedido.MotivosRevision = descripcion.Length <= 1000 ? descripcion : descripcion[..997] + "...";
             (notificaciones ?? new NotificacionesPedido(contexto)).RegistrarRevision(pedido);
         }
+        else
+        {
+            foreach (var detalle in carrito.Detalles.Where(d => d.Libro.Formato != FormatoLibro.Ebook).OrderBy(d => d.LibroId))
+            {
+                var cambios = await contexto.Libros.Where(l => l.Id == detalle.LibroId && l.Activo && l.Stock >= detalle.Cantidad)
+                    .ExecuteUpdateAsync(s => s.SetProperty(l => l.Stock, l => l.Stock - detalle.Cantidad));
+                if (cambios == 0) return (null, $"No hay existencias suficientes de {detalle.Libro.Titulo}. Tu carrito se conserva.");
+            }
+            pedido.Estado = EstadoPedido.Aprobado;
+            (notificaciones ?? new NotificacionesPedido(contexto)).RegistrarAprobacion(pedido);
+        }
         contexto.Pedidos.Add(pedido);
         contexto.DetallesCarrito.RemoveRange(carrito.Detalles);
         await contexto.SaveChangesAsync();
