@@ -7,12 +7,14 @@ public interface INotificacionesPedido
 {
     void RegistrarRevision(Pedido pedido);
     void RegistrarAprobacion(Pedido pedido);
+    void RegistrarCancelacion(Pedido pedido);
 }
 
 // Registro local; una integración externa podrá implementarse sin cambiar el flujo del pedido.
 public class NotificacionesPedido(ContextoAplicacion contexto) : INotificacionesPedido
 {
     public void RegistrarAprobacion(Pedido pedido) => contexto.NotificacionesPedido.Add(new NotificacionPedido { Pedido = pedido, Destinatario = "Cliente", FechaUtc = DateTime.UtcNow, Mensaje = "Tu pedido fue aprobado y está listo para prepararse." });
+    public void RegistrarCancelacion(Pedido pedido) => contexto.NotificacionesPedido.Add(new NotificacionPedido { Pedido = pedido, Destinatario = "Cliente", FechaUtc = DateTime.UtcNow, Mensaje = "Tu pedido fue cancelado. Si existía una autorización de pago simulada, quedó anulada." });
     public void RegistrarRevision(Pedido pedido)
     {
         contexto.NotificacionesPedido.AddRange(

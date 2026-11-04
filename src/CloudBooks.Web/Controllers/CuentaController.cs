@@ -61,7 +61,13 @@ public class CuentaController(UserManager<UsuarioAplicacion> usuarios, SignInMan
         return RedirectToAction("Index", "Inicio");
     }
 
-    [Authorize] public async Task<IActionResult> Index() => View(await usuarios.GetUserAsync(User));
+    [Authorize] public async Task<IActionResult> Index()
+    {
+        var usuario = await usuarios.GetUserAsync(User);
+        if (usuario != null) return View(usuario);
+        await acceso.SignOutAsync();
+        return RedirectToAction(nameof(Ingresar));
+    }
     public IActionResult AccesoDenegado() => View();
 
     private static string Mensaje(IdentityError error) => error.Code switch

@@ -5,7 +5,7 @@ namespace CloudBooks.Web.Modelos;
 
 public enum EstadoPedido { Pendiente, Aprobado, Enviado, Cancelado, EnRevision, CanceladoPorSeguridad }
 public enum MetodoPagoSimulado { TarjetaSimulada, TransferenciaSimulada }
-public enum EstadoPago { NoRegistrado, Autorizado, Confirmado, Rechazado }
+public enum EstadoPago { NoRegistrado, Autorizado, Confirmado, Rechazado, Anulado }
 public enum ResultadoPago { NoRegistrado, Aprobado, FondosInsuficientes, Rechazado, Bloqueado, Vencido, DatosInvalidos }
 [Flags] public enum TipoRevisionPedido { Ninguna = 0, Seguridad = 1, Comercial = 2, Inventario = 4 }
 

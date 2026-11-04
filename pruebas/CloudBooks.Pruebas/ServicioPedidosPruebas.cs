@@ -64,6 +64,7 @@ public class ServicioPedidosPruebas : IDisposable
         Assert.Equal(EstadoPago.Confirmado, (await contexto.Pedidos.AsNoTracking().SingleAsync()).EstadoPago);
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+        Assert.Equal(3, await contexto.NotificacionesPedido.CountAsync(n => n.PedidoId == pedido.Id));
     }
 
     [Fact]
@@ -169,6 +170,8 @@ public class ServicioPedidosPruebas : IDisposable
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(1, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
         Assert.Equal(EstadoPedido.EnRevision, (await contexto.Pedidos.AsNoTracking().SingleAsync()).Estado);
+        Assert.Equal(EstadoPago.Autorizado, (await contexto.Pedidos.AsNoTracking().SingleAsync()).EstadoPago);
+        Assert.Equal(2, await contexto.NotificacionesPedido.CountAsync(n => n.PedidoId == pedido.Id));
     }
 
     [Fact]
@@ -176,6 +179,10 @@ public class ServicioPedidosPruebas : IDisposable
     {
         var pedido = (await servicio.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona")).Pedido!;
         Assert.Null(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Cancelado));
+        Assert.Equal(EstadoPago.Anulado, (await contexto.Pedidos.AsNoTracking().SingleAsync()).EstadoPago);
+        Assert.Equal(3, await contexto.NotificacionesPedido.CountAsync(n => n.PedidoId == pedido.Id));
+        Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Cancelado));
+        Assert.Equal(3, await contexto.NotificacionesPedido.CountAsync(n => n.PedidoId == pedido.Id));
         Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
         Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
     }

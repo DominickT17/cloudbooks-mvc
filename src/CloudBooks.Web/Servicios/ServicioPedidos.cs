@@ -93,8 +93,16 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         if (nuevo == EstadoPedido.Aprobado) return await AprobarAsync(id);
         if (nuevo == EstadoPedido.Cancelado || nuevo == EstadoPedido.CanceladoPorSeguridad)
         {
-            var cancelados = await contexto.Pedidos.Where(p => p.Id == id && (p.Estado == EstadoPedido.Pendiente || p.Estado == EstadoPedido.EnRevision)).ExecuteUpdateAsync(s => s.SetProperty(p => p.Estado, nuevo));
-            return cancelados == 1 ? null : "Solo se pueden cancelar pedidos pendientes o en revisión.";
+            await using var transaccion = await contexto.Database.BeginTransactionAsync();
+            var cancelados = await contexto.Pedidos.Where(p => p.Id == id && (p.Estado == EstadoPedido.Pendiente || p.Estado == EstadoPedido.EnRevision)).ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.Estado, nuevo)
+                .SetProperty(p => p.EstadoPago, p => p.EstadoPago == EstadoPago.Autorizado ? EstadoPago.Anulado : p.EstadoPago));
+            if (cancelados == 0) return "Solo se pueden cancelar pedidos pendientes o en revisión.";
+            var pedido = await contexto.Pedidos.FindAsync(id);
+            (notificaciones ?? new NotificacionesPedido(contexto)).RegistrarCancelacion(pedido!);
+            await contexto.SaveChangesAsync();
+            await transaccion.CommitAsync();
+            return null;
         }
         var anterior = nuevo switch { EstadoPedido.Enviado => EstadoPedido.Aprobado, _ => (EstadoPedido?)null };
         if (anterior == null) return "Transición de estado no válida.";
@@ -121,6 +129,9 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
                 .ExecuteUpdateAsync(s => s.SetProperty(l => l.Stock, l => l.Stock - detalle.Cantidad));
             if (actualizado == 0) return $"No hay existencias suficientes de {detalle.Titulo}; el pedido sigue pendiente.";
         }
+        var pedido = await contexto.Pedidos.FindAsync(id);
+        (notificaciones ?? new NotificacionesPedido(contexto)).RegistrarAprobacion(pedido!);
+        await contexto.SaveChangesAsync();
         await transaccion.CommitAsync();
         return null;
     }
