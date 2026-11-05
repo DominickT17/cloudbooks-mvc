@@ -13,7 +13,15 @@ dotnet test --filter FullyQualifiedName~ConcurrenciaSqlPruebas
 Remove-Item Env:CLOUDBOOKS_QA_SQL
 ```
 
-Utiliza una base nueva por filtro cuando se requiera reproducibilidad completa. Eliminar únicamente la base creada para QA al terminar. Las pruebas reales de Resend permanecen desactivadas; no se realizó un nuevo envío.
+Utiliza una base nueva por filtro cuando se requiera reproducibilidad completa. No combines las clases de correo y concurrencia en una misma ejecución: comparten la cola y pueden interferir. Para restaurar con `sqlcmd`, habilita `QUOTED_IDENTIFIER` con `-I` además de `-f 65001`; sin `-I` puede fallar la creación de índices filtrados. Eliminar únicamente la base creada para QA al terminar. Las pruebas reales de Resend permanecen desactivadas; no se realizó un nuevo envío.
+
+## Continuación de cierre — 4 de noviembre de 2026
+
+- Restauración aislada con `sqlcmd -b -I -f 65001`: 17 migraciones, 10 libros, 5 usuarios, 25 claves foráneas y muestra «María López». SQL Server advirtió que tres índices de Identity pueden exceder el límite teórico de longitud; la restauración terminó correctamente.
+- Pruebas HTTP con SQL temporal nuevo: 2 aprobadas, sin activar Resend. Cubren las rutas y compra descritas abajo, no toda la matriz de permisos ni todo el recorrido institucional.
+- En una primera ejecución concurrente SQL Server produjo un interbloqueo. EF Core envolvió el error 1205 en `InvalidOperationException`, por lo que no lo capturaba el código existente. Se añadió manejo específico: la transacción se revierte y se solicita revisar el carrito y reintentar. No se capturan otros errores como si fueran conflictos de inventario.
+- Tras el cambio, en una base restaurada nueva pasaron 5 pruebas SQL: compras concurrentes, doble aprobación y reintento, aprobación frente a cancelación, rollback al faltar el segundo producto con reintento posterior y dos procesadores de correo. Esto no garantiza todos los entrelazados ni cubre aún e-books concurrentes o caída real de un trabajador.
+- La ejecución combinada de las clases de concurrencia y correo quedó esperando por interferencia de la cola compartida y se interrumpió; no se cuenta como aprobada. Los filtros aislados evitan esa interferencia.
 
 ## Resultados comprobados
 

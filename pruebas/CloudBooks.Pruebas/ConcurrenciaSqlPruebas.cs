@@ -119,6 +119,71 @@ public class ConcurrenciaSqlPruebas(ITestOutputHelper salida)
         salida.WriteLine($"Estado: {final.Estado}; pago: {final.EstadoPago}; stock: {stock}; una transición exitosa.");
     }
 
+    [SqlTemporalFact]
+    public async Task DosAprobacionesSimultaneasDescuentanUnaSolaVez()
+    {
+        var opciones = Opciones();
+        await using var preparacion = new ContextoAplicacion(opciones);
+        var categoria = await preparacion.Categorias.FirstAsync();
+        var editorial = await preparacion.Editoriales.FirstAsync();
+        var sufijo = Guid.NewGuid().ToString("N");
+        var libro = new Libro { ISBN = sufijo[..13], Titulo = "Libro QA doble aprobación", Sinopsis = "Prueba", CategoriaId = categoria.Id, EditorialId = editorial.Id, PrecioBase = 10, Stock = 20, Formato = FormatoLibro.TapaBlanda };
+        var usuario = new UsuarioAplicacion { Id = "qa-d-" + sufijo, UserName = "qa-d-" + sufijo, NombreCompleto = "Cliente" };
+        preparacion.Carritos.Add(new Carrito { Usuario = usuario, Detalles = [new DetalleCarrito { Libro = libro, Cantidad = 3 }] });
+        await preparacion.SaveChangesAsync();
+        var servicio = new ServicioPedidos(preparacion, new ServicioDescuentos());
+        var pedido = (await servicio.CrearAsync(usuario.Id, false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona")).Pedido!;
+        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.Null(await servicio.MarcarRevisadoAsync(pedido.Id));
+        var inicio = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task<string?> Aprobar()
+        {
+            await using var contexto = new ContextoAplicacion(opciones);
+            await inicio.Task;
+            return await new ServicioPedidos(contexto, new ServicioDescuentos()).CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado);
+        }
+        var uno = Aprobar();
+        var dos = Aprobar();
+        inicio.SetResult();
+        var resultados = await Task.WhenAll(uno, dos);
+        Assert.Single(resultados, r => r == null);
+        Assert.Single(resultados, r => r != null);
+        await using var verificacion = new ContextoAplicacion(opciones);
+        Assert.Equal(17, await verificacion.Libros.Where(l => l.Id == libro.Id).Select(l => l.Stock).SingleAsync());
+        Assert.Equal(EstadoPedido.Aprobado, await verificacion.Pedidos.Where(p => p.Id == pedido.Id).Select(p => p.Estado).SingleAsync());
+        Assert.NotNull(await new ServicioPedidos(verificacion, new ServicioDescuentos()).CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        Assert.Equal(17, await verificacion.Libros.Where(l => l.Id == libro.Id).Select(l => l.Stock).SingleAsync());
+    }
+
+    [SqlTemporalFact]
+    public async Task FalloEnSegundoProductoRevierteStockYPermiteReintento()
+    {
+        var opciones = Opciones();
+        await using var contexto = new ContextoAplicacion(opciones);
+        var categoria = await contexto.Categorias.FirstAsync();
+        var editorial = await contexto.Editoriales.FirstAsync();
+        var sufijo = Guid.NewGuid().ToString("N");
+        Libro LibroQa(string isbn) => new() { ISBN = isbn, Titulo = "Libro QA rollback", Sinopsis = "Prueba", CategoriaId = categoria.Id, EditorialId = editorial.Id, PrecioBase = 10, Stock = 20, Formato = FormatoLibro.TapaBlanda };
+        var primero = LibroQa(sufijo[..13]);
+        var segundo = LibroQa(sufijo[13..26]);
+        var usuario = new UsuarioAplicacion { Id = "qa-e-" + sufijo, UserName = "qa-e-" + sufijo, NombreCompleto = "Cliente" };
+        contexto.Carritos.Add(new Carrito { Usuario = usuario, Detalles = [new DetalleCarrito { Libro = primero, Cantidad = 3 }, new DetalleCarrito { Libro = segundo, Cantidad = 3 }] });
+        await contexto.SaveChangesAsync();
+        var servicio = new ServicioPedidos(contexto, new ServicioDescuentos());
+        var pedido = (await servicio.CrearAsync(usuario.Id, false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona")).Pedido!;
+        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.Null(await servicio.MarcarRevisadoAsync(pedido.Id));
+        var ids = new[] { primero.Id, segundo.Id }.Order().ToArray();
+        await contexto.Libros.Where(l => l.Id == ids[1]).ExecuteUpdateAsync(s => s.SetProperty(l => l.Stock, 1));
+        Assert.NotNull(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        contexto.ChangeTracker.Clear();
+        Assert.Equal(20, await contexto.Libros.Where(l => l.Id == ids[0]).Select(l => l.Stock).SingleAsync());
+        Assert.Equal(EstadoPedido.EnRevision, await contexto.Pedidos.Where(p => p.Id == pedido.Id).Select(p => p.Estado).SingleAsync());
+        await contexto.Libros.Where(l => l.Id == ids[1]).ExecuteUpdateAsync(s => s.SetProperty(l => l.Stock, 20));
+        Assert.Null(await servicio.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        Assert.Equal(new[] { 17, 17 }, await contexto.Libros.Where(l => ids.Contains(l.Id)).OrderBy(l => l.Id).Select(l => l.Stock).ToArrayAsync());
+    }
+
     private class ProveedorControlado : IProveedorCorreo
     {
         public TaskCompletionSource Inicio { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);

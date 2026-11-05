@@ -87,6 +87,11 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         {
             return (null, "Otro pedido modificó las existencias al mismo tiempo. Tu carrito se conserva; revisa la disponibilidad e inténtalo de nuevo.");
         }
+        catch (InvalidOperationException error) when (error.InnerException is SqlException { Number: 1205 })
+        {
+            // EF Core puede envolver la víctima de interbloqueo como fallo transitorio.
+            return (null, "Otro pedido modificó las existencias al mismo tiempo. Tu carrito se conserva; revisa la disponibilidad e inténtalo de nuevo.");
+        }
     }
 
     public Task<List<Pedido>> ObtenerPorUsuarioAsync(string usuarioId) => contexto.Pedidos.AsNoTracking().Where(p => p.UsuarioId == usuarioId).OrderByDescending(p => p.Id).ToListAsync();
