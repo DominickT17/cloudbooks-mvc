@@ -4,6 +4,7 @@ using CloudBooks.Web.ModelosVista;
 using CloudBooks.Web.Servicios;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace CloudBooks.Pruebas;
 
@@ -18,7 +19,7 @@ public class ServicioCotizacionesPruebas : IDisposable
         conexion.Open();
         contexto = new ContextoAplicacion(new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlite(conexion).Options);
         contexto.Database.EnsureCreated();
-        var cliente = new UsuarioAplicacion { Id = "cliente", UserName = "cliente", NombreCompleto = "Cliente" };
+        var cliente = new UsuarioAplicacion { Id = "cliente", UserName = "cliente", NombreCompleto = "Cliente", Email = "cliente@example.test" };
         var asesor = new UsuarioAplicacion { Id = "asesor", UserName = "asesor", NombreCompleto = "Asesor" };
         var perfil = new PerfilInstitucional { Usuario = cliente, Institucion = "Institución", Nit = "123", TipoInstitucion = "Biblioteca", Telefono = "123", Direccion = "Dirección", Representante = "Cliente" };
         contexto.SolicitudesCotizacion.Add(new SolicitudCotizacion { Usuario = cliente, Asesor = asesor, PerfilInstitucional = perfil, Titulo = "Edición", Cantidad = 25, Acabado = "Tapa dura", Papel = "Bond", FechaRequerida = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), FechaUtc = DateTime.UtcNow, Estado = EstadoSolicitudCotizacion.EnRevision });
@@ -72,6 +73,20 @@ public class ServicioCotizacionesPruebas : IDisposable
         Assert.Null(await servicio.EmitirAsync("asesor", Datos()));
         Assert.Null(await servicio.ResponderAsync(1, "cliente", false));
         Assert.Equal(EstadoSolicitudCotizacion.Rechazada, (await contexto.Cotizaciones.AsNoTracking().SingleAsync()).Estado);
+    }
+
+    [Fact]
+    public async Task EmisionYRespuestaEncolanDestinatariosCorrectosUnaSolaVez()
+    {
+        var correos = new ServicioNotificaciones(contexto, new ConfigurationBuilder().AddInMemoryCollection().Build());
+        var cotizaciones = new ServicioCotizaciones(contexto, new ServicioDescuentos(), correos: correos);
+        Assert.Null(await cotizaciones.EmitirAsync("asesor", Datos()));
+        Assert.NotNull(await cotizaciones.EmitirAsync("asesor", Datos()));
+        Assert.Null(await cotizaciones.ResponderAsync(1, "cliente", true));
+        Assert.NotNull(await cotizaciones.ResponderAsync(1, "cliente", true));
+        Assert.Equal(3, await contexto.CorreosPendientes.CountAsync());
+        Assert.Single(await contexto.CorreosPendientes.Where(c => c.Destinatario == "cliente@example.test").ToListAsync());
+        Assert.Equal(2, await contexto.AvisosAdministrativos.CountAsync());
     }
 
     [Fact]

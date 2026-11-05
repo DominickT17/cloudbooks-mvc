@@ -7,19 +7,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Servicios;
 
-public class ServicioInstituciones(ContextoAplicacion contexto, UserManager<UsuarioAplicacion> usuarios)
+public class ServicioInstituciones(ContextoAplicacion contexto, UserManager<UsuarioAplicacion> usuarios, IServicioNotificaciones? correos = null)
 {
     public async Task<string?> SolicitarAsync(string usuarioId, SolicitudInstitucionalModelo datos)
     {
         var usuario = await usuarios.FindByIdAsync(usuarioId);
         if (usuario == null || !await usuarios.IsInRoleAsync(usuario, "ClienteMinorista") || await usuarios.IsInRoleAsync(usuario, "ClienteInstitucional")) return "Solo un cliente minorista puede solicitar una cuenta institucional.";
         if (await contexto.SolicitudesInstitucionales.AnyAsync(s => s.UsuarioId == usuarioId && s.Estado == EstadoSolicitudInstitucional.Pendiente)) return "Ya tienes una solicitud pendiente.";
-        contexto.SolicitudesInstitucionales.Add(new SolicitudInstitucional { UsuarioId = usuarioId, Institucion = datos.Institucion.Trim(), Nit = datos.Nit.Trim(), TipoInstitucion = datos.TipoInstitucion.Trim(), Telefono = datos.Telefono.Trim(), Direccion = datos.Direccion.Trim(), Representante = datos.Representante.Trim(), FechaUtc = DateTime.UtcNow, Estado = EstadoSolicitudInstitucional.Pendiente });
+        await using var transaccion = await contexto.Database.BeginTransactionAsync();
+        var solicitud = new SolicitudInstitucional { UsuarioId = usuarioId, Institucion = datos.Institucion.Trim(), Nit = datos.Nit.Trim(), TipoInstitucion = datos.TipoInstitucion.Trim(), Telefono = datos.Telefono.Trim(), Direccion = datos.Direccion.Trim(), Representante = datos.Representante.Trim(), FechaUtc = DateTime.UtcNow, Estado = EstadoSolicitudInstitucional.Pendiente };
+        contexto.SolicitudesInstitucionales.Add(solicitud);
         try { await contexto.SaveChangesAsync(); }
         catch (DbUpdateException error) when (error.InnerException is Microsoft.Data.SqlClient.SqlException sql && (sql.Number == 2601 || sql.Number == 2627))
         {
             return "Ya tienes una solicitud pendiente.";
         }
+        if (correos != null)
+        {
+            await correos.EncolarAsync($"institucion/{solicitud.Id}/recibida/cliente", "institucion_recibida", $"Institución #{solicitud.Id}", usuario.Email, "CloudBooks | Solicitud institucional recibida", $"Hola, {usuario.NombreCompleto}: recibimos tu solicitud institucional y será revisada.");
+            await correos.EncolarAdministracionAsync($"institucion/{solicitud.Id}/recibida/admin", "institucion_recibida", $"Institución #{solicitud.Id}", "CloudBooks | Nueva solicitud institucional", $"{usuario.NombreCompleto} solicitó una cuenta para {solicitud.Institucion}.");
+            await contexto.SaveChangesAsync();
+        }
+        await transaccion.CommitAsync();
         return null;
     }
 
@@ -48,6 +57,11 @@ public class ServicioInstituciones(ContextoAplicacion contexto, UserManager<Usua
             Comprobar(await usuarios.UpdateSecurityStampAsync(usuario));
         }
         solicitud.Estado = aprobar ? EstadoSolicitudInstitucional.Aprobada : EstadoSolicitudInstitucional.Rechazada;
+        if (correos != null)
+        {
+            var solicitante = await usuarios.FindByIdAsync(solicitud.UsuarioId);
+            await correos.EncolarAsync($"institucion/{id}/resuelta/cliente", "institucion_resuelta", $"Institución #{id}", solicitante?.Email, "CloudBooks | Actualización de solicitud institucional", $"Tu solicitud institucional fue {(aprobar ? "aprobada" : "rechazada")}. {(aprobar ? "Inicia sesión nuevamente para actualizar tus permisos." : "Puedes contactar a CloudBooks para obtener asistencia.")}");
+        }
         await contexto.SaveChangesAsync();
         await transaccion.CommitAsync();
         return null;

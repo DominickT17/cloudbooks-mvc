@@ -3,6 +3,7 @@ using CloudBooks.Web.Modelos;
 using CloudBooks.Web.Servicios;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -25,6 +26,17 @@ builder.Services.AddScoped<ServicioCarrito>();
 builder.Services.AddScoped<ServicioDescuentos>();
 builder.Services.AddScoped<ServicioPedidos>();
 builder.Services.AddScoped<ServicioIntentosPago>();
+builder.Services.AddScoped<IServicioNotificaciones, ServicioNotificaciones>();
+builder.Services.AddScoped<ProcesadorCorreos>();
+builder.Services.AddHttpClient<ResendClient>(cliente => cliente.Timeout = TimeSpan.FromSeconds(60));
+builder.Services.Configure<ResendClientOptions>(opciones => opciones.ApiToken = builder.Configuration["Correo:ApiKey"] ?? "");
+builder.Services.AddTransient<IResend, ResendClient>();
+builder.Services.AddScoped<ProveedorCorreoResend>();
+builder.Services.AddScoped<ProveedorCorreoSimulado>();
+builder.Services.AddScoped<IProveedorCorreo>(servicios =>
+    builder.Configuration["Correo:Proveedor"] == "Resend" && !string.IsNullOrWhiteSpace(builder.Configuration["Correo:ApiKey"]) && System.Net.Mail.MailAddress.TryCreate(builder.Configuration["Correo:Remitente"], out _)
+        ? servicios.GetRequiredService<ProveedorCorreoResend>() : servicios.GetRequiredService<ProveedorCorreoSimulado>());
+builder.Services.AddHostedService<ServicioFondoCorreos>();
 builder.Services.AddScoped<INotificacionesPedido, NotificacionesPedido>();
 builder.Services.AddScoped<ServicioAvisosAdministracion>();
 builder.Services.AddScoped<ServicioInstituciones>();

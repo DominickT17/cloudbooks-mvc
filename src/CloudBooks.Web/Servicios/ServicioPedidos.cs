@@ -8,7 +8,7 @@ using Microsoft.Data.SqlClient;
 
 namespace CloudBooks.Web.Servicios;
 
-public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null, INotificacionesPedido? notificaciones = null)
+public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null, INotificacionesPedido? notificaciones = null, IServicioNotificaciones? correos = null)
 {
     public async Task<(Pedido? Pedido, string? Error)> CrearAsync(string usuarioId, bool institucional, MetodoPagoSimulado metodo, string? titular = null, string? ultimosCuatro = null)
     {
@@ -69,6 +69,13 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         contexto.Pedidos.Add(pedido);
         contexto.DetallesCarrito.RemoveRange(carrito.Detalles);
         await contexto.SaveChangesAsync();
+        if (correos != null)
+        {
+            await EncolarPedidoAsync(pedido, cliente, pedido.Estado == EstadoPedido.Aprobado ? "aprobado" : "revision");
+            if (pedido.Estado == EstadoPedido.EnRevision)
+                await correos.EncolarAdministracionAsync($"pedido/{pedido.Id}/revision/admin", "revision", pedido.Codigo, $"CloudBooks Administración | Pedido {pedido.Codigo} requiere revisión", $"Pedido {pedido.Codigo}\nCliente: {cliente.NombreCompleto}\nTotal: Q{pedido.Total:0.00}\nRevisión: {pedido.TipoRevision}\nPrioridad: {(pedido.AltaPrioridad ? "Alta" : "Normal")}\n{pedido.MotivosRevision}");
+            await contexto.SaveChangesAsync();
+        }
         await transaccion.CommitAsync();
         return (pedido, null);
         }
@@ -100,6 +107,7 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
             if (cancelados == 0) return "Solo se pueden cancelar pedidos pendientes o en revisión.";
             var pedido = await contexto.Pedidos.FindAsync(id);
             (notificaciones ?? new NotificacionesPedido(contexto)).RegistrarCancelacion(pedido!);
+            if (correos != null) await EncolarPedidoAsync(pedido!, await contexto.Users.AsNoTracking().SingleAsync(u => u.Id == pedido!.UsuarioId), "cancelado");
             await contexto.SaveChangesAsync();
             await transaccion.CommitAsync();
             return null;
@@ -131,8 +139,21 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         }
         var pedido = await contexto.Pedidos.FindAsync(id);
         (notificaciones ?? new NotificacionesPedido(contexto)).RegistrarAprobacion(pedido!);
+        if (correos != null) await EncolarPedidoAsync(pedido!, await contexto.Users.AsNoTracking().SingleAsync(u => u.Id == pedido!.UsuarioId), "aprobado");
         await contexto.SaveChangesAsync();
         await transaccion.CommitAsync();
         return null;
+    }
+
+    private async Task EncolarPedidoAsync(Pedido pedido, UsuarioAplicacion cliente, string tipo)
+    {
+        var asunto = tipo switch { "aprobado" => $"CloudBooks | Tu pedido {pedido.Codigo} fue confirmado", "revision" => $"CloudBooks | Estamos revisando tu pedido {pedido.Codigo}", _ => $"CloudBooks | Actualización de tu pedido {pedido.Codigo}" };
+        var detalle = tipo switch
+        {
+            "aprobado" => $"Tu pedido {pedido.Codigo} fue aprobado. El pago es simulado.\nFecha: {pedido.FechaUtc:dd/MM/yyyy HH:mm} UTC\n" + string.Join("\n", (pedido.Detalles.Count > 0 ? pedido.Detalles : await contexto.DetallesPedido.AsNoTracking().Where(d => d.PedidoId == pedido.Id).ToListAsync()).Select(d => $"{d.Cantidad} × {d.Titulo}")) + $"\nSubtotal: Q{pedido.Subtotal:0.00}\nDescuentos: Q{pedido.DescuentoVolumen + pedido.DescuentoInstitucional:0.00}\nIVA: Q{pedido.Impuesto:0.00}\nTotal: Q{pedido.Total:0.00}\nConsulta tus pedidos y descarga el comprobante desde tu cuenta.",
+            "revision" => $"Recibimos tu pedido {pedido.Codigo}. Necesita una validación adicional; no necesitas repetir la compra. No se han reservado existencias.",
+            _ => $"Tu pedido {pedido.Codigo} fue cancelado. Si existía una autorización simulada, fue anulada. No se realizó ningún cargo bancario real."
+        };
+        await correos!.EncolarAsync($"pedido/{pedido.Id}/{tipo}/cliente", tipo, pedido.Codigo, cliente.Email, asunto, $"Hola, {cliente.NombreCompleto}:\n\n{detalle}");
     }
 }

@@ -2,14 +2,34 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CloudBooks.Web.Modelos;
 using CloudBooks.Web.Servicios;
+using CloudBooks.Web.Datos;
+using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Controllers;
 
 [Authorize(Roles = "Administrador")]
-public class AdministracionController(ServicioPedidos pedidos, ServicioMetricas metricas, ServicioAvisosAdministracion avisos) : Controller
+public class AdministracionController(ServicioPedidos pedidos, ServicioMetricas metricas, ServicioAvisosAdministracion avisos, ContextoAplicacion contexto) : Controller
 {
     public async Task<IActionResult> Index() => View(await metricas.ObtenerAsync());
-    public async Task<IActionResult> Notificaciones() => View(await avisos.ObtenerAsync());
+    public async Task<IActionResult> Notificaciones()
+    {
+        ViewBag.AvisosGenerales = await contexto.AvisosAdministrativos.AsNoTracking().OrderByDescending(a => a.Id).Take(100).ToListAsync();
+        return View(await avisos.ObtenerAsync());
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> LeerAvisoGeneral(int id)
+    {
+        await contexto.AvisosAdministrativos.Where(a => a.Id == id).ExecuteUpdateAsync(s => s.SetProperty(a => a.Leido, true));
+        return RedirectToAction(nameof(Notificaciones));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> LeerAviso(int id)
+    {
+        await contexto.NotificacionesPedido.Where(n => n.Id == id && n.Destinatario == "Administración").ExecuteUpdateAsync(s => s.SetProperty(n => n.Leida, true));
+        return RedirectToAction(nameof(Notificaciones));
+    }
 
     public async Task<IActionResult> Pedidos(EstadoPedido? estado, bool? revision, TipoRevisionPedido? tipo, string? buscar, DateOnly? fecha)
     {

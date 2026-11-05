@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace CloudBooks.Pruebas;
 
@@ -34,7 +35,7 @@ public class ServicioInstitucionesPruebas : IDisposable
         foreach (var rol in new[] { "ClienteMinorista", "ClienteInstitucional", "Administrador", "AsesorVentas" }) roles.CreateAsync(new IdentityRole(rol)).GetAwaiter().GetResult();
         foreach (var (id, rol) in new[] { ("cliente", "ClienteMinorista"), ("admin", "Administrador"), ("otro", "ClienteMinorista"), ("asesor", "AsesorVentas") })
         {
-            var usuario = new UsuarioAplicacion { Id = id, UserName = id, NombreCompleto = id };
+            var usuario = new UsuarioAplicacion { Id = id, UserName = id, NombreCompleto = id, Email = $"{id}@example.test" };
             Assert.True(usuarios.CreateAsync(usuario).GetAwaiter().GetResult().Succeeded);
             Assert.True(usuarios.AddToRoleAsync(usuario, rol).GetAwaiter().GetResult().Succeeded);
         }
@@ -72,6 +73,19 @@ public class ServicioInstitucionesPruebas : IDisposable
         Assert.Null(await servicio.ResolverAsync(1, "admin", false));
         Assert.False(await usuarios.IsInRoleAsync((await usuarios.FindByIdAsync("cliente"))!, "ClienteInstitucional"));
         Assert.Equal(EstadoSolicitudInstitucional.Rechazada, (await contexto.SolicitudesInstitucionales.AsNoTracking().SingleAsync()).Estado);
+    }
+
+    [Fact]
+    public async Task SolicitudYAprobacionGeneranAvisosSinDuplicar()
+    {
+        var correos = new ServicioNotificaciones(contexto, new ConfigurationBuilder().AddInMemoryCollection().Build());
+        var servicioConAvisos = new ServicioInstituciones(contexto, usuarios, correos);
+        Assert.Null(await servicioConAvisos.SolicitarAsync("cliente", Datos()));
+        Assert.Null(await servicioConAvisos.ResolverAsync(1, "admin", true));
+        Assert.NotNull(await servicioConAvisos.ResolverAsync(1, "admin", true));
+        Assert.Equal(3, await contexto.CorreosPendientes.CountAsync());
+        Assert.Equal(2, await contexto.CorreosPendientes.CountAsync(c => c.Destinatario == "cliente@example.test"));
+        Assert.Single(await contexto.AvisosAdministrativos.ToListAsync());
     }
 
     [Fact]

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Servicios;
 
-public class ServicioSolicitudesCotizacion(ContextoAplicacion contexto, UserManager<UsuarioAplicacion> usuarios, ServicioAsignacionAsesores asignacion)
+public class ServicioSolicitudesCotizacion(ContextoAplicacion contexto, UserManager<UsuarioAplicacion> usuarios, ServicioAsignacionAsesores asignacion, IServicioNotificaciones? correos = null)
 {
     public async Task<string?> CrearAsync(string usuarioId, SolicitudEspecialModelo datos)
     {
@@ -19,8 +19,15 @@ public class ServicioSolicitudesCotizacion(ContextoAplicacion contexto, UserMana
         var perfil = await contexto.PerfilesInstitucionales.SingleOrDefaultAsync(p => p.UsuarioId == usuarioId);
         if (perfil == null) return "Tu cuenta no tiene un perfil institucional aprobado.";
         var asesorId = await asignacion.SeleccionarAsync();
-        contexto.SolicitudesCotizacion.Add(new SolicitudCotizacion { UsuarioId = usuarioId, PerfilInstitucionalId = perfil.Id, AsesorId = asesorId, Titulo = datos.Titulo.Trim(), Cantidad = datos.Cantidad, Acabado = datos.Acabado, Papel = datos.Papel, FechaRequerida = datos.FechaRequerida.Value, Observaciones = datos.Observaciones?.Trim(), FechaUtc = DateTime.UtcNow, Estado = EstadoSolicitudCotizacion.Solicitada });
+        var solicitud = new SolicitudCotizacion { UsuarioId = usuarioId, PerfilInstitucionalId = perfil.Id, AsesorId = asesorId, Titulo = datos.Titulo.Trim(), Cantidad = datos.Cantidad, Acabado = datos.Acabado, Papel = datos.Papel, FechaRequerida = datos.FechaRequerida.Value, Observaciones = datos.Observaciones?.Trim(), FechaUtc = DateTime.UtcNow, Estado = EstadoSolicitudCotizacion.Solicitada };
+        contexto.SolicitudesCotizacion.Add(solicitud);
         await contexto.SaveChangesAsync();
+        if (correos != null)
+        {
+            await correos.EncolarAdministracionAsync($"solicitud/{solicitud.Id}/creada/admin", "solicitud_comercial", solicitud.Codigo, "CloudBooks | Nueva solicitud comercial", $"Se registró {solicitud.Codigo} para {solicitud.Titulo}.");
+            if (asesorId != null) await NotificarAsignacionAsync(solicitud, asesorId);
+            await contexto.SaveChangesAsync();
+        }
         await transaccion.CommitAsync();
         return null;
     }
@@ -42,9 +49,16 @@ public class ServicioSolicitudesCotizacion(ContextoAplicacion contexto, UserMana
         var asesorId = await asignacion.SeleccionarAsync();
         if (asesorId == null) return "Aún no hay asesores activos disponibles.";
         solicitud.AsesorId = asesorId;
+        if (correos != null) await NotificarAsignacionAsync(solicitud, asesorId);
         await contexto.SaveChangesAsync();
         await transaccion.CommitAsync();
         return null;
+    }
+
+    private async Task NotificarAsignacionAsync(SolicitudCotizacion solicitud, string asesorId)
+    {
+        var asesor = await usuarios.FindByIdAsync(asesorId);
+        await correos!.EncolarAsync($"solicitud/{solicitud.Id}/asignada/{asesorId}", "solicitud_asignada", solicitud.Codigo, asesor?.Email, "CloudBooks | Solicitud comercial asignada", $"Se te asignó la solicitud {solicitud.Codigo} para {solicitud.Titulo}.");
     }
 
     private IQueryable<SolicitudCotizacion> Consulta() => contexto.SolicitudesCotizacion.AsNoTracking().Include(s => s.PerfilInstitucional).Include(s => s.Usuario).Include(s => s.Asesor);

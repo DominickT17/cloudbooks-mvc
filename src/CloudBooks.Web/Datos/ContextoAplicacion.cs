@@ -22,10 +22,15 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
     public DbSet<ParametrosSistema> ConfiguracionSistema => Set<ParametrosSistema>();
     public DbSet<NotificacionPedido> NotificacionesPedido => Set<NotificacionPedido>();
     public DbSet<IntentoPago> IntentosPago => Set<IntentoPago>();
+    public DbSet<CorreoPendiente> CorreosPendientes => Set<CorreoPendiente>();
+    public DbSet<AvisoAdministrativo> AvisosAdministrativos => Set<AvisoAdministrativo>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
         base.OnModelCreating(modelo);
+        modelo.Entity<CorreoPendiente>().HasIndex(c => c.ClaveEvento).IsUnique();
+        modelo.Entity<AvisoAdministrativo>().HasIndex(c => c.ClaveEvento).IsUnique();
+        modelo.Entity<CorreoPendiente>().HasIndex(c => new { c.Estado, c.ProximoIntentoUtc });
         modelo.Entity<UsuarioAplicacion>().Property(u => u.Activo).HasDefaultValue(true);
         modelo.Entity<ParametrosSistema>().Property(p => p.TasaImpuesto).HasPrecision(5, 4);
         modelo.Entity<ParametrosSistema>().Property(p => p.MontoRevision).HasPrecision(18, 2);

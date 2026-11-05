@@ -3,6 +3,7 @@ using CloudBooks.Web.Modelos;
 using CloudBooks.Web.Servicios;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace CloudBooks.Pruebas;
 
@@ -17,7 +18,7 @@ public class ServicioPedidosPruebas : IDisposable
         conexion.Open();
         contexto = new ContextoAplicacion(new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlite(conexion).Options);
         contexto.Database.EnsureCreated();
-        var usuario = new UsuarioAplicacion { Id = "cliente", UserName = "cliente", NombreCompleto = "Cliente" };
+        var usuario = new UsuarioAplicacion { Id = "cliente", UserName = "cliente", NombreCompleto = "Cliente", Email = "cliente@example.test" };
         var categoria = new Categoria { Nombre = "Narrativa" };
         var editorial = new Editorial { Nombre = "Editorial" };
         var fisico = new Libro { ISBN = "123", Titulo = "Libro físico", Sinopsis = "Descripción", Editorial = editorial, Categoria = categoria, PrecioBase = 100m, Stock = 10, Formato = FormatoLibro.TapaBlanda };
@@ -181,6 +182,56 @@ public class ServicioPedidosPruebas : IDisposable
         Assert.Equal(280m, resultado.Pedido.Total);
         Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
         Assert.Empty(await contexto.DetallesCarrito.ToListAsync());
+    }
+
+    [Fact]
+    public async Task PedidoAprobadoEncolaCorreoYFalloDelProveedorNoRevierteCompra()
+    {
+        var config = new ConfigurationBuilder().AddInMemoryCollection().Build();
+        var avisos = new ServicioNotificaciones(contexto, config);
+        var pedido = (await new ServicioPedidos(contexto, new ServicioDescuentos(), correos: avisos).CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "Cliente")).Pedido!;
+        contexto.ChangeTracker.Clear();
+        Assert.Equal(EstadoPedido.Aprobado, pedido.Estado);
+        var correo = await contexto.CorreosPendientes.AsNoTracking().SingleAsync();
+        Assert.Equal("cliente@example.test", correo.Destinatario);
+        Assert.Contains(pedido.Codigo, correo.Asunto);
+        Assert.True(await new ProcesadorCorreos(contexto, new ProveedorFallido()).ProcesarUnoAsync());
+        Assert.Equal(EstadoCorreo.ReintentoPendiente, (await contexto.CorreosPendientes.AsNoTracking().SingleAsync()).Estado);
+        Assert.Equal(EstadoPago.Confirmado, (await contexto.Pedidos.AsNoTracking().SingleAsync()).EstadoPago);
+        Assert.Equal(8, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+    }
+
+    [Fact]
+    public async Task RevisionYCancelacionEncolanCorreosSinDatosDeTarjeta()
+    {
+        var avisos = new ServicioNotificaciones(contexto, new ConfigurationBuilder().AddInMemoryCollection().Build());
+        var pedidos = new ServicioPedidos(contexto, new ServicioDescuentos(), correos: avisos);
+        var pedido = (await pedidos.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona", "0002")).Pedido!;
+        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.Equal(2, await contexto.CorreosPendientes.CountAsync());
+        Assert.Null(await pedidos.CambiarEstadoAsync(pedido.Id, EstadoPedido.Cancelado));
+        Assert.NotNull(await pedidos.CambiarEstadoAsync(pedido.Id, EstadoPedido.Cancelado));
+        var correos = await contexto.CorreosPendientes.AsNoTracking().ToListAsync();
+        Assert.Equal(3, correos.Count);
+        Assert.DoesNotContain(correos, c => c.Html.Contains("0002"));
+        Assert.Contains(correos, c => c.Tipo == "cancelado" && c.Destinatario == "cliente@example.test");
+    }
+
+    [Fact]
+    public async Task IntentoRechazadoEncolaCorreoSinCrearPedido()
+    {
+        var avisos = new ServicioNotificaciones(contexto, new ConfigurationBuilder().AddInMemoryCollection().Build());
+        await new ServicioIntentosPago(contexto, avisos).RegistrarRechazoAsync("cliente", ResultadoTarjetaSimulada.FondosInsuficientes);
+        var correo = await contexto.CorreosPendientes.AsNoTracking().SingleAsync();
+        Assert.Equal("pago_rechazado", correo.Tipo);
+        Assert.Contains("Fondos insuficientes", correo.Html);
+        Assert.Empty(await contexto.Pedidos.ToListAsync());
+        Assert.Equal(2, await contexto.DetallesCarrito.CountAsync());
+    }
+
+    private class ProveedorFallido : IProveedorCorreo
+    {
+        public Task<ResultadoEntrega> EnviarAsync(CorreoPendiente correo, CancellationToken cancelacion) => Task.FromException<ResultadoEntrega>(new InvalidOperationException());
     }
 
     [Fact]

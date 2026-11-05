@@ -1015,3 +1015,59 @@ VALUES (N'20261104235713_IntentosPago', N'10.0.14');
 
 COMMIT;
 GO
+
+BEGIN TRANSACTION;
+ALTER TABLE [NotificacionesPedido] ADD [Leida] bit NOT NULL DEFAULT CAST(0 AS bit);
+
+CREATE TABLE [CorreosPendientes] (
+    [Id] int NOT NULL IDENTITY,
+    [ClaveEnvio] uniqueidentifier NOT NULL,
+    [ClaveEvento] nvarchar(200) NOT NULL,
+    [Destinatario] nvarchar(254) NOT NULL,
+    [Asunto] nvarchar(200) NOT NULL,
+    [Html] nvarchar(max) NOT NULL,
+    [Tipo] nvarchar(80) NOT NULL,
+    [Referencia] nvarchar(100) NULL,
+    [Estado] int NOT NULL,
+    [CreadoUtc] datetime2 NOT NULL,
+    [PrimerIntentoUtc] datetime2 NULL,
+    [UltimoIntentoUtc] datetime2 NULL,
+    [ProximoIntentoUtc] datetime2 NULL,
+    [BloqueadoHastaUtc] datetime2 NULL,
+    [Bloqueo] uniqueidentifier NULL,
+    [Intentos] int NOT NULL,
+    [Error] nvarchar(200) NULL,
+    [IdProveedor] nvarchar(100) NULL,
+    [Proveedor] nvarchar(30) NULL,
+    CONSTRAINT [PK_CorreosPendientes] PRIMARY KEY ([Id])
+);
+
+CREATE UNIQUE INDEX [IX_CorreosPendientes_ClaveEvento] ON [CorreosPendientes] ([ClaveEvento]);
+
+CREATE INDEX [IX_CorreosPendientes_Estado_ProximoIntentoUtc] ON [CorreosPendientes] ([Estado], [ProximoIntentoUtc]);
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20261105014253_ColaCorreos', N'10.0.14');
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+CREATE TABLE [AvisosAdministrativos] (
+    [Id] int NOT NULL IDENTITY,
+    [ClaveEvento] nvarchar(200) NOT NULL,
+    [Titulo] nvarchar(200) NOT NULL,
+    [Mensaje] nvarchar(500) NOT NULL,
+    [Referencia] nvarchar(100) NULL,
+    [FechaUtc] datetime2 NOT NULL,
+    [Leido] bit NOT NULL,
+    CONSTRAINT [PK_AvisosAdministrativos] PRIMARY KEY ([Id])
+);
+
+CREATE UNIQUE INDEX [IX_AvisosAdministrativos_ClaveEvento] ON [AvisosAdministrativos] ([ClaveEvento]);
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20261105014616_AvisosInstitucionales', N'10.0.14');
+
+COMMIT;
+GO

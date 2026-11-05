@@ -55,6 +55,47 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.ToTable("Autores");
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.AvisoAdministrativo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaveEvento")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Leido")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Mensaje")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClaveEvento")
+                        .IsUnique();
+
+                    b.ToTable("AvisosAdministrativos");
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.Carrito", b =>
                 {
                     b.Property<int>("Id")
@@ -91,6 +132,91 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.HasKey("Id");
 
                     b.ToTable("Categorias");
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.CorreoPendiente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Asunto")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("BloqueadoHastaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("Bloqueo")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClaveEnvio")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClaveEvento")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreadoUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Destinatario")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Html")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IdProveedor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Intentos")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PrimerIntentoUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Proveedor")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("ProximoIntentoUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime?>("UltimoIntentoUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClaveEvento")
+                        .IsUnique();
+
+                    b.HasIndex("Estado", "ProximoIntentoUtc");
+
+                    b.ToTable("CorreosPendientes");
                 });
 
             modelBuilder.Entity("CloudBooks.Web.Modelos.Cotizacion", b =>
@@ -384,6 +510,9 @@ namespace CloudBooks.Web.Datos.Migraciones
 
                     b.Property<DateTime>("FechaUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("Leida")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Mensaje")
                         .IsRequired()

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Servicios;
 
-public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null)
+public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null, IServicioNotificaciones? correos = null)
 {
     private static DateOnly Hoy => DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -19,10 +19,18 @@ public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuento
         var subtotal = datos.Cantidad * datos.PrecioUnitario;
         var configuracion = parametros == null ? new ParametrosSistema() : await parametros.ObtenerAsync();
         var resumen = descuentos.Calcular(subtotal, datos.Cantidad, true, configuracion.TasaImpuesto);
-        contexto.Cotizaciones.Add(new Cotizacion { SolicitudCotizacionId = datos.SolicitudId, FechaUtc = DateTime.UtcNow, FechaVencimiento = Hoy.AddDays(configuracion.DiasVigencia), Estado = EstadoSolicitudCotizacion.Cotizada,
+        var cotizacion = new Cotizacion { SolicitudCotizacionId = datos.SolicitudId, FechaUtc = DateTime.UtcNow, FechaVencimiento = Hoy.AddDays(configuracion.DiasVigencia), Estado = EstadoSolicitudCotizacion.Cotizada,
             Subtotal = resumen.Subtotal, DescuentoVolumen = resumen.DescuentoVolumen, DescuentoInstitucional = resumen.DescuentoInstitucional, Impuesto = resumen.Impuesto, TasaImpuesto = resumen.TasaImpuesto, Total = resumen.Total,
-            Detalles = [new DetalleCotizacion { Concepto = datos.Concepto.Trim(), Cantidad = datos.Cantidad, PrecioUnitario = datos.PrecioUnitario, Subtotal = subtotal }] });
+            Detalles = [new DetalleCotizacion { Concepto = datos.Concepto.Trim(), Cantidad = datos.Cantidad, PrecioUnitario = datos.PrecioUnitario, Subtotal = subtotal }] };
+        contexto.Cotizaciones.Add(cotizacion);
         await contexto.SaveChangesAsync();
+        if (correos != null)
+        {
+            var cliente = await contexto.SolicitudesCotizacion.Where(s => s.Id == datos.SolicitudId).Select(s => s.Usuario).SingleAsync();
+            await correos.EncolarAsync($"cotizacion/{cotizacion.Id}/emitida/cliente", "cotizacion_emitida", cotizacion.Codigo, cliente.Email, $"CloudBooks | Cotización {cotizacion.Codigo}", $"Hola, {cliente.NombreCompleto}: tu cotización {cotizacion.Codigo} está disponible en tu cuenta. Desde allí puedes consultar el detalle y descargar el PDF.");
+            await correos.EncolarAdministracionAsync($"cotizacion/{cotizacion.Id}/emitida/admin", "cotizacion_emitida", cotizacion.Codigo, "CloudBooks | Cotización emitida", $"Se emitió {cotizacion.Codigo} para {cliente.NombreCompleto}.");
+            await contexto.SaveChangesAsync();
+        }
         await transaccion.CommitAsync();
         return null;
     }
@@ -61,6 +69,11 @@ public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuento
         var solicitudId = await contexto.Cotizaciones.Where(c => c.Id == id).Select(c => c.SolicitudCotizacionId).SingleAsync();
         var actualizada = await contexto.SolicitudesCotizacion.Where(s => s.Id == solicitudId && s.Estado == EstadoSolicitudCotizacion.Cotizada).ExecuteUpdateAsync(c => c.SetProperty(s => s.Estado, nuevo));
         if (actualizada != 1) throw new InvalidOperationException("No se pudo actualizar el estado de la solicitud.");
+        if (correos != null)
+        {
+            await correos.EncolarAdministracionAsync($"cotizacion/{id}/respuesta/admin", "cotizacion_respondida", $"Cotización #{id}", "CloudBooks | Respuesta a cotización", $"La cotización #{id} fue {(aceptar ? "aceptada" : "rechazada")} por el cliente.");
+            await contexto.SaveChangesAsync();
+        }
         await transaccion.CommitAsync();
         return null;
     }
