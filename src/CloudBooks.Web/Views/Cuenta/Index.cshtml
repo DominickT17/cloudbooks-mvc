@@ -1,3 +1,13 @@
 @model CloudBooks.Web.Modelos.UsuarioAplicacion
 @{ ViewData["Title"] = "Mi cuenta"; }
-<section class="container pagina"><p class="etiqueta">CLOUDBOOKS</p><h1>Mi cuenta</h1><p>@Model.NombreCompleto</p><p>@Model.Email</p>@if (!string.IsNullOrEmpty(Model.PhoneNumber)) { <p>@Model.PhoneNumber</p> }</section>
+<section class="container pagina">
+    <p class="etiqueta">CLOUDBOOKS</p><h1>Mi cuenta</h1><p>@Model.NombreCompleto</p><p>@Model.Email</p>
+    @if (TempData["ExitoTelefono"] != null) { <p class="alert alert-success">@TempData["ExitoTelefono"]</p> }
+    @if (TempData["ErrorTelefono"] != null) { <p class="alert alert-danger">@TempData["ErrorTelefono"]</p> }
+    <form asp-action="ActualizarTelefono" method="post">
+        <label for="telefono">Teléfono de Guatemala (opcional)</label>
+        <input id="telefono" name="telefono" type="tel" autocomplete="tel" value="@Model.PhoneNumber" placeholder="5575 1509" maxlength="20" />
+        <p>Ocho dígitos; también puedes incluir el prefijo +502. Déjalo vacío para eliminarlo.</p>
+        <button type="submit" class="boton-secundario">Guardar teléfono</button>
+    </form>
+</section>

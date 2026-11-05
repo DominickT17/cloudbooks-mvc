@@ -68,6 +68,22 @@ public class CuentaController(UserManager<UsuarioAplicacion> usuarios, SignInMan
         await acceso.SignOutAsync();
         return RedirectToAction(nameof(Ingresar));
     }
+
+    [Authorize, HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ActualizarTelefono(string? telefono)
+    {
+        var usuario = await usuarios.GetUserAsync(User);
+        if (usuario == null) { await acceso.SignOutAsync(); return RedirectToAction(nameof(Ingresar)); }
+        var normalizado = ContactoWhatsapp.NormalizarGuatemala(telefono);
+        if (!string.IsNullOrWhiteSpace(telefono) && normalizado == null)
+        {
+            TempData["ErrorTelefono"] = "Ingresa un teléfono de Guatemala de ocho dígitos.";
+            return RedirectToAction(nameof(Index));
+        }
+        var resultado = await usuarios.SetPhoneNumberAsync(usuario, normalizado);
+        TempData[resultado.Succeeded ? "ExitoTelefono" : "ErrorTelefono"] = resultado.Succeeded ? "Teléfono actualizado." : "No fue posible actualizar el teléfono.";
+        return RedirectToAction(nameof(Index));
+    }
     public IActionResult AccesoDenegado() => View();
 
     private static string Mensaje(IdentityError error) => error.Code switch

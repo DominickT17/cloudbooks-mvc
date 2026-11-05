@@ -996,3 +996,22 @@ INSERT INTO [PerfilesInstitucionales] ([Id], [UsuarioId], [Institucion], [Nit], 
 SET IDENTITY_INSERT [PerfilesInstitucionales] OFF;
 COMMIT;
 GO
+
+BEGIN TRANSACTION;
+CREATE TABLE [IntentosPago] (
+    [Id] int NOT NULL IDENTITY,
+    [UsuarioId] nvarchar(450) NOT NULL,
+    [FechaUtc] datetime2 NOT NULL,
+    [Resultado] int NOT NULL,
+    [UltimosCuatro] nvarchar(4) NULL,
+    CONSTRAINT [PK_IntentosPago] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_IntentosPago_AspNetUsers_UsuarioId] FOREIGN KEY ([UsuarioId]) REFERENCES [AspNetUsers] ([Id]) ON DELETE NO ACTION
+);
+
+CREATE INDEX [IX_IntentosPago_UsuarioId] ON [IntentosPago] ([UsuarioId]);
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20261104235713_IntentosPago', N'10.0.14');
+
+COMMIT;
+GO

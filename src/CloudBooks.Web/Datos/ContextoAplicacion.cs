@@ -21,6 +21,7 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
     public DbSet<DetalleCotizacion> DetallesCotizacion => Set<DetalleCotizacion>();
     public DbSet<ParametrosSistema> ConfiguracionSistema => Set<ParametrosSistema>();
     public DbSet<NotificacionPedido> NotificacionesPedido => Set<NotificacionPedido>();
+    public DbSet<IntentoPago> IntentosPago => Set<IntentoPago>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
@@ -39,6 +40,7 @@ public class ContextoAplicacion(DbContextOptions<ContextoAplicacion> opciones) :
         modelo.Entity<DetalleCarrito>().HasOne(detalle => detalle.Libro).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelo.Entity<DetalleCarrito>().ToTable(t => t.HasCheckConstraint("CK_DetalleCarrito_Cantidad", "[Cantidad] >= 1"));
         modelo.Entity<Pedido>().HasOne(p => p.Usuario).WithMany().OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<IntentoPago>().HasOne(i => i.Usuario).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelo.Entity<DetallePedido>().HasOne(d => d.Libro).WithMany().OnDelete(DeleteBehavior.Restrict);
         modelo.Entity<DetallePedido>().ToTable(t => t.HasCheckConstraint("CK_DetallePedido_Cantidad", "[Cantidad] >= 1"));
         foreach (var propiedad in new[] { nameof(Pedido.Subtotal), nameof(Pedido.DescuentoVolumen), nameof(Pedido.DescuentoInstitucional), nameof(Pedido.Impuesto), nameof(Pedido.Total) })

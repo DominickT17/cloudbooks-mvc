@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CloudBooks.Web.Controllers;
 
 [Authorize]
-public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros, ServicioCarritoInvitado invitado, IWebHostEnvironment entorno, ServicioComprobantePedido comprobante) : Controller
+public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito, ServicioDescuentos descuentos, ServicioParametros parametros, ServicioCarritoInvitado invitado, IWebHostEnvironment entorno, ServicioComprobantePedido comprobante, ServicioIntentosPago intentos) : Controller
 {
     private string UsuarioId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -48,6 +48,7 @@ public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito,
             var pago = new SimuladorTarjeta().Evaluar(numero, vencimiento, cvv, DateOnly.FromDateTime(DateTime.UtcNow));
             if (!pago.Autorizada)
             {
+                await intentos.RegistrarRechazoAsync(UsuarioId, pago.Resultado);
                 TempData["Error"] = pago.Resultado switch
                 {
                     ResultadoTarjetaSimulada.FondosInsuficientes => "La tarjeta simulada no dispone de fondos suficientes.",

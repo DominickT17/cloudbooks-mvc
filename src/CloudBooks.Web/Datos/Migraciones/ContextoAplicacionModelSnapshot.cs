@@ -275,6 +275,35 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.ToTable("Editoriales");
                 });
 
+            modelBuilder.Entity("CloudBooks.Web.Modelos.IntentoPago", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Resultado")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UltimosCuatro")
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("IntentosPago");
+                });
+
             modelBuilder.Entity("CloudBooks.Web.Modelos.Libro", b =>
                 {
                     b.Property<int>("Id")
@@ -959,6 +988,17 @@ namespace CloudBooks.Web.Datos.Migraciones
                     b.Navigation("Libro");
 
                     b.Navigation("Pedido");
+                });
+
+            modelBuilder.Entity("CloudBooks.Web.Modelos.IntentoPago", b =>
+                {
+                    b.HasOne("CloudBooks.Web.Modelos.UsuarioAplicacion", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("CloudBooks.Web.Modelos.Libro", b =>

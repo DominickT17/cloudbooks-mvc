@@ -43,6 +43,38 @@ public class ServicioPedidosPruebas : IDisposable
     }
 
     [Fact]
+    public async Task IntentoSinFondosSeRegistraSinAlterarCarritoNiInventario()
+    {
+        await new ServicioIntentosPago(contexto).RegistrarRechazoAsync("cliente", ResultadoTarjetaSimulada.FondosInsuficientes);
+        var intento = await contexto.IntentosPago.AsNoTracking().SingleAsync();
+        Assert.Equal(ResultadoPago.FondosInsuficientes, intento.Resultado);
+        Assert.Null(intento.UltimosCuatro);
+        Assert.Equal(2, await contexto.DetallesCarrito.CountAsync());
+        Assert.Equal(10, (await contexto.Libros.AsNoTracking().SingleAsync(l => l.ISBN == "123")).Stock);
+        Assert.Empty(await contexto.Pedidos.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData(ResultadoTarjetaSimulada.Rechazado, ResultadoPago.Rechazado)]
+    [InlineData(ResultadoTarjetaSimulada.Bloqueado, ResultadoPago.Bloqueado)]
+    [InlineData(ResultadoTarjetaSimulada.Vencido, ResultadoPago.Vencido)]
+    [InlineData(ResultadoTarjetaSimulada.DatosInvalidos, ResultadoPago.DatosInvalidos)]
+    public async Task RegistrarIntentoConservaMotivoSinDatosDeTarjeta(ResultadoTarjetaSimulada resultado, ResultadoPago esperado)
+    {
+        await new ServicioIntentosPago(contexto).RegistrarRechazoAsync("cliente", resultado);
+        var intento = await contexto.IntentosPago.AsNoTracking().SingleAsync();
+        Assert.Equal(esperado, intento.Resultado);
+        Assert.Null(intento.UltimosCuatro);
+    }
+
+    [Fact]
+    public async Task NoRegistraUnaAutorizacionComoRechazo()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => new ServicioIntentosPago(contexto).RegistrarRechazoAsync("cliente", ResultadoTarjetaSimulada.Aprobado));
+        Assert.Empty(await contexto.IntentosPago.ToListAsync());
+    }
+
+    [Fact]
     public async Task CantidadAltaRequiereRevisionYRegistraAvisosAntesDeAprobar()
     {
         var detalle = await contexto.DetallesCarrito.Include(d => d.Libro).SingleAsync(d => d.Libro.ISBN == "456");

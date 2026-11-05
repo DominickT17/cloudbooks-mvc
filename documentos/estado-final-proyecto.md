@@ -49,3 +49,9 @@ Las cifras son conservadoras y no equivalen a una calificación oficial. La ause
 3. Completar proveedor de correo configurable, registro de intentos rechazados y avisos institucionales/comerciales sin duplicar sistemas.
 4. Revisar seguridad, diseño administrativo y responsive en las cuatro resoluciones solicitadas.
 5. Contrastar guía oficial cuando esté disponible y actualizar diagnóstico, manual y guion con evidencia verificable.
+
+## Avance posterior del 4 de noviembre
+
+Se agregó el registro de intentos de pago no autorizados sin número ni CVV, la edición opcional del teléfono en Mi cuenta y la identificación explícita de simulación académica en el comprobante. El script SQL actualizado se restauró en una base temporal con 14 migraciones, 10 libros y 5 usuarios; se verificaron la tabla de intentos y una muestra con tildes y se eliminó la base. La prueba de servicio comprueba que un intento sin fondos no altera carrito, inventario ni pedidos. Sigue pendiente verificar estos cambios mediante HTTP y navegador.
+
+El correo real y la cola persistente siguen pendientes; consultar la documentación oficial de Resend antes de implementarlos. La clave de idempotencia del proveedor se conserva durante 24 horas y no garantiza por sí sola deduplicación indefinida. No hay envío real configurado o probado.

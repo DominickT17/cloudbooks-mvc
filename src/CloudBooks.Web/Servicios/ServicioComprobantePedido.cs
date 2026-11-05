@@ -17,7 +17,7 @@ public class ServicioComprobantePedido(IWebHostEnvironment entorno)
             pagina.Header().Row(fila =>
             {
                 fila.ConstantItem(145).Image(logo);
-                fila.RelativeItem().AlignRight().Column(columna => { columna.Item().Text("COMPROBANTE DE COMPRA").FontSize(17).Bold().FontColor("#167ce0"); columna.Item().Text(pedido.Codigo).Bold(); columna.Item().Text("Documento académico · No es factura fiscal"); });
+                fila.RelativeItem().AlignRight().Column(columna => { columna.Item().Text("COMPROBANTE DE COMPRA").FontSize(17).Bold().FontColor("#167ce0"); columna.Item().Text("Simulación académica"); columna.Item().Text(pedido.Codigo).Bold(); columna.Item().Text("No es factura fiscal"); });
             });
             pagina.Content().PaddingTop(25).Column(columna =>
             {

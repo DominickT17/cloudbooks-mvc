@@ -24,6 +24,7 @@ builder.Services.AddScoped<ServicioParametros>();
 builder.Services.AddScoped<ServicioCarrito>();
 builder.Services.AddScoped<ServicioDescuentos>();
 builder.Services.AddScoped<ServicioPedidos>();
+builder.Services.AddScoped<ServicioIntentosPago>();
 builder.Services.AddScoped<INotificacionesPedido, NotificacionesPedido>();
 builder.Services.AddScoped<ServicioAvisosAdministracion>();
 builder.Services.AddScoped<ServicioInstituciones>();
