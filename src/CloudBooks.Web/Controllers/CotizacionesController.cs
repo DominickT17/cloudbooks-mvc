@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CloudBooks.Web.Servicios;
+using CloudBooks.Web.Modelos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,7 +13,16 @@ public class CotizacionesController(ServicioCotizaciones cotizaciones, ServicioP
     [Authorize(Roles = "ClienteInstitucional")]
     public async Task<IActionResult> Index() => View(await cotizaciones.PorClienteAsync(UsuarioId));
     [Authorize(Roles = "Administrador")]
-    public async Task<IActionResult> Administracion() => View("Index", await cotizaciones.TodasAsync());
+    public async Task<IActionResult> Administracion(string? buscar, EstadoSolicitudCotizacion? estado)
+    {
+        if (!ModelState.IsValid || (estado.HasValue && !Enum.IsDefined(estado.Value))) return BadRequest();
+        var todas = await cotizaciones.TodasAsync();
+        ViewBag.Resumen = todas;
+        var lista = todas.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(buscar)) lista = lista.Where(c => c.Codigo.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase) || c.Solicitud.PerfilInstitucional.Institucion.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (estado.HasValue) lista = lista.Where(c => c.Estado == estado);
+        return View("Index", lista.ToList());
+    }
 
     public async Task<IActionResult> Detalle(int id)
     {

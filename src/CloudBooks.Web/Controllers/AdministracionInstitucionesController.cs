@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CloudBooks.Web.Servicios;
+using CloudBooks.Web.Modelos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,16 @@ namespace CloudBooks.Web.Controllers;
 [Authorize(Roles = "Administrador")]
 public class AdministracionInstitucionesController(ServicioInstituciones instituciones) : Controller
 {
-    public async Task<IActionResult> Index() => View(await instituciones.TodasAsync());
+    public async Task<IActionResult> Index(string? buscar, EstadoSolicitudInstitucional? estado)
+    {
+        if (!ModelState.IsValid || (estado.HasValue && !Enum.IsDefined(estado.Value))) return BadRequest();
+        var todas = await instituciones.TodasAsync();
+        ViewBag.Resumen = todas;
+        var lista = todas.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(buscar)) lista = lista.Where(s => s.Institucion.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase) || s.Usuario.NombreCompleto.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (estado.HasValue) lista = lista.Where(s => s.Estado == estado);
+        return View(lista.ToList());
+    }
     public async Task<IActionResult> Detalle(int id)
     {
         var solicitud = await instituciones.ObtenerAsync(id);
