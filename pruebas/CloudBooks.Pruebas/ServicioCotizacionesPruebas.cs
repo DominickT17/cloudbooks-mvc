@@ -85,7 +85,9 @@ public class ServicioCotizacionesPruebas : IDisposable
         Assert.Null(await cotizaciones.ResponderAsync(1, "cliente", true));
         Assert.NotNull(await cotizaciones.ResponderAsync(1, "cliente", true));
         Assert.Equal(3, await contexto.CorreosPendientes.CountAsync());
-        Assert.Single(await contexto.CorreosPendientes.Where(c => c.Destinatario == "cliente@example.test").ToListAsync());
+        var correoCliente = Assert.Single(await contexto.CorreosPendientes.Where(c => c.Destinatario == "cliente@example.test").ToListAsync());
+        Assert.Contains("Institución: Institución", correoCliente.TextoPlano);
+        Assert.Contains("Total: Q2318.40", correoCliente.TextoPlano);
         Assert.Equal(2, await contexto.AvisosAdministrativos.CountAsync());
     }
 

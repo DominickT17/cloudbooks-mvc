@@ -60,7 +60,7 @@ public class ServicioInstituciones(ContextoAplicacion contexto, UserManager<Usua
         if (correos != null)
         {
             var solicitante = await usuarios.FindByIdAsync(solicitud.UsuarioId);
-            await correos.EncolarAsync($"institucion/{id}/resuelta/cliente", "institucion_resuelta", $"Institución #{id}", solicitante?.Email, "CloudBooks | Actualización de solicitud institucional", $"Tu solicitud institucional fue {(aprobar ? "aprobada" : "rechazada")}. {(aprobar ? "Inicia sesión nuevamente para actualizar tus permisos." : "Puedes contactar a CloudBooks para obtener asistencia.")}");
+            await correos.EncolarAsync($"institucion/{id}/resuelta/cliente", aprobar ? "institucion_aprobada" : "institucion_rechazada", $"Institución #{id}", solicitante?.Email, "CloudBooks | Actualización de solicitud institucional", $"Hola, {solicitante?.NombreCompleto}:\n\nTu solicitud institucional fue {(aprobar ? "aprobada" : "rechazada")}. {(aprobar ? "Inicia sesión nuevamente para actualizar tus permisos." : "Puedes contactar a CloudBooks para obtener asistencia.")}");
         }
         await contexto.SaveChangesAsync();
         await transaccion.CommitAsync();

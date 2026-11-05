@@ -79,11 +79,12 @@ public class CorreosPruebas : IDisposable
         var manejador = new ManejadorResend();
         var cliente = ResendClient.Create(new ResendClientOptions { ApiToken = "clave-prueba" }, new HttpClient(manejador));
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["Correo:Remitente"] = "CloudBooks <demo@example.test>" }).Build();
-        var correo = new CorreoPendiente { ClaveEnvio = Guid.NewGuid(), Destinatario = "cliente@example.test", Asunto = "Prueba", Html = "<p>Hola</p>" };
+        var correo = new CorreoPendiente { ClaveEnvio = Guid.NewGuid(), Destinatario = "cliente@example.test", Asunto = "Prueba", Html = "<p>Hola</p>", TextoPlano = "Hola en texto" };
         var resultado = await new ProveedorCorreoResend(cliente, config).EnviarAsync(correo, CancellationToken.None);
         Assert.False(resultado.Simulado);
         Assert.Equal("b59fbb1f-b839-4aef-9c9a-6680ba344291", resultado.IdProveedor);
         Assert.Equal($"cloudbooks/{correo.ClaveEnvio:N}", manejador.Clave);
+        Assert.Contains("Hola en texto", manejador.Cuerpo);
     }
 
     [Fact]
@@ -103,13 +104,75 @@ public class CorreosPruebas : IDisposable
         Assert.False(ConfiguracionCorreo.UsarResend(configuracion));
     }
 
+    [Fact]
+    public void PlantillasDeEjemploTienenTextoYHtmlAdaptableSinDatosDeTarjeta()
+    {
+        var ejemplos = EjemplosCorreo.Crear("https://cloudbooks.example", null);
+        Assert.Equal(13, ejemplos.Count);
+        Assert.All(ejemplos, ejemplo =>
+        {
+            Assert.Contains("<table", ejemplo.Html);
+            Assert.Contains("max-width:600px", ejemplo.Html);
+            Assert.Contains("CloudBooks", ejemplo.Texto);
+            Assert.DoesNotContain("<script", ejemplo.Html, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("4000000000000002", ejemplo.Html);
+            Assert.DoesNotContain("CVV", ejemplo.Texto, StringComparison.OrdinalIgnoreCase);
+        });
+        var pedido = ejemplos.Single(e => e.Nombre == "Pedido aprobado");
+        Assert.Contains("Q502.88", pedido.Html);
+        Assert.Contains("Q502.88", pedido.Texto);
+        Assert.Contains("https://cloudbooks.example/Pedidos/Comprobante/42", pedido.Html);
+        var cotizacion = ejemplos.Single(e => e.Nombre == "Cotización emitida");
+        Assert.Contains("Biblioteca Horizonte", cotizacion.Html);
+        Assert.Contains("/Cotizaciones/Pdf/7", cotizacion.Html);
+        Assert.Contains("19/11/2026", cotizacion.Texto);
+    }
+
+    [Theory]
+    [InlineData("http://localhost:5000")]
+    [InlineData("https://localhost")]
+    [InlineData("https://tienda.localhost")]
+    [InlineData("https://127.0.0.1")]
+    [InlineData("javascript:alert(1)")]
+    public void SinUrlPublicaNoIncorporaLogoNiEnlacesDeAplicacion(string url)
+    {
+        var correo = PlantillasCorreo.Crear("pedido/42/aprobado/cliente", "aprobado", "<asunto>", "Hola <script>alert(1)</script>", url, url);
+        Assert.DoesNotContain("<img", correo.Html);
+        Assert.DoesNotContain("<script>", correo.Html);
+        Assert.Contains("&lt;script&gt;", correo.Html);
+        Assert.DoesNotContain("localhost", correo.Html);
+        Assert.DoesNotContain("/Pedidos/Detalle", correo.Html);
+        Assert.Contains("Hola <script>", correo.Texto);
+    }
+
+    [Fact]
+    public void PagoRechazadoEnlazaAlCarritoSinInventarPedido()
+    {
+        var correo = PlantillasCorreo.Crear("intento/8/rechazado", "pago_rechazado", "Pago", "Fondos insuficientes", "https://cloudbooks.example", null);
+        Assert.Contains("https://cloudbooks.example/Carrito", correo.Html);
+        Assert.DoesNotContain("/Pedidos/Detalle", correo.Html);
+        Assert.DoesNotContain("PED-", correo.Texto);
+    }
+
+    [Fact]
+    public void LogoSoloAdmiteUrlHttpsDeImagenRaster()
+    {
+        var svg = PlantillasCorreo.Crear("pedido/42/aprobado/cliente", "aprobado", "Asunto", "Mensaje", null, "https://cloudbooks.example/logo.svg");
+        Assert.DoesNotContain("<img", svg.Html);
+        var png = PlantillasCorreo.Crear("pedido/42/aprobado/cliente", "aprobado", "Asunto", "Mensaje", null, "https://cloudbooks.example/logo.png");
+        Assert.Contains("alt=\"CloudBooks\"", png.Html);
+        Assert.Contains("https://cloudbooks.example/logo.png", png.Html);
+    }
+
     private class ManejadorResend : HttpMessageHandler
     {
         public string? Clave { get; private set; }
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage solicitud, CancellationToken cancelacion)
+        public string Cuerpo { get; private set; } = "";
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage solicitud, CancellationToken cancelacion)
         {
             Clave = solicitud.Headers.GetValues("Idempotency-Key").Single();
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"id\":\"b59fbb1f-b839-4aef-9c9a-6680ba344291\"}", System.Text.Encoding.UTF8, "application/json") });
+            Cuerpo = await solicitud.Content!.ReadAsStringAsync(cancelacion);
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"id\":\"b59fbb1f-b839-4aef-9c9a-6680ba344291\"}", System.Text.Encoding.UTF8, "application/json") };
         }
     }
 

@@ -1071,3 +1071,12 @@ VALUES (N'20261105014616_AvisosInstitucionales', N'10.0.14');
 
 COMMIT;
 GO
+
+BEGIN TRANSACTION;
+ALTER TABLE [CorreosPendientes] ADD [TextoPlano] nvarchar(max) NULL;
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20261105025022_TextoPlanoCorreo', N'10.0.14');
+
+COMMIT;
+GO

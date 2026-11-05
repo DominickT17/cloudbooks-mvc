@@ -12,6 +12,7 @@ public class CorreoPendiente
     [Required, MaxLength(254)] public string Destinatario { get; set; } = "";
     [Required, MaxLength(200)] public string Asunto { get; set; } = "";
     [Required] public string Html { get; set; } = "";
+    public string? TextoPlano { get; set; }
     [Required, MaxLength(80)] public string Tipo { get; set; } = "";
     [MaxLength(100)] public string? Referencia { get; set; }
     public EstadoCorreo Estado { get; set; }

@@ -19,7 +19,15 @@ dotnet user-secrets set "Correo:Administradores" "admin-controlado@example.test"
 
 También pueden utilizarse variables de entorno `Resend__ApiKey`, `Correo__Remitente`, `Correo__Proveedor`, `Correo__UrlBase` y `Correo__Administradores`; los destinatarios se separan con punto y coma. Si no se configura la lista, se utiliza `dominickt1703@gmail.com`. Activar Resend permite que el servicio procese todos los mensajes pendientes, por lo que primero deben verificarse sus destinatarios y utilizarse un remitente apropiado. Para volver al modo simulado, cambia `Correo:Proveedor` a `Simulado`. Si faltan la clave o un remitente con sintaxis válida, se selecciona el proveedor simulado. La aplicación no comprueba anticipadamente que el dominio esté verificado: el proveedor puede rechazarlo.
 
-`Correo:UrlBase` debe ser una URL pública controlada por el equipo para que las imágenes y enlaces funcionen fuera del equipo local. Sin ella se conserva la vista previa, pero los enlaces a la aplicación no aparecen. Las rutas de pedidos y cotizaciones mantienen sus comprobaciones de autorización; es necesario iniciar sesión para acceder a documentos privados.
+`Correo:UrlBase` debe ser una URL HTTPS pública controlada por el equipo para que los enlaces funcionen fuera del equipo local. Si falta o apunta a localhost o una IP, no se insertan botones a la aplicación. Para utilizar el logo oficial se puede configurar `Correo:LogoUrl` con una URL HTTPS pública y accesible de la imagen PNG o JPEG; comprueba que sea realmente accesible sin autenticación antes de usarla. Sin ella se muestra la marca tipográfica CloudBooks. Las rutas de pedidos y cotizaciones mantienen sus comprobaciones de autorización; es necesario iniciar sesión para acceder a documentos privados.
+
+## Plantillas y vista previa
+
+Los correos nuevos usan una base de tablas y estilos inline, con preencabezado, marca, estado, contenido contextual y ayuda por WhatsApp. Incluyen una alternativa de texto plano; los mensajes anteriores en cola conservan su HTML y, si no tenían texto, se genera una versión básica al enviarlos. Los correos de compra muestran los importes guardados en el pedido, y las cotizaciones emitidas muestran institución, importe y fecha de vigencia. No se incrustan datos completos de tarjetas o CVV.
+
+En Development, inicia sesión como administrador y abre **Administración → Avisos → Historial de correos → Ver plantillas de demostración**. Los trece ejemplos contienen datos ficticios y no crean ni envían correos. Si no existe `Correo:UrlBase`, la vista utiliza `https://cloudbooks.example` exclusivamente para ilustrar botones; ese dominio de ejemplo no representa una dirección funcional. El iframe puede estrecharse para inspeccionar una aproximación de vista móvil. En otros entornos esta ruta devuelve 404.
+
+El 4 de noviembre de 2026 se envió una única prueba controlada de la nueva plantilla de pedido aprobado a `dominickt1703@gmail.com`, con datos ficticios y sin crear un pedido comercial ni modificar inventario. Resend aceptó la solicitud con identificador `01a1a9a0-6a41-754b-8610-25f469193fbf`; esto no confirma entrega ni apariencia en el buzón. El ejemplo se envió sin URL de aplicación configurada, por lo que no incluyó botones de pedido o comprobante.
 
 ## Entrega y reintentos
 

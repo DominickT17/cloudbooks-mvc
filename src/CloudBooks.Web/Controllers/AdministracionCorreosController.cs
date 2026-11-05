@@ -3,13 +3,18 @@ using CloudBooks.Web.Modelos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CloudBooks.Web.Servicios;
 
 namespace CloudBooks.Web.Controllers;
 
 [Authorize(Roles = "Administrador")]
-public class AdministracionCorreosController(ContextoAplicacion contexto) : Controller
+public class AdministracionCorreosController(ContextoAplicacion contexto, IWebHostEnvironment entorno, IConfiguration configuracion) : Controller
 {
     public async Task<IActionResult> Index() => View(await contexto.CorreosPendientes.AsNoTracking().OrderByDescending(c => c.Id).Take(200).ToListAsync());
+    [HttpGet]
+    public IActionResult Ejemplos() => entorno.IsDevelopment()
+        ? View(EjemplosCorreo.Crear(configuracion["Correo:UrlBase"] ?? "https://cloudbooks.example", configuracion["Correo:LogoUrl"]))
+        : NotFound();
     public async Task<IActionResult> Detalle(int id)
     {
         var correo = await contexto.CorreosPendientes.AsNoTracking().SingleOrDefaultAsync(c => c.Id == id);

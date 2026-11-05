@@ -201,6 +201,9 @@ namespace CloudBooks.Web.Datos.Migraciones
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("TextoPlano")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(80)

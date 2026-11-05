@@ -24,6 +24,7 @@ public class ServicioSolicitudesCotizacion(ContextoAplicacion contexto, UserMana
         await contexto.SaveChangesAsync();
         if (correos != null)
         {
+            await correos.EncolarAsync($"solicitud/{solicitud.Id}/creada/cliente", "solicitud_comercial", solicitud.Codigo, usuario.Email, "CloudBooks | Solicitud comercial recibida", $"Hola, {usuario.NombreCompleto}:\n\nRecibimos tu solicitud {solicitud.Codigo} para {solicitud.Titulo}. Nuestro equipo dará seguimiento a tu gestión.");
             await correos.EncolarAdministracionAsync($"solicitud/{solicitud.Id}/creada/admin", "solicitud_comercial", solicitud.Codigo, "CloudBooks | Nueva solicitud comercial", $"Se registró {solicitud.Codigo} para {solicitud.Titulo}.");
             if (asesorId != null) await NotificarAsignacionAsync(solicitud, asesorId);
             await contexto.SaveChangesAsync();

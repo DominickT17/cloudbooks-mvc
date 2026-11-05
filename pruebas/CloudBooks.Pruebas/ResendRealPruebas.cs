@@ -30,7 +30,8 @@ public class ResendRealPruebas(ITestOutputHelper salida)
         Assert.True(ConfiguracionCorreo.UsarResend(config), "No se encontró la configuración segura de Resend.");
         await using var db = new ContextoAplicacion(new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlServer(cadena).Options);
         Assert.Empty(await db.CorreosPendientes.ToListAsync());
-        var correo = new CorreoPendiente { ClaveEvento = "prueba-real/" + Guid.NewGuid().ToString("N"), Tipo = "prueba_real", Destinatario = "dominickt1703@gmail.com", Asunto = "CloudBooks - Prueba de correo", Html = "<p>Esta es una prueba de correo transaccional de CloudBooks.</p>", CreadoUtc = DateTime.UtcNow, Estado = EstadoCorreo.Pendiente };
+        var ejemplo = EjemplosCorreo.Crear(null, null).Single(e => e.Nombre == "Pedido aprobado");
+        var correo = new CorreoPendiente { ClaveEvento = "prueba-real/" + Guid.NewGuid().ToString("N"), Tipo = "prueba_real", Destinatario = "dominickt1703@gmail.com", Asunto = "CloudBooks | Ejemplo de pedido confirmado", Html = ejemplo.Html, TextoPlano = ejemplo.Texto, CreadoUtc = DateTime.UtcNow, Estado = EstadoCorreo.Pendiente };
         db.CorreosPendientes.Add(correo);
         await db.SaveChangesAsync();
         var cliente = ResendClient.Create(new ResendClientOptions { ApiToken = ConfiguracionCorreo.ObtenerClave(config)! }, new HttpClient { Timeout = TimeSpan.FromSeconds(30) });

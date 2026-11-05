@@ -195,6 +195,9 @@ public class ServicioPedidosPruebas : IDisposable
         var correo = await contexto.CorreosPendientes.AsNoTracking().SingleAsync();
         Assert.Equal("cliente@example.test", correo.Destinatario);
         Assert.Contains(pedido.Codigo, correo.Asunto);
+        Assert.Contains("Subtotal: Q250.00", correo.TextoPlano);
+        Assert.Contains("Descuento por volumen: Q0.00", correo.TextoPlano);
+        Assert.Contains("TOTAL: Q280.00", correo.TextoPlano);
         Assert.True(await new ProcesadorCorreos(contexto, new ProveedorFallido()).ProcesarUnoAsync());
         Assert.Equal(EstadoCorreo.ReintentoPendiente, (await contexto.CorreosPendientes.AsNoTracking().SingleAsync()).Estado);
         Assert.Equal(EstadoPago.Confirmado, (await contexto.Pedidos.AsNoTracking().SingleAsync()).EstadoPago);

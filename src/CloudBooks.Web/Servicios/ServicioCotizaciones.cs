@@ -26,9 +26,9 @@ public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuento
         await contexto.SaveChangesAsync();
         if (correos != null)
         {
-            var cliente = await contexto.SolicitudesCotizacion.Where(s => s.Id == datos.SolicitudId).Select(s => s.Usuario).SingleAsync();
-            await correos.EncolarAsync($"cotizacion/{cotizacion.Id}/emitida/cliente", "cotizacion_emitida", cotizacion.Codigo, cliente.Email, $"CloudBooks | Cotización {cotizacion.Codigo}", $"Hola, {cliente.NombreCompleto}: tu cotización {cotizacion.Codigo} está disponible en tu cuenta. Desde allí puedes consultar el detalle y descargar el PDF.");
-            await correos.EncolarAdministracionAsync($"cotizacion/{cotizacion.Id}/emitida/admin", "cotizacion_emitida", cotizacion.Codigo, "CloudBooks | Cotización emitida", $"Se emitió {cotizacion.Codigo} para {cliente.NombreCompleto}.");
+            var destinatario = await contexto.SolicitudesCotizacion.Where(s => s.Id == datos.SolicitudId).Select(s => new { Cliente = s.Usuario, Institucion = s.PerfilInstitucional.Institucion }).SingleAsync();
+            await correos.EncolarAsync($"cotizacion/{cotizacion.Id}/emitida/cliente", "cotizacion_emitida", cotizacion.Codigo, destinatario.Cliente.Email, $"CloudBooks | Cotización {cotizacion.Codigo}", $"Hola, {destinatario.Cliente.NombreCompleto}:\n\nTu cotización está disponible en tu cuenta.\nInstitución: {destinatario.Institucion}\nCotización: {cotizacion.Codigo}\nTotal: Q{cotizacion.Total:0.00}\nVigencia hasta: {cotizacion.FechaVencimiento:dd/MM/yyyy}\n\nPuedes consultar el detalle y descargar el PDF iniciando sesión.");
+            await correos.EncolarAdministracionAsync($"cotizacion/{cotizacion.Id}/emitida/admin", "cotizacion_emitida", cotizacion.Codigo, "CloudBooks | Cotización emitida", $"Se emitió {cotizacion.Codigo} para {destinatario.Cliente.NombreCompleto}.");
             await contexto.SaveChangesAsync();
         }
         await transaccion.CommitAsync();
@@ -71,7 +71,7 @@ public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuento
         if (actualizada != 1) throw new InvalidOperationException("No se pudo actualizar el estado de la solicitud.");
         if (correos != null)
         {
-            await correos.EncolarAdministracionAsync($"cotizacion/{id}/respuesta/admin", "cotizacion_respondida", $"Cotización #{id}", "CloudBooks | Respuesta a cotización", $"La cotización #{id} fue {(aceptar ? "aceptada" : "rechazada")} por el cliente.");
+            await correos.EncolarAdministracionAsync($"cotizacion/{id}/respuesta/admin", aceptar ? "cotizacion_aceptada" : "cotizacion_rechazada", $"Cotización #{id}", "CloudBooks | Respuesta a cotización", $"La cotización #{id} fue {(aceptar ? "aceptada" : "rechazada")} por el cliente.");
             await contexto.SaveChangesAsync();
         }
         await transaccion.CommitAsync();

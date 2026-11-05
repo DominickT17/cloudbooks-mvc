@@ -20,7 +20,8 @@ public class ProveedorCorreoResend(IResend cliente, IConfiguration configuracion
 {
     public async Task<ResultadoEntrega> EnviarAsync(CorreoPendiente correo, CancellationToken cancelacion)
     {
-        var mensaje = new EmailMessage { From = configuracion["Correo:Remitente"]!, Subject = correo.Asunto, HtmlBody = correo.Html };
+        var texto = correo.TextoPlano ?? PlantillasCorreo.TextoDeHtmlAnterior(correo.Asunto, correo.Html);
+        var mensaje = new EmailMessage { From = configuracion["Correo:Remitente"]!, Subject = correo.Asunto, HtmlBody = correo.Html, TextBody = texto };
         mensaje.To.Add(correo.Destinatario);
         var respuesta = await cliente.EmailSendAsync($"cloudbooks/{correo.ClaveEnvio:N}", mensaje, cancelacion);
         if (!respuesta.Success) throw new InvalidOperationException("El proveedor no aceptó el mensaje.");
