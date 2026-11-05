@@ -1,13 +1,7 @@
 @model CloudBooks.Web.Modelos.UsuarioAplicacion
-@{ ViewData["Title"] = "Mi cuenta"; }
-<section class="container pagina">
-    <p class="etiqueta">CLOUDBOOKS</p><h1>Mi cuenta</h1><p>@Model.NombreCompleto</p><p>@Model.Email</p>
-    @if (TempData["ExitoTelefono"] != null) { <p class="alert alert-success">@TempData["ExitoTelefono"]</p> }
-    @if (TempData["ErrorTelefono"] != null) { <p class="alert alert-danger">@TempData["ErrorTelefono"]</p> }
-    <form asp-action="ActualizarTelefono" method="post">
-        <label for="telefono">Teléfono de Guatemala (opcional)</label>
-        <input id="telefono" name="telefono" type="tel" autocomplete="tel" value="@Model.PhoneNumber" placeholder="5575 1509" maxlength="20" />
-        <p>Ocho dígitos; también puedes incluir el prefijo +502. Déjalo vacío para eliminarlo.</p>
-        <button type="submit" class="boton-secundario">Guardar teléfono</button>
-    </form>
-</section>
+@{ ViewData["Title"] = "Mi cuenta"; var partes = Model.NombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries); var iniciales = string.Concat(partes.Take(2).Select(p => char.ToUpperInvariant(p[0]))); }
+<section class="container pagina cuenta-perfil"><p class="etiqueta">TU ESPACIO EN CLOUDBOOKS</p><h1>Mi cuenta</h1><p class="cuenta-intro">Consulta tu información y mantén actualizado tu contacto.</p>
+@if (TempData["ExitoTelefono"] != null) { <p class="alert alert-success" role="status">@TempData["ExitoTelefono"]</p> } @if (TempData["ErrorTelefono"] != null) { <p class="alert alert-danger" role="alert">@TempData["ErrorTelefono"]</p> }
+<div class="cuenta-perfil-grid"><div class="cuenta-perfil-contenido"><section class="cuenta-panel"><div class="cuenta-identidad"><span class="cuenta-iniciales">@iniciales</span><div><p class="etiqueta">DATOS DE TU CUENTA</p><h2>@Model.NombreCompleto</h2><p>@Model.Email</p></div></div></section>
+<section class="cuenta-panel"><h2>Información de contacto</h2><p>Usaremos este número para dar seguimiento a tus solicitudes cuando sea necesario.</p><form asp-action="ActualizarTelefono" method="post" class="cuenta-telefono"><label for="telefono">Teléfono de Guatemala <span>(opcional)</span></label><input id="telefono" name="telefono" type="tel" autocomplete="tel" value="@Model.PhoneNumber" placeholder="5575 1509" maxlength="20" aria-describedby="ayuda-telefono" /><small id="ayuda-telefono">Ocho dígitos; también puedes incluir el prefijo +502. Déjalo vacío para eliminarlo.</small><button type="submit" class="boton">Guardar teléfono</button></form></section></div>
+<aside class="cuenta-panel cuenta-atajos"><p class="etiqueta">ACCESOS RÁPIDOS</p><h2>Tu actividad</h2><a asp-controller="Pedidos" asp-action="Index"><i data-lucide="shopping-bag"></i><span><strong>Mis pedidos</strong><small>Consulta el estado de tus compras.</small></span><i data-lucide="arrow-right"></i></a><a asp-controller="Instituciones" asp-action="MisSolicitudes"><i data-lucide="building-2"></i><span><strong>Mis solicitudes</strong><small>Revisa tus gestiones institucionales.</small></span><i data-lucide="arrow-right"></i></a>@if (User.IsInRole("ClienteInstitucional")) { <a asp-controller="Cotizaciones" asp-action="Index"><i data-lucide="file-text"></i><span><strong>Mis cotizaciones</strong><small>Consulta tus propuestas.</small></span><i data-lucide="arrow-right"></i></a> }</aside></div></section>
