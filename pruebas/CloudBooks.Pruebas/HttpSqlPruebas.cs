@@ -127,6 +127,11 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
         Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString((await pdf.Content.ReadAsByteArrayAsync())[..4]));
         using var otro = await IngresarAsync(app, "institucion@cloudbooks.local");
         Assert.Equal(HttpStatusCode.NotFound, (await otro.GetAsync($"/Pedidos/Comprobante/{pedido.Id}")).StatusCode);
+        await db.Users.Where(u => u.Id == usuario.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.PhoneNumber, "55551234"));
+        using var administrador = await IngresarAsync(app, "admin.dominick@cloudbooks.local");
+        var detalleAdmin = await administrador.GetStringAsync($"/Administracion/DetallePedido/{pedido.Id}");
+        Assert.Contains("https://wa.me/50255551234", detalleAdmin);
+        Assert.DoesNotContain("antes%20de%20continuar%20con%20el%20procesamiento", detalleAdmin);
         salida.WriteLine($"Compra HTTP: {pedido.Codigo}, total Q{pedido.Total:0.00}, stock 100→94; rechazo sin fondos, correo en cola y PDF propio; PDF ajeno 404.");
     }
 
