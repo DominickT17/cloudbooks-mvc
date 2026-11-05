@@ -29,12 +29,12 @@ builder.Services.AddScoped<ServicioIntentosPago>();
 builder.Services.AddScoped<IServicioNotificaciones, ServicioNotificaciones>();
 builder.Services.AddScoped<ProcesadorCorreos>();
 builder.Services.AddHttpClient<ResendClient>(cliente => cliente.Timeout = TimeSpan.FromSeconds(60));
-builder.Services.Configure<ResendClientOptions>(opciones => opciones.ApiToken = builder.Configuration["Correo:ApiKey"] ?? "");
+builder.Services.Configure<ResendClientOptions>(opciones => opciones.ApiToken = ConfiguracionCorreo.ObtenerClave(builder.Configuration) ?? "");
 builder.Services.AddTransient<IResend, ResendClient>();
 builder.Services.AddScoped<ProveedorCorreoResend>();
 builder.Services.AddScoped<ProveedorCorreoSimulado>();
 builder.Services.AddScoped<IProveedorCorreo>(servicios =>
-    builder.Configuration["Correo:Proveedor"] == "Resend" && !string.IsNullOrWhiteSpace(builder.Configuration["Correo:ApiKey"]) && System.Net.Mail.MailAddress.TryCreate(builder.Configuration["Correo:Remitente"], out _)
+    ConfiguracionCorreo.UsarResend(builder.Configuration)
         ? servicios.GetRequiredService<ProveedorCorreoResend>() : servicios.GetRequiredService<ProveedorCorreoSimulado>());
 builder.Services.AddHostedService<ServicioFondoCorreos>();
 builder.Services.AddScoped<INotificacionesPedido, NotificacionesPedido>();

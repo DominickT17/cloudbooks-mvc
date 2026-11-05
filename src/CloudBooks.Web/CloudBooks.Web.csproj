@@ -4,7 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>CloudBooks.Web-Local-2026</UserSecretsId>
     <UserSecretsId>c9ab3ad4-5ea3-40f1-9e53-3d1b4174ea0f</UserSecretsId>
   </PropertyGroup>
 

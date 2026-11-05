@@ -86,6 +86,23 @@ public class CorreosPruebas : IDisposable
         Assert.Equal($"cloudbooks/{correo.ClaveEnvio:N}", manejador.Clave);
     }
 
+    [Fact]
+    public void ConfiguracionPrefiereClaveResendYExigeActivacionExplicita()
+    {
+        var configuracion = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Resend:ApiKey"] = "clave-prueba",
+            ["Correo:ApiKey"] = "clave-anterior",
+            ["Correo:Remitente"] = "CloudBooks <onboarding@resend.dev>"
+        }).Build();
+        Assert.Equal("clave-prueba", ConfiguracionCorreo.ObtenerClave(configuracion));
+        Assert.False(ConfiguracionCorreo.UsarResend(configuracion));
+        configuracion["Correo:Proveedor"] = "Resend";
+        Assert.True(ConfiguracionCorreo.UsarResend(configuracion));
+        configuracion["Correo:Remitente"] = "no-es-un-correo";
+        Assert.False(ConfiguracionCorreo.UsarResend(configuracion));
+    }
+
     private class ManejadorResend : HttpMessageHandler
     {
         public string? Clave { get; private set; }
