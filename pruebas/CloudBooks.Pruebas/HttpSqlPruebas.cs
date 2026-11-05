@@ -125,4 +125,62 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
         Assert.Equal(HttpStatusCode.NotFound, (await otro.GetAsync($"/Pedidos/Comprobante/{pedido.Id}")).StatusCode);
         salida.WriteLine($"Compra HTTP: {pedido.Codigo}, total Q{pedido.Total:0.00}, stock 100→94; rechazo sin fondos, correo en cola y PDF propio; PDF ajeno 404.");
     }
+
+    [SqlTemporalFact]
+    public async Task InstitucionSolicitaAprobacionYCotizacionHastaRespuestaConPdfPrivado()
+    {
+        var opciones = new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlServer(Environment.GetEnvironmentVariable("CLOUDBOOKS_QA_SQL")!).Options;
+        await using var db = new ContextoAplicacion(opciones);
+        await using var app = CrearAplicacion();
+        using var minorista = await IngresarAsync(app, "cliente@cloudbooks.local");
+        using var administrador = await IngresarAsync(app, "admin.dominick@cloudbooks.local");
+        var usuario = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "cliente@cloudbooks.local");
+        var solicitudHtml = await minorista.GetStringAsync("/Instituciones/Solicitar");
+        var respuesta = await minorista.PostAsync("/Instituciones/Solicitar", new FormUrlEncodedContent(new Dictionary<string, string> {
+            ["__RequestVerificationToken"] = Token(solicitudHtml), ["Institucion"] = "Instituto QA Horizonte", ["Nit"] = "QA-123", ["TipoInstitucion"] = "Educativa", ["Telefono"] = "55551234", ["Direccion"] = "Quetzaltenango", ["Representante"] = "María López" }));
+        Assert.Equal("/Instituciones/MisSolicitudes", respuesta.Headers.Location?.ToString());
+        var institucional = await db.SolicitudesInstitucionales.AsNoTracking().SingleAsync(s => s.UsuarioId == usuario.Id && s.Estado == EstadoSolicitudInstitucional.Pendiente);
+        Assert.True(await db.CorreosPendientes.AnyAsync(c => c.ClaveEvento.StartsWith($"institucion/{institucional.Id}/recibida/admin/")));
+        var adminHtml = await administrador.GetStringAsync($"/AdministracionInstituciones/Detalle/{institucional.Id}");
+        respuesta = await administrador.PostAsync("/AdministracionInstituciones/Resolver", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(adminHtml), ["id"] = institucional.Id.ToString(), ["aprobar"] = "true" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        Assert.Equal(EstadoSolicitudInstitucional.Aprobada, await db.SolicitudesInstitucionales.AsNoTracking().Where(s => s.Id == institucional.Id).Select(s => s.Estado).SingleAsync());
+        Assert.True(await db.CorreosPendientes.AnyAsync(c => c.ClaveEvento == $"institucion/{institucional.Id}/resuelta/cliente" && c.Tipo == "institucion_aprobada"));
+
+        using var cliente = await IngresarAsync(app, "cliente@cloudbooks.local");
+        var crearHtml = await cliente.GetStringAsync("/Solicitudes/Crear");
+        respuesta = await cliente.PostAsync("/Solicitudes/Crear", new FormUrlEncodedContent(new Dictionary<string, string> {
+            ["__RequestVerificationToken"] = Token(crearHtml), ["Titulo"] = "Obra de prueba QA", ["Cantidad"] = "20", ["Acabado"] = "Tapa blanda", ["Papel"] = "Bond", ["FechaRequerida"] = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)).ToString("yyyy-MM-dd") }));
+        Assert.Equal("/Solicitudes", respuesta.Headers.Location?.ToString());
+        var comercial = await db.SolicitudesCotizacion.AsNoTracking().SingleAsync(s => s.UsuarioId == usuario.Id);
+        var asesor = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "asesor@cloudbooks.local");
+        Assert.Equal(asesor.Id, comercial.AsesorId);
+        Assert.True(await db.CorreosPendientes.AnyAsync(c => c.ClaveEvento == $"solicitud/{comercial.Id}/asignada/{asesor.Id}"));
+        using var asesorHttp = await IngresarAsync(app, "asesor@cloudbooks.local");
+        var asesorHtml = await asesorHttp.GetStringAsync($"/Asesor/Detalle/{comercial.Id}");
+        respuesta = await asesorHttp.PostAsync("/Asesor/IniciarRevision", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(asesorHtml), ["id"] = comercial.Id.ToString() }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        var cotizarHtml = await asesorHttp.GetStringAsync($"/Asesor/Cotizar/{comercial.Id}");
+        respuesta = await asesorHttp.PostAsync("/Asesor/Cotizar", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(cotizarHtml), ["SolicitudId"] = comercial.Id.ToString(), ["Concepto"] = "Obra de prueba QA", ["Cantidad"] = "20", ["PrecioUnitario"] = "10.00" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        var cotizacion = await db.Cotizaciones.AsNoTracking().SingleAsync(c => c.SolicitudCotizacionId == comercial.Id);
+        var correo = await db.CorreosPendientes.AsNoTracking().SingleAsync(c => c.ClaveEvento == $"cotizacion/{cotizacion.Id}/emitida/cliente");
+        Assert.Contains("Instituto QA Horizonte", correo.TextoPlano);
+        Assert.Contains(cotizacion.Codigo, correo.TextoPlano);
+        Assert.Contains(cotizacion.FechaVencimiento.ToString("dd/MM/yyyy"), correo.TextoPlano);
+        var detalle = await cliente.GetStringAsync($"/Cotizaciones/Detalle/{cotizacion.Id}");
+        Assert.Contains(cotizacion.Codigo, detalle);
+        var pdf = await cliente.GetAsync($"/Cotizaciones/Pdf/{cotizacion.Id}");
+        Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
+        Assert.Equal("application/pdf", pdf.Content.Headers.ContentType?.MediaType);
+        Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString((await pdf.Content.ReadAsByteArrayAsync())[..4]));
+        using var otro = await IngresarAsync(app, "institucion@cloudbooks.local");
+        Assert.Equal(HttpStatusCode.NotFound, (await otro.GetAsync($"/Cotizaciones/Pdf/{cotizacion.Id}")).StatusCode);
+        respuesta = await cliente.PostAsync("/Cotizaciones/Responder", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(detalle), ["id"] = cotizacion.Id.ToString(), ["aceptar"] = "true" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        Assert.Equal(EstadoSolicitudCotizacion.Aceptada, await db.Cotizaciones.AsNoTracking().Where(c => c.Id == cotizacion.Id).Select(c => c.Estado).SingleAsync());
+        Assert.Equal(EstadoSolicitudCotizacion.Aceptada, await db.SolicitudesCotizacion.AsNoTracking().Where(s => s.Id == comercial.Id).Select(s => s.Estado).SingleAsync());
+        Assert.True(await db.CorreosPendientes.AnyAsync(c => c.ClaveEvento.StartsWith($"cotizacion/{cotizacion.Id}/respuesta/admin/") && c.Tipo == "cotizacion_aceptada"));
+        salida.WriteLine($"Solicitud {institucional.Id} aprobada; {comercial.Codigo} asignada, cotización {cotizacion.Codigo} aceptada; PDF propio accesible y ajeno 404.");
+    }
 }
