@@ -16,6 +16,14 @@ namespace CloudBooks.Pruebas;
 
 public class HttpSqlPruebas(ITestOutputHelper salida)
 {
+    private static DbContextOptions<ContextoAplicacion> OpcionesQaSql()
+    {
+        var cadena = Environment.GetEnvironmentVariable("CLOUDBOOKS_QA_SQL")!;
+        if (!new SqlConnectionStringBuilder(cadena).InitialCatalog.StartsWith("CloudBooks_QA_", StringComparison.Ordinal))
+            throw new InvalidOperationException("Se requiere una base temporal de QA.");
+        return new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlServer(cadena).Options;
+    }
+
     private static WebApplicationFactory<Program> CrearAplicacion()
     {
         var cadena = Environment.GetEnvironmentVariable("CLOUDBOOKS_QA_SQL")!;
@@ -43,6 +51,83 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
         Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
         Assert.DoesNotContain("Ingresar", respuesta.Headers.Location?.ToString() ?? "", StringComparison.OrdinalIgnoreCase);
         return cliente;
+    }
+
+    [SqlTemporalFact]
+    public async Task PostAdministrativosExigenRolYAntiforgeryYProtegenAdministradores()
+    {
+        var opciones = OpcionesQaSql();
+        await using var db = new ContextoAplicacion(opciones);
+        var admin = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "admin.yeisson@cloudbooks.local");
+        var rolesAntes = await db.UserRoles.AsNoTracking().Where(r => r.UserId == admin.Id).Select(r => r.RoleId).ToListAsync();
+        var stockAntes = await db.Libros.AsNoTracking().Where(l => l.Id == 1).Select(l => l.Stock).SingleAsync();
+        await using var app = CrearAplicacion();
+        var rutas = new[] { "/Administracion/CambiarEstado", "/Administracion/MarcarRevisado", "/AdministracionUsuarios/CambiarRol", "/AdministracionInventario/Actualizar", "/AdministracionConfiguracion/Guardar", "/AdministracionInstituciones/Resolver", "/AdministracionSolicitudes/Asignar", "/AdministracionCorreos/Reintentar", "/Administracion/LeerAvisoGeneral", "/Administracion/LeerAviso", "/AdministracionCatalogo/Guardar", "/AdministracionCatalogo/CambiarEstado", "/AdministracionCatalogos/Guardar" };
+        using var visitante = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = true });
+        var tokenVisitante = Token(await visitante.GetStringAsync("/Cuenta/Ingresar"));
+        foreach (var ruta in rutas)
+        {
+            var respuesta = await visitante.PostAsync(ruta, new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = tokenVisitante, ["id"] = "1" }));
+            Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+            Assert.Contains("/Cuenta/Ingresar", respuesta.Headers.Location?.ToString());
+        }
+        foreach (var correo in new[] { "cliente@cloudbooks.local", "institucion@cloudbooks.local", "asesor@cloudbooks.local" })
+        {
+            using var cliente = await IngresarAsync(app, correo);
+            var token = Token(await cliente.GetStringAsync("/Cuenta/Ingresar"));
+            foreach (var ruta in rutas)
+            {
+                var respuesta = await cliente.PostAsync(ruta, new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = token, ["id"] = "1", ["usuarioId"] = admin.Id, ["rol"] = "ClienteMinorista", ["stockNuevo"] = "0" }));
+                Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+                Assert.Contains("/Cuenta/AccesoDenegado", respuesta.Headers.Location?.ToString());
+            }
+        }
+        using var administrador = await IngresarAsync(app, "admin.dominick@cloudbooks.local");
+        foreach (var ruta in rutas)
+            Assert.Equal(HttpStatusCode.BadRequest, (await administrador.PostAsync(ruta, new FormUrlEncodedContent(new Dictionary<string, string> { ["id"] = "1" }))).StatusCode);
+        var tokenAdmin = Token(await administrador.GetStringAsync("/AdministracionUsuarios"));
+        var intento = await administrador.PostAsync("/AdministracionUsuarios/CambiarRol", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = tokenAdmin, ["usuarioId"] = admin.Id, ["rol"] = "ClienteMinorista" }));
+        Assert.Equal(HttpStatusCode.Redirect, intento.StatusCode);
+        Assert.Equal(rolesAntes, await db.UserRoles.AsNoTracking().Where(r => r.UserId == admin.Id).Select(r => r.RoleId).ToListAsync());
+        Assert.Equal(stockAntes, await db.Libros.AsNoTracking().Where(l => l.Id == 1).Select(l => l.Stock).SingleAsync());
+    }
+
+    [SqlTemporalFact]
+    public async Task CheckoutConStockQueCambioConservaCarritoSinConfirmarOtroPedido()
+    {
+        var opciones = OpcionesQaSql();
+        await using var db = new ContextoAplicacion(opciones);
+        var libro = await db.Libros.SingleAsync(l => l.ISBN == "9789929000003");
+        libro.Stock = 12;
+        await db.SaveChangesAsync();
+        var minorista = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "cliente@cloudbooks.local");
+        var institucional = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "institucion@cloudbooks.local");
+        await using var app = CrearAplicacion();
+        using var primero = await IngresarAsync(app, minorista.Email!);
+        using var segundo = await IngresarAsync(app, institucional.Email!);
+        async Task Agregar(HttpClient cliente, int cantidad)
+        {
+            var html = await cliente.GetStringAsync($"/Catalogo/Detalle/{libro.Id}");
+            var respuesta = await cliente.PostAsync("/Carrito/Agregar", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(html), ["libroId"] = libro.Id.ToString(), ["cantidad"] = cantidad.ToString() }));
+            Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        }
+        await Agregar(primero, 6);
+        await Agregar(segundo, 8);
+        var checkoutSegundo = await segundo.GetStringAsync("/Pedidos/Confirmar");
+        var checkoutPrimero = await primero.GetStringAsync("/Pedidos/Confirmar");
+        async Task<HttpResponseMessage> Pagar(HttpClient cliente, string html, string titular) => await cliente.PostAsync("/Pedidos/Crear", new FormUrlEncodedContent(new Dictionary<string, string> {
+            ["__RequestVerificationToken"] = Token(html), ["metodo"] = "0", ["titular"] = titular, ["numero"] = "4000000000000002", ["vencimiento"] = "12/35", ["cvv"] = "123" }));
+        Assert.Equal(HttpStatusCode.Redirect, (await Pagar(primero, checkoutPrimero, minorista.NombreCompleto)).StatusCode);
+        Assert.Equal(6, await db.Libros.AsNoTracking().Where(l => l.Id == libro.Id).Select(l => l.Stock).SingleAsync());
+        var cantidadAvisos = await db.AvisosAdministrativos.CountAsync();
+        var fallo = await Pagar(segundo, checkoutSegundo, institucional.NombreCompleto);
+        Assert.Equal("/Carrito", fallo.Headers.Location?.ToString());
+        var carrito = await segundo.GetStringAsync("/Carrito");
+        Assert.Contains("existencias", carrito, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(6, await db.Libros.AsNoTracking().Where(l => l.Id == libro.Id).Select(l => l.Stock).SingleAsync());
+        Assert.Equal(8, await db.DetallesCarrito.Where(d => d.Carrito.UsuarioId == institucional.Id && d.LibroId == libro.Id).Select(d => d.Cantidad).SingleAsync());
+        Assert.Equal(0, await db.Pedidos.CountAsync(p => p.UsuarioId == institucional.Id));
+        Assert.Equal(cantidadAvisos, await db.AvisosAdministrativos.CountAsync());
     }
 
     [SqlTemporalFact]
@@ -210,6 +295,15 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
         Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString((await pdf.Content.ReadAsByteArrayAsync())[..4]));
         using var otro = await IngresarAsync(app, "institucion@cloudbooks.local");
         Assert.Equal(HttpStatusCode.NotFound, (await otro.GetAsync($"/Cotizaciones/Pdf/{cotizacion.Id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await otro.GetAsync($"/Cotizaciones/Detalle/{cotizacion.Id}")).StatusCode);
+        var tokenAjeno = Token(await otro.GetStringAsync("/Cuenta/Ingresar"));
+        var respuestaAjena = await otro.PostAsync("/Cotizaciones/Responder", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = tokenAjeno, ["id"] = cotizacion.Id.ToString(), ["aceptar"] = "false" }));
+        Assert.Equal(HttpStatusCode.NotFound, respuestaAjena.StatusCode);
+        Assert.Equal(EstadoSolicitudCotizacion.Cotizada, await db.Cotizaciones.AsNoTracking().Where(c => c.Id == cotizacion.Id).Select(c => c.Estado).SingleAsync());
+        var tokenAsesor = Token(await asesorHttp.GetStringAsync("/Cuenta/Ingresar"));
+        var respuestaAsesor = await asesorHttp.PostAsync("/Cotizaciones/Responder", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = tokenAsesor, ["id"] = cotizacion.Id.ToString(), ["aceptar"] = "true" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuestaAsesor.StatusCode);
+        Assert.Contains("/Cuenta/AccesoDenegado", respuestaAsesor.Headers.Location?.ToString());
         respuesta = await cliente.PostAsync("/Cotizaciones/Responder", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(detalle), ["id"] = cotizacion.Id.ToString(), ["aceptar"] = "true" }));
         Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
         Assert.Equal(EstadoSolicitudCotizacion.Aceptada, await db.Cotizaciones.AsNoTracking().Where(c => c.Id == cotizacion.Id).Select(c => c.Estado).SingleAsync());
