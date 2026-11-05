@@ -156,7 +156,7 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         var detalle = tipo switch
         {
             "aprobado" => $"Gracias por comprar en CloudBooks. Tu pedido {pedido.Codigo} fue aprobado y el pago es simulado.\nFecha: {pedido.FechaUtc:dd/MM/yyyy HH:mm} UTC\n\nProductos:\n" + string.Join("\n", (pedido.Detalles.Count > 0 ? pedido.Detalles : await contexto.DetallesPedido.AsNoTracking().Where(d => d.PedidoId == pedido.Id).ToListAsync()).Select(d => $"{d.Cantidad} × {d.Titulo}")) + $"\n\nSubtotal: Q{pedido.Subtotal:0.00}\nDescuento por volumen: Q{pedido.DescuentoVolumen:0.00}" + (pedido.DescuentoInstitucional > 0 ? $"\nDescuento institucional: Q{pedido.DescuentoInstitucional:0.00}" : "") + $"\nIVA: Q{pedido.Impuesto:0.00}\nTOTAL: Q{pedido.Total:0.00}\n\nConsulta tus pedidos y descarga el comprobante desde tu cuenta.",
-            "revision" => $"Recibimos tu pedido {pedido.Codigo}. Necesita una validación adicional; no necesitas repetir la compra. No se han reservado existencias.",
+            "revision" => $"Recibimos tu pedido {pedido.Codigo}. Nuestro equipo realizará una validación adicional; no necesitas repetir la compra. No se han reservado existencias.",
             _ => $"Tu pedido {pedido.Codigo} fue cancelado. Si existía una autorización simulada, fue anulada. No se realizó ningún cargo bancario real."
         };
         await correos!.EncolarAsync($"pedido/{pedido.Id}/{tipo}/cliente", tipo, pedido.Codigo, cliente.Email, asunto, $"Hola, {cliente.NombreCompleto}:\n\n{detalle}");

@@ -59,7 +59,7 @@ public class ServicioSolicitudesCotizacion(ContextoAplicacion contexto, UserMana
     private async Task NotificarAsignacionAsync(SolicitudCotizacion solicitud, string asesorId)
     {
         var asesor = await usuarios.FindByIdAsync(asesorId);
-        await correos!.EncolarAsync($"solicitud/{solicitud.Id}/asignada/{asesorId}", "solicitud_asignada", solicitud.Codigo, asesor?.Email, "CloudBooks | Solicitud comercial asignada", $"Se te asignó la solicitud {solicitud.Codigo} para {solicitud.Titulo}.");
+        await correos!.EncolarAsync($"solicitud/{solicitud.Id}/asignada/{asesorId}", "solicitud_asignada", solicitud.Codigo, asesor?.Email, "CloudBooks | Solicitud comercial asignada", $"Hola, {asesor?.NombreCompleto}:\n\nSe te asignó la solicitud {solicitud.Codigo} para {solicitud.Titulo}.");
     }
 
     private IQueryable<SolicitudCotizacion> Consulta() => contexto.SolicitudesCotizacion.AsNoTracking().Include(s => s.PerfilInstitucional).Include(s => s.Usuario).Include(s => s.Asesor);

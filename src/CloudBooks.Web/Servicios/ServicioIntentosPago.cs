@@ -25,7 +25,7 @@ public class ServicioIntentosPago(ContextoAplicacion contexto, IServicioNotifica
         {
             var usuario = await contexto.Users.AsNoTracking().SingleAsync(u => u.Id == usuarioId);
             var explicacion = motivo switch { ResultadoPago.FondosInsuficientes => "Fondos insuficientes", ResultadoPago.Rechazado => "Tarjeta rechazada", ResultadoPago.Bloqueado => "Tarjeta bloqueada", ResultadoPago.Vencido => "Tarjeta vencida", _ => "Datos de prueba inválidos" };
-            await correos.EncolarAsync($"intento/{intento.Id}/rechazado", "pago_rechazado", $"Intento {intento.Id}", usuario.Email, "CloudBooks | No pudimos procesar tu pago", $"Hola, {usuario.NombreCompleto}:\n\nEl pago simulado no fue procesado: {explicacion}. Tu carrito sigue disponible. No hubo ningún cargo bancario real.");
+            await correos.EncolarAsync($"intento/{intento.Id}/rechazado", "pago_rechazado", $"Intento {intento.Id}", usuario.Email, "CloudBooks | No pudimos procesar tu pago", $"Hola, {usuario.NombreCompleto}:\n\nEl pago simulado no fue procesado: {explicacion}. Tu carrito sigue disponible para que puedas volver a intentarlo. No hubo ningún cargo bancario real.");
             await contexto.SaveChangesAsync();
         }
         await transaccion.CommitAsync();
