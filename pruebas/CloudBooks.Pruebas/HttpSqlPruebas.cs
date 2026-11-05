@@ -73,6 +73,10 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
         using var administrador = await IngresarAsync(app, "admin.yeisson@cloudbooks.local");
         foreach (var ruta in new[] { "/Administracion", "/Administracion/Pedidos", "/AdministracionCatalogo", "/AdministracionInventario", "/AdministracionInstituciones", "/AdministracionSolicitudes", "/Cotizaciones/Administracion", "/AdministracionUsuarios", "/AdministracionConfiguracion", "/Administracion/Notificaciones", "/AdministracionCorreos", "/AdministracionCorreos/Ejemplos" })
             Assert.Equal(HttpStatusCode.OK, (await administrador.GetAsync(ruta)).StatusCode);
+        var catalogoDigital = await administrador.GetStringAsync("/AdministracionCatalogo?formato=Ebook");
+        Assert.Contains("Q89.00", catalogoDigital);
+        Assert.DoesNotContain("Q@libro", catalogoDigital);
+        Assert.DoesNotContain("Arquitectura para sistemas humanos", catalogoDigital);
         var ejemplos = WebUtility.HtmlDecode(await administrador.GetStringAsync("/AdministracionCorreos/Ejemplos"));
         foreach (var nombre in new[] { "Pedido aprobado", "Pedido en revisión", "Pago rechazado", "Pedido cancelado", "Institución recibida", "Cotización emitida", "Aviso administrativo" }) Assert.Contains(nombre, ejemplos);
         salida.WriteLine("La segunda cuenta administradora accedió a las rutas administrativas y a la vista de plantillas de demostración.");
