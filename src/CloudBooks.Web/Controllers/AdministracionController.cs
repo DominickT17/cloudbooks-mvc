@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using CloudBooks.Web.Modelos;
 using CloudBooks.Web.Servicios;
 using CloudBooks.Web.Datos;
+using CloudBooks.Web.ModelosVista;
 using Microsoft.EntityFrameworkCore;
 
 namespace CloudBooks.Web.Controllers;
@@ -31,7 +32,7 @@ public class AdministracionController(ServicioPedidos pedidos, ServicioMetricas 
         return RedirectToAction(nameof(Notificaciones));
     }
 
-    public async Task<IActionResult> Pedidos(EstadoPedido? estado, bool? revision, TipoRevisionPedido? tipo, string? buscar, DateOnly? fecha)
+    public async Task<IActionResult> Pedidos(EstadoPedido? estado, bool? revision, TipoRevisionPedido? tipo, string? buscar, DateOnly? fecha, bool? prioridad)
     {
         if (!ModelState.IsValid || estado.HasValue && !Enum.IsDefined(estado.Value)) return BadRequest();
         ViewBag.Estado = estado;
@@ -43,8 +44,9 @@ public class AdministracionController(ServicioPedidos pedidos, ServicioMetricas 
         if (estado.HasValue) resultados = resultados.Where(p => p.Estado == estado);
         if (revision == true) resultados = resultados.Where(p => p.Estado == EstadoPedido.EnRevision);
         if (tipo.HasValue) resultados = resultados.Where(p => (p.TipoRevision & tipo.Value) != 0);
+        if (prioridad.HasValue) resultados = resultados.Where(p => p.AltaPrioridad == prioridad.Value);
         if (!string.IsNullOrWhiteSpace(buscar)) resultados = resultados.Where(p => p.Usuario.NombreCompleto.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase) || (p.Usuario.Email?.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase) ?? false) || p.Codigo.Contains(buscar.Trim(), StringComparison.OrdinalIgnoreCase));
-        if (fecha.HasValue) resultados = resultados.Where(p => DateOnly.FromDateTime(p.FechaUtc) == fecha.Value);
+        if (fecha.HasValue) resultados = resultados.Where(p => DateOnly.FromDateTime(FechaPresentacion.EnGuatemala(p.FechaUtc)) == fecha.Value);
         return View(resultados.ToList());
     }
 

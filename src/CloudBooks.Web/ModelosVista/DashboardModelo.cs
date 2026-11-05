@@ -3,6 +3,7 @@ using CloudBooks.Web.Modelos;
 namespace CloudBooks.Web.ModelosVista;
 
 public record LibroVendido(int LibroId, string Titulo, int Unidades);
+public record ActividadAdministrativa(DateTime FechaUtc, string Titulo, string Detalle, string Tipo, int Id);
 public class DashboardModelo
 {
     public decimal Ventas { get; set; }
@@ -23,4 +24,5 @@ public class DashboardModelo
     public List<Libro> StockBajo { get; set; } = [];
     public List<LibroVendido> MasVendidos { get; set; } = [];
     public List<Pedido> PedidosRecientes { get; set; } = [];
+    public List<ActividadAdministrativa> Actividad { get; set; } = [];
 }

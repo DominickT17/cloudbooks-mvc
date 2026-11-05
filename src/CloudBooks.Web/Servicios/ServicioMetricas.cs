@@ -19,6 +19,13 @@ public class ServicioMetricas(ContextoAplicacion contexto, ServicioParametros? p
         var masVendidos = await contexto.DetallesPedido.AsNoTracking().Where(d => d.Pedido.Estado == EstadoPedido.Aprobado || d.Pedido.Estado == EstadoPedido.Enviado)
             .GroupBy(d => new { d.LibroId, d.Libro.Titulo }).Select(g => new { g.Key.LibroId, g.Key.Titulo, Unidades = g.Sum(d => d.Cantidad) })
             .OrderByDescending(x => x.Unidades).ThenBy(x => x.Titulo).Take(5).ToListAsync();
+        var pedidosRecientes = await contexto.Pedidos.AsNoTracking().OrderByDescending(p => p.FechaUtc).Take(5).ToListAsync();
+        var institucionesRecientes = await contexto.SolicitudesInstitucionales.AsNoTracking().OrderByDescending(s => s.FechaUtc).Take(5).ToListAsync();
+        var cotizacionesRecientes = await contexto.Cotizaciones.AsNoTracking().Include(c => c.Solicitud).ThenInclude(s => s.PerfilInstitucional).OrderByDescending(c => c.FechaUtc).Take(5).ToListAsync();
+        var actividad = pedidosRecientes.Select(p => new ActividadAdministrativa(p.FechaUtc, "Pedido registrado", $"{p.Codigo} · {p.EstadoTexto}", "pedido", p.Id))
+            .Concat(institucionesRecientes.Select(s => new ActividadAdministrativa(s.FechaUtc, "Solicitud institucional recibida", s.Institucion, "institucion", s.Id)))
+            .Concat(cotizacionesRecientes.Select(c => new ActividadAdministrativa(c.FechaUtc, "Cotización emitida", $"{c.Codigo} · {c.Solicitud.PerfilInstitucional.Institucion}", "cotizacion", c.Id)))
+            .OrderByDescending(a => a.FechaUtc).Take(6).ToList();
         return new DashboardModelo
         {
             Ventas = await contexto.Pedidos.Where(p => p.Estado == EstadoPedido.Aprobado || p.Estado == EstadoPedido.Enviado).SumAsync(p => (decimal?)p.Total) ?? 0m,
@@ -37,7 +44,8 @@ public class ServicioMetricas(ContextoAplicacion contexto, ServicioParametros? p
             Clientes = await clientes.Distinct().CountAsync(), Institucionales = await institucionales.Distinct().CountAsync(),
             StockBajo = await contexto.Libros.AsNoTracking().Where(l => l.Activo && l.Formato != FormatoLibro.Ebook && l.Stock <= umbral).OrderBy(l => l.Stock).ThenBy(l => l.Titulo).ToListAsync(),
             MasVendidos = masVendidos.Select(x => new LibroVendido(x.LibroId, x.Titulo, x.Unidades)).ToList(),
-            PedidosRecientes = await contexto.Pedidos.AsNoTracking().OrderByDescending(p => p.Id).Take(5).ToListAsync()
+            PedidosRecientes = pedidosRecientes,
+            Actividad = actividad
         };
     }
 }
