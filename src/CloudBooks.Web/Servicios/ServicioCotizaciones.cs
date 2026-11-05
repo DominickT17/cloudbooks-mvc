@@ -27,7 +27,7 @@ public class ServicioCotizaciones(ContextoAplicacion contexto, ServicioDescuento
         if (correos != null)
         {
             var destinatario = await contexto.SolicitudesCotizacion.Where(s => s.Id == datos.SolicitudId).Select(s => new { Cliente = s.Usuario, Institucion = s.PerfilInstitucional.Institucion }).SingleAsync();
-            await correos.EncolarAsync($"cotizacion/{cotizacion.Id}/emitida/cliente", "cotizacion_emitida", cotizacion.Codigo, destinatario.Cliente.Email, $"CloudBooks | Cotización {cotizacion.Codigo}", $"Hola, {destinatario.Cliente.NombreCompleto}:\n\nTu cotización está disponible en tu cuenta.\nInstitución: {destinatario.Institucion}\nCotización: {cotizacion.Codigo}\nTotal: Q{cotizacion.Total:0.00}\nVigencia hasta: {cotizacion.FechaVencimiento:dd/MM/yyyy}\n\nPuedes consultar el detalle y descargar el PDF iniciando sesión.");
+            await correos.EncolarAsync($"cotizacion/{cotizacion.Id}/emitida/cliente", "cotizacion_emitida", cotizacion.Codigo, destinatario.Cliente.Email, $"CloudBooks | Cotización {cotizacion.Codigo}", $"Hola, {destinatario.Cliente.NombreCompleto}:\n\nTu cotización está disponible en tu cuenta.\nInstitución: {destinatario.Institucion}\nCotización: {cotizacion.Codigo}\nFecha: {cotizacion.FechaUtc:dd/MM/yyyy} UTC\nVigencia hasta: {cotizacion.FechaVencimiento:dd/MM/yyyy}\nEstado: Emitida\nTotal: Q{cotizacion.Total:0.00}\n\nPuedes consultar el detalle y descargar el PDF iniciando sesión.");
             await correos.EncolarAdministracionAsync($"cotizacion/{cotizacion.Id}/emitida/admin", "cotizacion_emitida", cotizacion.Codigo, "CloudBooks | Cotización emitida", $"Se emitió {cotizacion.Codigo} para {destinatario.Cliente.NombreCompleto}.");
             await contexto.SaveChangesAsync();
         }

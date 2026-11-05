@@ -13,7 +13,7 @@ public class AdministracionCorreosController(ContextoAplicacion contexto, IWebHo
     public async Task<IActionResult> Index() => View(await contexto.CorreosPendientes.AsNoTracking().OrderByDescending(c => c.Id).Take(200).ToListAsync());
     [HttpGet]
     public IActionResult Ejemplos() => entorno.IsDevelopment()
-        ? View(EjemplosCorreo.Crear(configuracion["Correo:UrlBase"] ?? "https://cloudbooks.example", configuracion["Correo:LogoUrl"]))
+        ? View(EjemplosCorreo.Crear(configuracion["Correo:UrlBase"], configuracion["Correo:LogoUrl"]))
         : NotFound();
     public async Task<IActionResult> Detalle(int id)
     {

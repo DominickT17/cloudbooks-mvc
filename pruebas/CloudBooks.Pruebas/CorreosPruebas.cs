@@ -155,6 +155,19 @@ public class CorreosPruebas : IDisposable
     }
 
     [Fact]
+    public void ResumenDePedidoEscapaTitulosYConservaImportesSinAlterarTextoPlano()
+    {
+        const string contenido = "Hola, María:\n\nProductos:\n2 × Libro <especial>\n\nSubtotal: Q100.00\nDescuento por volumen: Q5.00\nIVA: Q11.40\nTOTAL: Q106.40";
+        var correo = PlantillasCorreo.Crear("pedido/42/aprobado/cliente", "aprobado", "Pedido", contenido, null);
+        Assert.Contains("PRODUCTOS</td>", correo.Html);
+        Assert.Contains("Libro &lt;especial&gt;", correo.Html);
+        Assert.Contains("2 × Libro <especial>", WebUtility.HtmlDecode(correo.Html));
+        Assert.Contains("Q106.40", correo.Html);
+        Assert.Contains(contenido, correo.Texto);
+        Assert.DoesNotContain("/Pedidos/Detalle", correo.Html);
+    }
+
+    [Fact]
     public void LogoSoloAdmiteUrlHttpsDeImagenRaster()
     {
         var svg = PlantillasCorreo.Crear("pedido/42/aprobado/cliente", "aprobado", "Asunto", "Mensaje", null, "https://cloudbooks.example/logo.svg");

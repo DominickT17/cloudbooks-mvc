@@ -61,9 +61,9 @@ public static class PlantillasCorreo
         };
         var baseSegura = EsHttpsPublico(urlBase, out var uriBase) ? uriBase!.GetLeftPart(UriPartial.Path).TrimEnd('/') : null;
         var logo = EsHttpsPublico(urlLogo, out var uriLogo) && new[] { ".png", ".jpg", ".jpeg" }.Any(extension => uriLogo!.AbsolutePath.EndsWith(extension, StringComparison.OrdinalIgnoreCase)) ? uriLogo!.AbsoluteUri : null;
-        var enlace = baseSegura == null ? null : baseSegura + ruta;
+        var enlace = baseSegura == null || ruta.Length == 0 ? null : baseSegura + ruta;
         var enlacePdf = baseSegura != null && numero > 0 ? tipo switch { "aprobado" when !admin => $"{baseSegura}/Pedidos/Comprobante/{numero}", "cotizacion_emitida" when !admin => $"{baseSegura}/Cotizaciones/Pdf/{numero}", _ => null } : null;
-        var contenidoHtml = string.Join("<br>", contenido.Replace("\r\n", "\n").Split('\n').Select(E));
+        var contenidoHtml = tipo == "aprobado" && !admin ? ResumenPedido(contenido) : string.Join("<br>", contenido.Replace("\r\n", "\n").Split('\n').Select(E));
         var marca = logo == null ? "<span style=\"font-size:24px;font-weight:700;letter-spacing:-.5px;color:#ffffff\">CloudBooks</span>" : $"<img src=\"{E(logo)}\" alt=\"CloudBooks\" width=\"150\" style=\"display:block;border:0;max-width:150px;height:auto\">";
         var boton = enlace == null ? "" : $"<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:26px 0 12px\"><tr><td bgcolor=\"#1478c9\" style=\"border-radius:6px\"><a href=\"{E(enlace)}\" style=\"display:inline-block;padding:14px 23px;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none\">{E(accion)} &rarr;</a></td></tr></table>";
         var pdf = enlacePdf == null ? "" : $"<p style=\"margin:14px 0 0;font-size:13px\"><a href=\"{E(enlacePdf)}\" style=\"color:#126bb0\">{(tipo == "aprobado" ? "Descargar comprobante" : "Descargar PDF de cotización")}</a> · Acceso con tu cuenta</p>";
@@ -73,8 +73,8 @@ public static class PlantillasCorreo
 <body style="margin:0;padding:0;background:#edf3f8;color:#21354b;font-family:Arial,Helvetica,sans-serif"><div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden">{preheader}</div>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#edf3f8"><tr><td align="center" style="padding:28px 12px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#ffffff">
 <tr><td bgcolor="#102e4b" style="padding:25px 30px">{marca}<div style="padding-top:7px;color:#b9d1e5;font-size:11px;letter-spacing:1.2px;text-transform:uppercase">Tu próxima lectura empieza aquí</div></td></tr>
-<tr><td style="padding:34px 30px 32px"><span style="display:inline-block;background:#eef5fa;color:{color};font-size:11px;font-weight:bold;letter-spacing:1px;padding:8px 11px">&#9679; &nbsp;{E(estado)}</span><h1 style="margin:20px 0 18px;color:#102e4b;font-size:25px;line-height:1.25">{E(titulo)}</h1>
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="border-left:3px solid #bbdced;padding:0 0 0 16px;font-size:15px;line-height:1.7;color:#32485e">{contenidoHtml}</td></tr></table>{boton}{pdf}
+<tr><td style="padding:{(admin ? "24px 24px 26px" : "34px 30px 32px")}"><span style="display:inline-block;background:#eef5fa;color:{color};font-size:11px;font-weight:bold;letter-spacing:1px;padding:8px 11px">&#9679; &nbsp;{E(estado)}</span><h1 style="margin:20px 0 18px;color:#102e4b;font-size:25px;line-height:1.25">{E(titulo)}</h1>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="table-layout:fixed"><tr><td style="border-left:3px solid #bbdced;padding:0 0 0 16px;font-size:15px;line-height:1.7;color:#32485e;overflow-wrap:anywhere;word-wrap:break-word">{contenidoHtml}</td></tr></table>{boton}{pdf}
 <p style="margin:28px 0 0;font-size:13px;line-height:1.6;color:#5b7081">¿Necesitas ayuda? <a href="https://wa.me/50255751509?text=Hola%2C%20necesito%20ayuda%20con%20CloudBooks." style="color:#126bb0">Contáctanos por WhatsApp</a>.</p></td></tr>
 <tr><td bgcolor="#f5f9fc" style="padding:22px 30px;border-top:1px solid #e1ebf2;color:#607588;font-size:12px;line-height:1.6"><strong style="color:#183c5b">CloudBooks</strong> · Quetzaltenango, Guatemala<br>Plataforma académica · Operaciones de compra y pago simuladas.</td></tr>
 </table></td></tr></table></body></html>
@@ -84,5 +84,33 @@ public static class PlantillasCorreo
         if (enlacePdf != null) texto.AppendLine("Documento (acceso con tu cuenta): " + enlacePdf);
         texto.AppendLine().AppendLine("Ayuda: https://wa.me/50255751509").Append("CloudBooks · Quetzaltenango, Guatemala · Simulación académica");
         return new PlantillaGenerada(html, texto.ToString());
+    }
+
+    private static string ResumenPedido(string contenido)
+    {
+        static string E(string valor) => WebUtility.HtmlEncode(valor);
+        var lineas = contenido.Replace("\r\n", "\n").Split('\n');
+        var inicio = Array.IndexOf(lineas, "Productos:");
+        var subtotal = Array.FindIndex(lineas, l => l.StartsWith("Subtotal:", StringComparison.Ordinal));
+        if (inicio < 0 || subtotal <= inicio)
+            return string.Join("<br>", lineas.Select(E));
+
+        var html = new StringBuilder(string.Join("<br>", lineas.Take(inicio).Select(E)));
+        html.Append("<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:14px 0 4px;border-collapse:collapse;table-layout:fixed\"><tr><td style=\"padding:10px 12px;background:#eef5fa;color:#183c5b;font-size:12px;font-weight:bold;letter-spacing:.5px\">PRODUCTOS</td></tr>");
+        foreach (var linea in lineas.Skip(inicio + 1).Take(subtotal - inicio - 1).Where(l => !string.IsNullOrWhiteSpace(l)))
+            html.Append("<tr><td style=\"padding:9px 12px;border-bottom:1px solid #e1ebf2;overflow-wrap:anywhere;word-wrap:break-word\">").Append(E(linea)).Append("</td></tr>");
+        html.Append("</table><table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;table-layout:fixed\">");
+        var fin = subtotal;
+        while (fin < lineas.Length && !string.IsNullOrWhiteSpace(lineas[fin]))
+        {
+            var linea = lineas[fin++];
+            var separador = linea.IndexOf(':');
+            if (separador < 0) continue;
+            var total = linea.StartsWith("TOTAL:", StringComparison.Ordinal);
+            html.Append("<tr><td style=\"padding:7px 12px;").Append(total ? "border-top:2px solid #bbdced;font-weight:bold;color:#102e4b" : "color:#536c80").Append("\">").Append(E(linea[..separador])).Append("</td><td align=\"right\" style=\"padding:7px 12px;white-space:nowrap;").Append(total ? "border-top:2px solid #bbdced;font-weight:bold;color:#102e4b" : "color:#32485e").Append("\">").Append(E(linea[(separador + 1)..].Trim())).Append("</td></tr>");
+        }
+        html.Append("</table>");
+        if (fin < lineas.Length) html.Append("<br>").Append(string.Join("<br>", lineas.Skip(fin).Select(E)));
+        return html.ToString();
     }
 }
