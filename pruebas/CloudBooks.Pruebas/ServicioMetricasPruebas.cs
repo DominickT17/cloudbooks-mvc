@@ -38,6 +38,20 @@ public class ServicioMetricasPruebas : IDisposable
     }
 
     [Fact]
+    public async Task DashboardCuentaCadaMotivoSoloEnPedidosEnRevision()
+    {
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.EnRevision, TipoRevision = TipoRevisionPedido.Seguridad | TipoRevisionPedido.Inventario });
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.EnRevision, TipoRevision = TipoRevisionPedido.Comercial });
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.Aprobado, TipoRevision = TipoRevisionPedido.Seguridad });
+        await contexto.SaveChangesAsync();
+        var metricas = await new ServicioMetricas(contexto).ObtenerAsync();
+        Assert.Equal(2, metricas.EnRevision);
+        Assert.Equal(1, metricas.RevisionSeguridad);
+        Assert.Equal(1, metricas.RevisionComercial);
+        Assert.Equal(1, metricas.RevisionInventario);
+    }
+
+    [Fact]
     public async Task VentasYRankingSoloCuentanPedidosAprobadosYEnviados()
     {
         var metricas = await new ServicioMetricas(contexto).ObtenerAsync();

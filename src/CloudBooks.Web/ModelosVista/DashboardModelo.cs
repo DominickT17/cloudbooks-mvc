@@ -9,6 +9,10 @@ public class DashboardModelo
     public int Pedidos { get; set; }
     public int Pendientes { get; set; }
     public int EnRevision { get; set; }
+    public int RevisionSeguridad { get; set; }
+    public int RevisionComercial { get; set; }
+    public int RevisionInventario { get; set; }
+    public int SolicitudesComercialesPendientes { get; set; }
     public int Aprobados { get; set; }
     public int Enviados { get; set; }
     public int Cancelados { get; set; }
