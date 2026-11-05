@@ -27,6 +27,8 @@ Los correos nuevos usan una base de tablas y estilos inline, con preencabezado, 
 
 En Development, inicia sesión como administrador y abre **Administración → Avisos → Historial de correos → Ver plantillas de demostración**. Los trece ejemplos contienen datos ficticios y no crean ni envían correos. Si no existe `Correo:UrlBase`, se omiten los botones que apuntan a la aplicación. El iframe puede estrecharse para inspeccionar una aproximación de vista móvil. En otros entornos esta ruta devuelve 404. El resumen del pedido aprobado separa productos y totales en tablas HTML y conserva una alternativa de texto plano.
 
+La vista permite seleccionar marcos de 600, 430 y 375 px; si la ventana es más estrecha, el marco se ajusta al espacio disponible. Los enlaces de ejemplos con URL configurada son ilustrativos y pueden apuntar a identificadores ficticios. En la revisión del 5 de noviembre se abrieron las trece variantes en esos anchos y se comprobó el ajuste de un título largo a 375 px. Parte del contenido largo requiere desplazar el iframe; la revisión de todos los pies y botones no quedó completa. La vista de navegador no sustituye una prueba en Gmail u Outlook. No se hicieron envíos reales.
+
 El 4 de noviembre de 2026 se envió una única prueba controlada de la nueva plantilla de pedido aprobado a `dominickt1703@gmail.com`, con datos ficticios y sin crear un pedido comercial ni modificar inventario. Resend aceptó la solicitud con identificador `01a1a9a0-6a41-754b-8610-25f469193fbf`; esto no confirma entrega ni apariencia en el buzón. El ejemplo se envió sin URL de aplicación configurada, por lo que no incluyó botones de pedido o comprobante.
 
 ## Entrega y reintentos

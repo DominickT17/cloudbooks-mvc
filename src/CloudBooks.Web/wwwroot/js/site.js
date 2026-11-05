@@ -47,6 +47,11 @@ document.querySelectorAll('form[data-mini-carrito]').forEach(formulario => formu
  catch { location.href = "/Carrito"; } finally { if (boton) boton.disabled = false; }
 }));
 const menuAdministrativo = document.querySelector('.admin-menu');
+document.querySelectorAll('[data-correo-ancho]').forEach(boton => boton.addEventListener('click', () => {
+ const vista = boton.closest('.admin-ejemplos-correo');
+ vista.style.setProperty('--vista-correo', `${boton.dataset.correoAncho}px`);
+ vista.querySelectorAll('[data-correo-ancho]').forEach(opcion => opcion.setAttribute('aria-pressed', String(opcion === boton)));
+}));
 if (menuAdministrativo) {
  const anchoCompacto = window.matchMedia('(max-width: 900px)');
  const ajustarMenu = () => { menuAdministrativo.open = !anchoCompacto.matches; };

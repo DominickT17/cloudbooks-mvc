@@ -63,7 +63,12 @@ public static class PlantillasCorreo
         var logo = EsHttpsPublico(urlLogo, out var uriLogo) && new[] { ".png", ".jpg", ".jpeg" }.Any(extension => uriLogo!.AbsolutePath.EndsWith(extension, StringComparison.OrdinalIgnoreCase)) ? uriLogo!.AbsoluteUri : null;
         var enlace = baseSegura == null || ruta.Length == 0 ? null : baseSegura + ruta;
         var enlacePdf = baseSegura != null && numero > 0 ? tipo switch { "aprobado" when !admin => $"{baseSegura}/Pedidos/Comprobante/{numero}", "cotizacion_emitida" when !admin => $"{baseSegura}/Cotizaciones/Pdf/{numero}", _ => null } : null;
-        var contenidoHtml = tipo == "aprobado" && !admin ? ResumenPedido(contenido) : string.Join("<br>", contenido.Replace("\r\n", "\n").Split('\n').Select(E));
+        var contenidoHtml = (tipo, admin) switch
+        {
+            ("aprobado", false) => ResumenPedido(contenido),
+            ("cotizacion_emitida", false) => ResumenCotizacion(contenido),
+            _ => string.Join("<br>", contenido.Replace("\r\n", "\n").Split('\n').Select(E))
+        };
         var marca = logo == null ? "<span style=\"font-size:24px;font-weight:700;letter-spacing:-.5px;color:#ffffff\">CloudBooks</span>" : $"<img src=\"{E(logo)}\" alt=\"CloudBooks\" width=\"150\" style=\"display:block;border:0;max-width:150px;height:auto\">";
         var boton = enlace == null ? "" : $"<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:26px 0 12px\"><tr><td bgcolor=\"#1478c9\" style=\"border-radius:6px\"><a href=\"{E(enlace)}\" style=\"display:inline-block;padding:14px 23px;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none\">{E(accion)} &rarr;</a></td></tr></table>";
         var pdf = enlacePdf == null ? "" : $"<p style=\"margin:14px 0 0;font-size:13px\"><a href=\"{E(enlacePdf)}\" style=\"color:#126bb0\">{(tipo == "aprobado" ? "Descargar comprobante" : "Descargar PDF de cotización")}</a> · Acceso con tu cuenta</p>";
@@ -111,6 +116,28 @@ public static class PlantillasCorreo
         }
         html.Append("</table>");
         if (fin < lineas.Length) html.Append("<br>").Append(string.Join("<br>", lineas.Skip(fin).Select(E)));
+        return html.ToString();
+    }
+
+    private static string ResumenCotizacion(string contenido)
+    {
+        static string E(string valor) => WebUtility.HtmlEncode(valor);
+        var lineas = contenido.Replace("\r\n", "\n").Split('\n');
+        var inicio = Array.FindIndex(lineas, l => l.StartsWith("Institución:", StringComparison.Ordinal));
+        if (inicio < 0) return string.Join("<br>", lineas.Select(E));
+        var html = new StringBuilder(string.Join("<br>", lineas.Take(inicio).Select(E)));
+        html.Append("<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:16px 0;border-collapse:collapse;table-layout:fixed;background:#f5f9fc\">");
+        var fin = inicio;
+        while (fin < lineas.Length && !string.IsNullOrWhiteSpace(lineas[fin]))
+        {
+            var linea = lineas[fin++];
+            var separador = linea.IndexOf(':');
+            if (separador < 0) continue;
+            var total = linea.StartsWith("Total:", StringComparison.Ordinal);
+            html.Append("<tr><td style=\"width:42%;padding:8px 10px;border-bottom:1px solid #e1ebf2;color:#60788b;font-size:13px;vertical-align:top\">").Append(E(linea[..separador])).Append("</td><td style=\"padding:8px 10px;border-bottom:1px solid #e1ebf2;color:#173c58;overflow-wrap:anywhere;word-wrap:break-word;").Append(total ? "font-weight:bold" : "").Append("\">").Append(E(linea[(separador + 1)..].Trim())).Append("</td></tr>");
+        }
+        html.Append("</table>");
+        if (fin < lineas.Length) html.Append(string.Join("<br>", lineas.Skip(fin).Select(E)));
         return html.ToString();
     }
 }

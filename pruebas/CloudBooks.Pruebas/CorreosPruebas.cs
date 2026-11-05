@@ -168,6 +168,18 @@ public class CorreosPruebas : IDisposable
     }
 
     [Fact]
+    public void ResumenDeCotizacionEscapaDatosYConservaTextoPlano()
+    {
+        const string contenido = "Hola, María:\n\nCotización disponible.\nInstitución: Colegio <Sol>\nCotización: COT-000007\nFecha: 05/11/2026 UTC\nVigencia hasta: 20/11/2026\nEstado: Emitida\nTotal: Q100.00\n\nConsulta tu cuenta.";
+        var correo = PlantillasCorreo.Crear("cotizacion/7/emitida/cliente", "cotizacion_emitida", "Cotización", contenido, null);
+        Assert.Contains("Colegio &lt;Sol&gt;", correo.Html);
+        Assert.Contains("Q100.00", correo.Html);
+        Assert.Contains("Vigencia hasta", correo.Html);
+        Assert.Contains(contenido, correo.Texto);
+        Assert.DoesNotContain("/Cotizaciones/Detalle", correo.Html);
+    }
+
+    [Fact]
     public void LogoSoloAdmiteUrlHttpsDeImagenRaster()
     {
         var svg = PlantillasCorreo.Crear("pedido/42/aprobado/cliente", "aprobado", "Asunto", "Mensaje", null, "https://cloudbooks.example/logo.svg");
