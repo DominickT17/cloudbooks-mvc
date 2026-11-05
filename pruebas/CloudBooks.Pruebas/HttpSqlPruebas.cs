@@ -182,5 +182,50 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
         Assert.Equal(EstadoSolicitudCotizacion.Aceptada, await db.SolicitudesCotizacion.AsNoTracking().Where(s => s.Id == comercial.Id).Select(s => s.Estado).SingleAsync());
         Assert.True(await db.CorreosPendientes.AnyAsync(c => c.ClaveEvento.StartsWith($"cotizacion/{cotizacion.Id}/respuesta/admin/") && c.Tipo == "cotizacion_aceptada"));
         salida.WriteLine($"Solicitud {institucional.Id} aprobada; {comercial.Codigo} asignada, cotización {cotizacion.Codigo} aceptada; PDF propio accesible y ajeno 404.");
+
+        crearHtml = await cliente.GetStringAsync("/Solicitudes/Crear");
+        respuesta = await cliente.PostAsync("/Solicitudes/Crear", new FormUrlEncodedContent(new Dictionary<string, string> {
+            ["__RequestVerificationToken"] = Token(crearHtml), ["Titulo"] = "Cotización por vencer QA", ["Cantidad"] = "5", ["Acabado"] = "Tapa blanda", ["Papel"] = "Bond", ["FechaRequerida"] = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)).ToString("yyyy-MM-dd") }));
+        Assert.Equal("/Solicitudes", respuesta.Headers.Location?.ToString());
+        var segunda = await db.SolicitudesCotizacion.AsNoTracking().SingleAsync(s => s.UsuarioId == usuario.Id && s.Titulo == "Cotización por vencer QA");
+        asesorHtml = await asesorHttp.GetStringAsync($"/Asesor/Detalle/{segunda.Id}");
+        respuesta = await asesorHttp.PostAsync("/Asesor/IniciarRevision", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(asesorHtml), ["id"] = segunda.Id.ToString() }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        cotizarHtml = await asesorHttp.GetStringAsync($"/Asesor/Cotizar/{segunda.Id}");
+        respuesta = await asesorHttp.PostAsync("/Asesor/Cotizar", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(cotizarHtml), ["SolicitudId"] = segunda.Id.ToString(), ["Concepto"] = segunda.Titulo, ["Cantidad"] = "5", ["PrecioUnitario"] = "10.00" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        var vencida = await db.Cotizaciones.AsNoTracking().SingleAsync(c => c.SolicitudCotizacionId == segunda.Id);
+        await db.Cotizaciones.Where(c => c.Id == vencida.Id).ExecuteUpdateAsync(s => s.SetProperty(c => c.FechaVencimiento, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1))));
+        detalle = await cliente.GetStringAsync($"/Cotizaciones/Detalle/{vencida.Id}");
+        Assert.Equal(EstadoSolicitudCotizacion.Vencida, await db.Cotizaciones.AsNoTracking().Where(c => c.Id == vencida.Id).Select(c => c.Estado).SingleAsync());
+        respuesta = await cliente.PostAsync("/Cotizaciones/Responder", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(detalle), ["id"] = vencida.Id.ToString(), ["aceptar"] = "true" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        Assert.Equal(EstadoSolicitudCotizacion.Vencida, await db.SolicitudesCotizacion.AsNoTracking().Where(s => s.Id == segunda.Id).Select(s => s.Estado).SingleAsync());
+    }
+
+    [SqlTemporalFact]
+    public async Task RechazoInstitucionalConservaRolMinoristaYNotifica()
+    {
+        var opciones = new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlServer(Environment.GetEnvironmentVariable("CLOUDBOOKS_QA_SQL")!).Options;
+        await using var db = new ContextoAplicacion(opciones);
+        await using var app = CrearAplicacion();
+        using var cliente = await IngresarAsync(app, "cliente@cloudbooks.local");
+        using var administrador = await IngresarAsync(app, "admin.dominick@cloudbooks.local");
+        var usuario = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "cliente@cloudbooks.local");
+        var html = await cliente.GetStringAsync("/Instituciones/Solicitar");
+        var respuesta = await cliente.PostAsync("/Instituciones/Solicitar", new FormUrlEncodedContent(new Dictionary<string, string> {
+            ["__RequestVerificationToken"] = Token(html), ["Institucion"] = "Instituto QA Rechazo", ["Nit"] = "QA-456", ["TipoInstitucion"] = "Educativa", ["Telefono"] = "55551234", ["Direccion"] = "Quetzaltenango", ["Representante"] = "María López" }));
+        Assert.Equal("/Instituciones/MisSolicitudes", respuesta.Headers.Location?.ToString());
+        var solicitud = await db.SolicitudesInstitucionales.AsNoTracking().SingleAsync(s => s.UsuarioId == usuario.Id && s.Estado == EstadoSolicitudInstitucional.Pendiente);
+        html = await administrador.GetStringAsync($"/AdministracionInstituciones/Detalle/{solicitud.Id}");
+        respuesta = await administrador.PostAsync("/AdministracionInstituciones/Resolver", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(html), ["id"] = solicitud.Id.ToString(), ["aprobar"] = "false" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        Assert.Equal(EstadoSolicitudInstitucional.Rechazada, await db.SolicitudesInstitucionales.AsNoTracking().Where(s => s.Id == solicitud.Id).Select(s => s.Estado).SingleAsync());
+        Assert.True(await db.CorreosPendientes.AnyAsync(c => c.ClaveEvento == $"institucion/{solicitud.Id}/resuelta/cliente" && c.Tipo == "institucion_rechazada"));
+        using var nuevaSesion = await IngresarAsync(app, "cliente@cloudbooks.local");
+        Assert.Equal(HttpStatusCode.OK, (await nuevaSesion.GetAsync("/Instituciones/Solicitar")).StatusCode);
+        var acceso = await nuevaSesion.GetAsync("/Solicitudes/Crear");
+        Assert.Equal(HttpStatusCode.Redirect, acceso.StatusCode);
+        Assert.Contains("/Cuenta/AccesoDenegado", acceso.Headers.Location?.ToString());
     }
 }
