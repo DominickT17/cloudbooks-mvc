@@ -105,3 +105,7 @@ Las pruebas automatizadas usan SQLite aislado para reglas y servicios; las opera
 El carrito de visitantes se guarda en la sesión del navegador. Al iniciar sesión o registrarse, sus cantidades se suman al carrito de la cuenta. Si un artículo ya no está disponible o supera las existencias, permanece en la sesión para que el cliente lo ajuste o retire antes de finalizar la compra. El resumen de visitante es estimado; el descuento institucional se aplica después de iniciar sesión. La sesión utiliza la memoria de la aplicación y puede perderse al reiniciar el servidor o al caducar.
 
 En Inicio, “Más vendidos” suma unidades de pedidos aprobados y enviados; si hay menos de cuatro títulos con ventas se muestra “Lecturas destacadas” en orden alfabético. Los administradores pueden marcar libros como recomendados al crear o editar. Los últimos cinco títulos consultados se guardan en la sesión; no incluyen datos personales.
+
+## Estado de preparación de la entrega
+
+La lista vigente de verificaciones, evidencias y pendientes se encuentra en [checklist de entrega](documentos/checklist-entrega-final.md). El pago es una simulación académica; el comprobante no es factura fiscal y el correo automático de QA se mantiene en modo simulado.

@@ -14,3 +14,11 @@ Capturas reales de Chromium/Playwright sobre CloudBooks en Development, una base
 Se produjeron capturas temporales adicionales a 1024 y 768 px; no se guardaron en el repositorio. La [matriz de revisión](../../revision-diseno-final.md) distingue esas capturas y mediciones de la inspección visual y de las acciones aún pendientes. Una captura HTML no demuestra compatibilidad con Gmail u Outlook.
 
 Para reproducir la revisión manual, restaura `base-datos/CloudBooks.sql` en una base dedicada, usa Development con `Correo:Proveedor=Simulado` y las [cuentas ficticias](../../credenciales-prueba.md). Recorre cada pantalla hasta el pie a los cuatro anchos; en tablas mueve el contenido horizontalmente hasta la última columna. No uses la base principal ni actives Resend para estas pruebas.
+
+## Evidencias añadidas en la continuación funcional
+
+- [Dashboard sin actividad a 768 px](dashboard-vacio-768.png).
+- [Carrito con aviso de stock insuficiente a 1024 px](stock-insuficiente-1024.png); el correo personal del pie está enmascarado.
+- Se reemplazó `dashboard-1440.png` después de esperar la animación de la gráfica, que ahora muestra la barra en la categoría correcta.
+
+Se inspeccionaron las imágenes temporales de las 14 rutas a 1440, 1024 y 768 px; las tablas se vieron en su posición horizontal inicial y los estados no cubiertos se enumeran en la [matriz](../../revision-diseno-final.md).

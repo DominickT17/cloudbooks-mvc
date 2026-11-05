@@ -55,3 +55,7 @@ El 4 de noviembre de 2026 se realizó una única prueba real con `CloudBooks <on
 ## Recepción observada y comprobación visual pendiente — 5 de noviembre
 
 La búsqueda del buzón Gmail mediante el conector encontró en la bandeja de entrada el ejemplo de pedido aprobado enviado el 4 de noviembre. Esto confirma recepción en esa cuenta; no se observó su presentación en la interfaz de Gmail ni en Outlook. Las 13 vistas de demostración se capturaron completas en marcos de 600, 430 y 375 px y se revisaron visualmente en hojas de contacto; faltan botones con URL pública válida y pruebas de clientes reales. Véase la [matriz de diseño](revision-diseno-final.md). No se enviaron mensajes nuevos.
+
+## Continuación funcional del 5 de noviembre
+
+La recepción anterior se comprobó mediante el conector de Gmail. Se intentó acceder a la interfaz para revisar su presentación, pero el entorno de interfaz falló al iniciar (`failed to write kernel assets`); la apariencia de Gmail escritorio/móvil y Outlook continúa sin comprobarse. No se realizaron envíos nuevos. Los botones a la aplicación permanecen condicionados a una URL HTTPS pública válida y controlada; la falta de esa URL o de Outlook no se presenta como un defecto de CloudBooks ni como requisito docente sin guía.

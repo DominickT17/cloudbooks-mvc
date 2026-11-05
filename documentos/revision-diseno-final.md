@@ -1,3 +1,15 @@
+## Continuación de cierre funcional — 5 de noviembre de 2026
+
+Se inspeccionaron visualmente las capturas completas existentes de las 14 rutas a **1440, 1024 y 768 px**, además de la inspección previa a 375 px. Esto acredita el estado capturado de cada página, no todos sus estados ni controles: en las tablas con desplazamiento horizontal se vio la posición inicial y siguen pendientes las columnas ocultas en cada resolución. Las capturas públicas antiguas preceden al ajuste del pie; la evidencia nueva de stock insuficiente muestra el pie corregido. No se observaron nuevos defectos generales en las vistas inspeccionadas.
+
+La captura anterior de dashboard a 1440 mostraba una barra a mitad de la animación. Se esperó a que terminara y se verificaron los datos y la posición de la barra; se reemplazó [dashboard-1440.png](evidencias/diseno-final/dashboard-1440.png). Se inspeccionó y guardó además [dashboard vacío a 768](evidencias/diseno-final/dashboard-vacio-768.png), con base restaurada sin operaciones, y [stock insuficiente a 1024](evidencias/diseno-final/stock-insuficiente-1024.png).
+
+En navegador y base temporal se comprobaron el catálogo sin resultados, validaciones de creación, alta, edición, desactivación y reactivación de un libro académico; los filtros disponible, bajo, agotado y digital; rechazo de stock negativo; cambio de rol del asesor a minorista y restauración; y validación visible de impuesto fuera de rango. El cliente pudo reducir de 8 a 6 la cantidad tras el mensaje de stock insuficiente. Las operaciones se hicieron solo en QA.
+
+Faltan todavía los recorridos completos de todos los estados y acciones de pedidos, instituciones, cotizaciones y formularios; desplazar las tablas a la última columna en cada resolución; y el ensayo de diez minutos en una sola sesión. La revisión de las capturas **no** equivale a cerrar esos pendientes. La matriz histórica que sigue conserva sus valores originales; esta sección es la actualización vigente.
+
+---
+
 # Continuación de QA visual — 5 de noviembre de 2026
 
 Esta sección actualiza la matriz histórica de abajo. Se ejecutó Chromium con Playwright sobre una base SQL Server aislada, datos académicos y correo simulado. Se capturaron las 14 rutas completas a 1440, 1024, 768 y 375 px; todas respondieron 200 y, en esa ejecución, el ancho global coincidió con el viewport. **Eso no demuestra por sí solo la ausencia de defectos ni la revisión de todas las acciones y estados.** Las imágenes de 1024 y 768 fueron temporales; no se conservan como evidencia de entrega. Las capturas de 375 se inspeccionaron completas, en el estado mostrado, y las tablas requieren desplazamiento horizontal interno. Se guardaron las capturas prioritarias indicadas abajo; el correo personal del pie se cubrió con una máscara gris y se sustituyeron los nombres de los administradores en la base de QA.
@@ -81,3 +93,5 @@ La verificación es parcial: una captura de la parte visible y una medición no 
 2. Comprobar botones de correo con una URL HTTPS pública válida y autorizada, pies y contenido largo en las 13 variantes, y realizar pruebas separadas en Gmail y Outlook.
 3. Completar la revisión de accesibilidad, estados vacíos, errores del checkout y permisos/acciones para cada rol; comprobar las rutas y formatos con más datos.
 4. No hacer merge ni declarar la fase terminada hasta cerrar esas evidencias.
+
+En una ejecución posterior en la misma base aislada, el pedido aprobado se marcó enviado; otro entró en revisión comercial y se canceló; un tercero entró en revisión de inventario, se marcó revisado y se aprobó. La revisión de seguridad se había observado en el recorrido anterior. Sigue pendiente la presentación del estado pendiente y una revisión de todos los mensajes por ancho.

@@ -1,3 +1,14 @@
+## Cierre funcional: verificaciones adicionales del 5 de noviembre
+
+- Una prueba HTTP nueva, ejecutada en SQL Server restaurado para QA, preparó dos carritos de 6 y 8 unidades sobre stock 12. La primera compra se aprobó; la segunda redirigió al carrito con mensaje de existencias, conservó 8 unidades, no produjo pedido nuevo ni aviso adicional y dejó stock 6. En navegador se reprodujo el rechazo y se ajustó el carrito a 6. [Captura](evidencias/diseno-final/stock-insuficiente-1024.png). No se probó que todas las ejecuciones simultáneas tengan el mismo orden; la prueba concurrente previa cubre otra intercalación.
+- Una prueba HTTP nueva ejerció trece POST administrativos con token de visitante y de minorista, institucional y asesor: se denegaron según rol. Para administrador sin token recibieron 400; un intento con token de cambiar el rol de otro administrador no alteró sus roles. Se comprobó que no cambió el stock observado. No es una matriz exhaustiva de todos los endpoints ni demuestra todos los cambios autorizados.
+- Se amplió el recorrido institucional en una base restaurada distinta: otro cliente institucional recibió 404 al ver, descargar o responder una cotización ajena y el asesor fue denegado al responder; la cotización seguía vigente hasta la respuesta del dueño. La aceptación, vencimiento y rechazo previos siguen cubiertos por el mismo recorrido.
+- En navegador se verificaron alta/edición/desactivación/reactivación de libro QA y validación del formulario; filtros y rechazo de stock negativo; cambio de rol permitido y restauración; error de configuración fuera de rango; y estados vacíos de dashboard, carrito y búsqueda del catálogo. Son escenarios puntuales.
+- Los enlaces `wa.me` de inicio, pedido, usuarios, institución, solicitud y cotización se revisaron mediante sus URL, con el número comercial o teléfono ficticio normalizado, texto contextual y caso de usuario sin teléfono. No se abrió ni envió WhatsApp.
+- Recorrido de navegador en dos sesiones rápidas: catálogo, carrito de visitante, ingreso, compra aprobada, comprobante propio, pedido por titular distinto, dashboard, inventario, avisos y 13 plantillas; luego solicitud institucional, asesor, emisión y PDF de cotización, y enlaces WhatsApp. **No fue una presentación única de diez minutos ni se completó el guion oral.**
+- Se encontró en Gmail el mensaje recibido anteriormente, pero la herramienta de interfaz no inició por el error `failed to write kernel assets`; por tanto no se observó su apariencia real. No se envió correo nuevo. No se identificó una guía docente en los archivos con los nombres buscados.
+
+
 ## Continuación del 5 de noviembre: pruebas adicionales
 
 - Compilación posterior a las correcciones: cero errores y advertencias. La ejecución ordinaria más reciente se indica en la sección de estado final; las pruebas SQL especiales requieren base dedicada y no se consideran aprobadas al aparecer omitidas.
@@ -51,3 +62,5 @@ Utiliza una base nueva por filtro cuando se requiera reproducibilidad completa. 
 ## Límites y pendientes
 
 No se ejecutó navegador visual ni se probaron los tamaños 1440, 1024, 768 y 375 px; no hay capturas. No se verificaron por HTTP todos los permisos, compras ahora, todas las tarjetas, revisión administrativa, flujo institucional completo, contenido visual de PDF ni enlaces WhatsApp. Falta probar más entrelazados: doble aprobación simultánea, fallo en segundo producto en SQL Server, e-book bajo concurrencia y reintentos. La prueba de dos trabajadores no cubre caída de proceso real ni expiración de lease bajo carga. Los filtros HTTP y SQL especiales pueden requerir bases recién restauradas para evitar interacción entre escenarios. No se localizó guía oficial docente.
+
+Se comprobó adicionalmente en navegador la transición aprobado → enviado, revisión comercial → cancelado y revisión de inventario → revisado → aprobado, con stock preparado exclusivamente en QA. No se observó el estado pendiente en esa ejecución.
