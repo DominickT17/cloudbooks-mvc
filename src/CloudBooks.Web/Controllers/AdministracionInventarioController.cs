@@ -1,4 +1,5 @@
 using CloudBooks.Web.Servicios;
+using CloudBooks.Web.Modelos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +8,21 @@ namespace CloudBooks.Web.Controllers;
 [Authorize(Roles = "Administrador")]
 public class AdministracionInventarioController(ServicioInventario inventario, ServicioParametros parametros) : Controller
 {
-    public async Task<IActionResult> Index(string? buscar) { ViewBag.Umbral = (await parametros.ObtenerAsync()).UmbralStockBajo; return View(await inventario.ListarAsync(buscar)); }
+    public async Task<IActionResult> Index(string? buscar, string? tipo)
+    {
+        var umbral = (await parametros.ObtenerAsync()).UmbralStockBajo;
+        var libros = await inventario.ListarAsync(buscar);
+        ViewBag.Umbral = umbral;
+        ViewBag.Resumen = libros;
+        return View(tipo switch
+        {
+            "disponibles" => libros.Where(l => l.Formato != FormatoLibro.Ebook && l.Stock > umbral).ToList(),
+            "bajo" => libros.Where(l => l.Formato != FormatoLibro.Ebook && l.Stock > 0 && l.Stock <= umbral).ToList(),
+            "agotados" => libros.Where(l => l.Formato != FormatoLibro.Ebook && l.Stock == 0).ToList(),
+            "digitales" => libros.Where(l => l.Formato == FormatoLibro.Ebook).ToList(),
+            _ => libros
+        });
+    }
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Actualizar(int id, int stockOriginal, int stockNuevo)
     {

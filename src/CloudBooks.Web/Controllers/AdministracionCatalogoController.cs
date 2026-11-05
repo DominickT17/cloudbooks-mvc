@@ -1,4 +1,5 @@
 using CloudBooks.Web.ModelosVista;
+using CloudBooks.Web.Modelos;
 using CloudBooks.Web.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,13 @@ namespace CloudBooks.Web.Controllers;
 [Authorize(Roles = "Administrador")]
 public class AdministracionCatalogoController(ServicioAdministracionCatalogo catalogo) : Controller
 {
-    public async Task<IActionResult> Index(string? buscar, string? estado) => View(await catalogo.ListarAsync(buscar, estado));
+    public async Task<IActionResult> Index(string? buscar, string? estado, FormatoLibro? formato)
+    {
+        if (!ModelState.IsValid || (formato.HasValue && !Enum.IsDefined(formato.Value))) return BadRequest();
+        var libros = await catalogo.ListarAsync(buscar, estado);
+        ViewBag.TotalEncontrados = libros.Count;
+        return View(formato.HasValue ? libros.Where(l => l.Formato == formato.Value).ToList() : libros);
+    }
     [HttpGet] public async Task<IActionResult> Crear() { var modelo = new LibroAdministracionModelo { AnioEdicion = DateTime.UtcNow.Year }; await catalogo.PrepararAsync(modelo); return View("Formulario", modelo); }
     [HttpGet] public async Task<IActionResult> Editar(int id) { var modelo = await catalogo.ObtenerAsync(id); if (modelo == null) return NotFound(); await catalogo.PrepararAsync(modelo); return View("Formulario", modelo); }
     [HttpGet] public async Task<IActionResult> Detalle(int id) { var modelo = await catalogo.ObtenerAsync(id); if (modelo == null) return NotFound(); await catalogo.PrepararAsync(modelo); return View(modelo); }
