@@ -20,6 +20,7 @@ public class ServicioPdfCotizaciones(IWebHostEnvironment entorno)
                 fila.RelativeItem().AlignRight().Column(columna =>
                 {
                     columna.Item().Text("COTIZACIÓN").FontSize(19).Bold().FontColor("#167ce0");
+                    columna.Item().Text("Simulación académica");
                     columna.Item().Text(cotizacion.Codigo).Bold();
                     columna.Item().Text("Zona 1, Quetzaltenango, Guatemala");
                     columna.Item().Text("+502 5575 1509 · dominickt1703@gmail.com");

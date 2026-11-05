@@ -1,5 +1,7 @@
 # Estado del proyecto — diagnóstico inicial, 4 de noviembre de 2026
 
+> **Actualización de cierre:** la matriz inicial y las cifras históricas de abajo describen un momento anterior. El estado vigente de esta continuación aparece al final y en [evidencias de QA](evidencias-qa-integral.md).
+
 Este diagnóstico es una evaluación parcial de preparación, no una certificación de entrega. Se revisaron los servicios críticos, controladores y documentos indicados abajo; no se han completado la auditoría exhaustiva, el recorrido en navegador ni las pruebas de todos los roles. No se localizó una guía o rúbrica oficial del docente en los archivos del repositorio. La rúbrica y los requisitos específicos evaluados aquí proceden de la solicitud del proyecto y no se atribuyen al docente.
 
 ## Matriz inicial
@@ -59,3 +61,22 @@ Se añadió una cola persistente con proveedor simulado y proveedor Resend confi
 ## QA integral posterior
 
 En SQL Server temporal se comprobaron dos compras simultáneas sobre 12 unidades, aprobación frente a cancelación y dos procesadores de correo. En TestServer se verificaron rutas seleccionadas de los cinco roles, antiforgery, compra desde visitante con fusión, rechazo por fondos, aprobación, cola y acceso al PDF propio y ajeno. Los resultados y límites reproducibles se detallan en [evidencias de QA](evidencias-qa-integral.md). La revisión de navegador, responsive y el resto de casos siguen pendientes. La rúbrica inicial sigue siendo provisional y no debe interpretarse como cierre del proyecto.
+
+## Estado de la continuación de cierre
+
+Esta clasificación expresa la evidencia disponible, no una certificación de entrega. «Parcial» incluye funcionalidad implementada cuyo QA o diseño todavía no cubre el alcance solicitado.
+
+| Área | Estado | Evidencia y trabajo pendiente |
+|---|---|---|
+| Catálogo, carrito y compra | Parcial | Flujo HTTP de visitante, fondos insuficientes y compra aprobada verificado; faltan escenarios y revisión visual completa. |
+| Pagos y pedidos | Parcial | Hay pruebas de simulador, pedidos y revisión; faltan recorridos HTTP de todas las tarjetas y transiciones. |
+| Inventario y concurrencia | Parcial | Cinco pruebas SQL aisladas, incluidas doble aprobación y rollback del segundo producto; faltan e-books concurrentes y más entrelazados. |
+| Instituciones y cotizaciones | Parcial | Recorrido HTTP de aprobación, asignación, emisión, aceptación, PDF privado y vencimiento; rechazo institucional probado aparte. Falta QA visual integral y rechazo de cotización en el recorrido HTTP. |
+| Roles y seguridad | Parcial | Rutas seleccionadas de cinco roles, antiforgery y documentos propios/ajenos probados; no existe una matriz exhaustiva de endpoints. |
+| Correo y Resend | Parcial | Cola y proveedor simulado probados; 13 vistas abiertas parcialmente y pedido mejorado. Faltan todos los anchos y clientes de correo reales. Sin nuevos envíos reales. |
+| Administración y tienda | Parcial | Dashboard y navegación mejorados; solo se inspeccionaron algunas vistas y tamaños. Faltan rediseño y QA por módulo y responsive integral. |
+| PDF | Parcial | Dos ejemplos de una página renderizados y legibles; falta probar documentos largos y paginación. |
+| Base de datos | Completo y verificado para la restauración observada | SQL de entrega restaurado con 17 migraciones en base aislada; no se modificó el esquema en esta continuación. Persisten advertencias de longitud teórica de índices Identity. |
+| Documentación y demo | Parcial | Guion y evidencias actualizados; falta ensayar la demo completa en navegador y revisar el resto de documentos. |
+
+**Evaluación actual: NO LISTO PARA ENTREGA.** Las tareas visuales, responsive y de QA pendientes son parte de los criterios solicitados; no deben presentarse como completadas por las pruebas existentes.
