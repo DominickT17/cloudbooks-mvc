@@ -22,3 +22,7 @@ Para reproducir la revisión manual, restaura `base-datos/CloudBooks.sql` en una
 - Se reemplazó `dashboard-1440.png` después de esperar la animación de la gráfica, que ahora muestra la barra en la categoría correcta.
 
 Se inspeccionaron las imágenes temporales de las 14 rutas a 1440, 1024 y 768 px; las tablas se vieron en su posición horizontal inicial y los estados no cubiertos se enumeran en la [matriz](../../revision-diseno-final.md).
+
+## Versión candidata
+
+[Pedidos: acciones de la última columna a 375 px](pedidos-acciones-375.png), captura real de la copia de ensayo con registros académicos y la tabla desplazada a la derecha. La revisión de siete tablas en cuatro anchos está documentada en la [matriz visual](../../revision-diseno-final.md).

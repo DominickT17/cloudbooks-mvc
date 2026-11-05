@@ -1,27 +1,19 @@
-# Guion de demostración final — 10 minutos
+# Guion final de demostración — aproximadamente 10 minutos
 
-Preparar una base de demostración dedicada, aplicar migraciones, arrancar en Development con `Correo:Proveedor=Simulado` y verificar las [cuentas y tarjetas ficticias](credenciales-prueba.md). Comprobar existencias y dejar disponibles un pedido en revisión y una cotización para evitar esperas. El pago es simulado y el comprobante no es factura fiscal. Un pedido en revisión no reserva existencias.
+Usa la base y los accesos de [instrucciones de presentación](instrucciones-presentacion.md). Los tiempos son una propuesta para una persona; el recorrido automatizado continuo se ejecutó en 13,7 segundos y **no valida la duración ni la exposición oral**. Falta un ensayo presencial con cronómetro.
 
-| Tiempo | Recorrido |
-|---|---|
-| 0:00–1:00 | Presentar CloudBooks y el diagrama de [arquitectura MVC](arquitectura.md): controlador, servicio, modelo, vista y SQL Server. |
-| 1:00–2:00 | Explorar y filtrar el catálogo; abrir un libro y agregarlo al carrito como visitante. |
-| 2:00–4:00 | Iniciar sesión como cliente, comprobar el carrito y agregar seis ejemplares de una obra con stock holgado. Mostrar descuento e IVA, usar tarjeta ficticia aprobada y confirmar. Enseñar aprobación automática, historial y comprobante PDF. |
-| 4:00–5:00 | Mostrar un pedido preparado con titular distinto y explicar la revisión académica sin afirmar fraude. La autorización queda pendiente y el stock no está reservado. |
-| 5:00–6:30 | Entrar como administrador: revisar motivo y estado del pago, validar el pedido y aprobarlo si hay stock; consultar inventario y dashboard. |
-| 6:30–7:30 | Abrir Avisos, historial y plantillas de demostración. Explicar que las intenciones se guardan en una cola persistente; en modo simulado no se envía correo. Resend es configurable y una aceptación del proveedor no confirma entrega al buzón. |
-| 7:30–9:00 | Mostrar una cuenta institucional aprobada, solicitud especial, asesor asignado y cotización preparada; descargar el PDF como cliente. |
-| 9:00–10:00 | Mostrar roles, parámetros comerciales y protección de stock. Abrir el enlace de WhatsApp sin enviar el mensaje: una persona decide si lo envía. |
+| Tiempo | Acción | Texto breve de exposición |
+|---|---|---|
+| 0:00–1:00 | Presentar inicio y [arquitectura](arquitectura.md). | «CloudBooks es una librería académica MVC: las vistas presentan, los controladores autorizan y los servicios aplican reglas sobre SQL Server». |
+| 1:00–3:00 | Buscar un libro, agregar seis como visitante e iniciar sesión como minorista. | «El carrito se conserva al iniciar sesión. Aquí se ven el descuento por volumen, el IVA y el total». |
+| 3:00–4:00 | Pagar con la tarjeta ficticia aprobada, abrir el pedido y descargar el comprobante. | «El pago es simulado y el comprobante no es una factura fiscal. Al aprobarse se actualiza la existencia». |
+| 4:00–5:30 | Entrar como administrador y abrir el pedido preparado en revisión; mostrar dashboard e inventario. | «Un titular diferente requiere revisión académica; no implica afirmar fraude ni reserva existencias. El panel reúne alertas y stock». |
+| 5:30–6:30 | Mostrar avisos, historial y plantillas de demostración. | «Los avisos de correo se guardan en una cola. En modo simulado no sale ningún mensaje». |
+| 6:30–8:30 | Mostrar solicitud comercial y cotización como institucional; descargar PDF y mostrar la asignación al asesor. | «La institución solicita una propuesta, el asesor la prepara y el cliente puede consultar y responder su cotización». |
+| 8:30–10:00 | Mostrar usuarios, configuración y enlace WhatsApp sin enviarlo. | «Los roles limitan las acciones; los parámetros afectan nuevas operaciones. WhatsApp abre un mensaje que una persona decide enviar». |
 
-Para mostrar la aprobación institucional, volver a iniciar sesión tras la decisión administrativa. Si no hay asesor activo, administración puede reintentar la asignación. Un recorrido HTTP aislado comprobó la secuencia de aprobación, asignación, cotización y aceptación; este guion todavía debe ensayarse en el navegador y con los datos preparados para la presentación.
-## Preparación y estado del ensayo — continuación del 5 de noviembre
+## Resultado técnico observado
 
-**Pendiente de ensayo completo cronometrado.** Los recorridos parciales de compra, revisión, administración e institución se comprobaron por separado, pero no constituyen una demostración completa de diez minutos. No usar como datos finales el pedido manipulado para el PDF largo.
+En una copia restaurada del respaldo de presentación se ejecutaron los pasos de navegador de forma continua en 13,7 segundos: búsqueda de visitante, carrito fusionado, importe con descuento e IVA, compra aprobada, comprobante propio, fondos insuficientes con carrito conservado, nueva revisión, panel, stock 98→92, avisos e historial simulado, 13 plantillas, solicitud comercial preparada, asesor, cotización, PDF y aceptación, segundo administrador y enlaces WhatsApp. También se comprobó que un cliente sin el rol adecuado no accedió al PDF de cotización. Tras la aceptación, la cola registró el correo en estado Simulado. La prueba usó datos aislados y no acredita una exposición oral de diez minutos.
 
-Para el ensayo, restaurar el SQL en una base exclusiva, usar Development y `Correo:Proveedor=Simulado`; confirmar las cuentas de demostración, stock del libro elegido y las tarjetas ficticias antes de empezar. Preparar una compra aprobada y otra con titular distinto para revisión; comprobar dashboard e inventario. Crear una solicitud institucional, aprobarla, volver a iniciar sesión, crear solicitud comercial, ingresar como asesor y emitir una cotización. Comprobar acceso al PDF como dueño, historial y plantillas simuladas. Para fondos insuficientes, verificar el mensaje y la conservación del carrito antes de la compra aprobada. En WhatsApp mostrar el enlace sin enviar. El guion de tiempos anterior debe recorrerse una vez con cronómetro y registrar el resultado antes de declarar el ensayo exitoso.
-
-## Recorrido ejecutado en esta continuación
-
-Se recorrieron en Chromium dos partes automáticas: (1) inicio, catálogo, carrito de visitante, ingreso, compra aprobada y comprobante, pedido en revisión, dashboard, inventario, avisos y 13 plantillas; (2) solicitud institucional, revisión por asesor, emisión y PDF de cotización, y enlaces WhatsApp. Las partes tardaron aproximadamente 5 y 4 segundos de automatización, sin exposición oral; la primera tuvo que detenerse antes de la solicitud por un selector ambiguo, resuelto en la segunda. **No se considera un ensayo de diez minutos ni un recorrido continuo completo.**
-
-Para el ensayo pendiente, restaurar el SQL en una base exclusiva, preparar stock suficiente y las cuentas de prueba, y dejar lista una cotización o solicitud. Recorrer la tabla de tiempos con una persona y un cronómetro; registrar duración, incidencias y resultado. No activar Resend ni enviar WhatsApp. Si el tiempo se excede, precargar el pedido en revisión y la cotización; no afirmar que la prueba automática anterior validó el tiempo de exposición.
+El primer intento se detuvo porque el guion de prueba siguió una redirección HTTP automáticamente; tras corregir el guion y restaurar la copia, la ejecución continua pasó. No se envió correo ni WhatsApp. Ensayar en persona con cronómetro, anotar tiempo e incidencias y restablecer la base preparada si es necesario.

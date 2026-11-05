@@ -1,17 +1,18 @@
-# Checklist de entrega CloudBooks — 5 de noviembre de 2026
+# Checklist de versión candidata — CloudBooks
 
-Estado: **NO LISTO PARA ENTREGA** frente a los criterios explícitos de esta solicitud. Los resultados parciales y fuentes están en [QA](evidencias-qa-integral.md), [diseño](revision-diseno-final.md) y [guion](guion-demostracion-final.md). No se localizó una guía docente con los nombres buscados; esta lista no le atribuye requisitos.
+**Estado del código: CANDIDATO A ENTREGA.** El recorrido técnico continuo y la restauración aislada pasaron; no se detectaron bloqueantes en los escenarios comprobados. Antes de presentar, el equipo debe efectuar el ensayo oral con cronómetro y comprobar la vigencia de la cotización. Esto no equivale a una aprobación docente ni autoriza el merge.
 
-| Elemento | Resultado verificable | Pendiente |
+| Área | Resultado | Acción o límite |
 |---|---|---|
-| 14 rutas y cuatro anchos | Imágenes completas inspeccionadas en el estado capturado; 19 PNG conservados en [evidencias](evidencias/diseno-final/README.md). | Recorrer columnas ocultas de tablas y completar estados y acciones en los cuatro anchos. |
-| Catálogo e inventario | Alta, edición, desactivación/reactivación, búsqueda vacía, filtros y rechazo de negativo en QA. | Completar combinaciones de formularios y validaciones. |
-| Checkout | HTTP y navegador: dos carritos con stock cambiante; carrito conservado y cantidad ajustable, sin segundo pedido ni aviso. | Revisar el estado pendiente y las combinaciones restantes. |
-| Roles y privados | Lecturas de 12 rutas, trece POST con antiforgery y roles, protección de administrador; cotización propia/ajena y PDF comprobados. | Ampliar la matriz a los demás POST, recursos y mutaciones autorizadas. |
-| Instituciones y cotizaciones | Solicitud, asesor, emisión, aceptación, rechazo, vencimiento y PDF comprobados en pruebas aisladas. | Revisar visualmente todos los estados y acciones. |
-| WhatsApp | Se inspeccionaron los seis tipos de enlace y el caso sin teléfono; no se envió nada. | Ningún envío automático es parte de la prueba. |
-| Correos | 13 variantes vistas en HTML; un mensaje anterior llegó a Gmail. | Inspección visual en Gmail/Outlook y botones con URL pública válida si se dispone de acceso; son dependencias externas. |
-| PDF | Comprobante y cotización multipágina inspeccionados previamente; descargas propias y ajenas verificadas por HTTP. | Mantener los ejemplos académicos y no presentar el comprobante como factura fiscal. |
-| Demo | Recorridos rápidos en dos partes con datos temporales y correo simulado. | Ensayar el guion completo en una sesión de aproximadamente diez minutos y registrar tiempo e incidencias. |
-| Pruebas | Build 0 errores/advertencias; `dotnet test --no-build`: 92 aprobadas, 16 omitidas, 0 fallidas de 108. Dos pruebas SQL nuevas y la institucional ampliada pasaron por separado. | Las pruebas omitidas requieren bases SQL dedicadas o autorización para correo real. |
-| Git | Verificar rama limpia y sincronizada tras publicar esta continuación. | No hacer merge sin autorización. |
+| Base y arranque | SQL de entrega restaurado con 17 migraciones; base `CloudBooks_Demo_Entrega_20261105` preparada y respaldo local verificado y restaurado en una copia. | El respaldo es local a este equipo; seguir [instrucciones](instrucciones-presentacion.md). |
+| Compra y stock | En una sesión continua: carrito fusionado, descuentos e IVA, compra aprobada, PDF y stock 98→92; fondos insuficientes conservan carrito y titular distinto produce revisión. | Usar tarjetas académicas; se trata de pago simulado. |
+| Institución | Solicitud y asesor preparados; cotización propia, PDF y aceptación en navegador. Respuesta registrada en correo simulado. | La cotización preparada vence el 20/11/2026; crear otra si ha vencido. |
+| Roles y recursos | Pruebas SQL/HTTP anteriores cubren lecturas administrativas, 13 POST con antiforgery y roles, protección de administradores y acceso a PDF/cotización propios y ajenos. | No se afirma cobertura de todas las combinaciones posibles. |
+| Diseño | Las 14 rutas se inspeccionaron en cuatro anchos; se comprobaron acciones de las últimas columnas de siete tablas administrativas en 1440, 1024, 768 y 375. [Captura móvil](evidencias/diseno-final/pedidos-acciones-375.png). | Tablas estrechas requieren desplazamiento horizontal interno. |
+| Correo y WhatsApp | 13 plantillas HTML, historial simulado y enlaces contextuales comprobados; no se envió nada en este cierre. | Gmail/Outlook y botones con URL HTTPS pública controlada son verificaciones externas opcionales salvo exigencia docente. |
+| PDF | Comprobante y cotización descargados en el recorrido; la paginación larga fue inspeccionada previamente. | El comprobante es académico, no factura fiscal. |
+| Demo | Recorrido automatizado continuo: 13,7 s, con datos preparados y ambos administradores; ver [guion](guion-demostracion-final.md). | **Falta ensayo oral humano de aproximadamente diez minutos**, con cronómetro y registro de incidencias. |
+| Compilación y pruebas | Build: 0 errores y 0 advertencias. Pruebas ordinarias: 92 aprobadas, 16 omitidas, 0 fallidas de 108; especiales SQL se documentaron por separado. | La prueba de envío real permanece omitida. |
+| Git | Publicar únicamente en `feature/base-mvc`. | No hacer merge sin autorización. |
+
+No se localizó una guía docente con los nombres buscados, por lo que esta evaluación no le atribuye requisitos. Ver [evidencias de QA](evidencias-qa-integral.md) y [matriz visual](revision-diseno-final.md).

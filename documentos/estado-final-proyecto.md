@@ -1,3 +1,9 @@
+## Cierre académico — estado vigente
+
+**CANDIDATO A ENTREGA**, sujeto a revisión y ensayo oral por el equipo. No se detectaron bloqueantes en el recorrido técnico continuo ni en las verificaciones documentadas; no se presenta como cobertura exhaustiva o aprobación docente. Una base de demostración exclusiva y su respaldo verificado quedan preparados en este equipo. El recorrido automático tardó 13,7 segundos y no sustituye el ensayo humano cronometrado. La vigencia de la cotización preparada termina el 20/11/2026. La [checklist](checklist-entrega-final.md) y las [instrucciones](instrucciones-presentacion.md) prevalecen sobre las clasificaciones históricas posteriores en este documento. Sin autorización no se hace merge.
+
+---
+
 # Estado del proyecto — diagnóstico inicial, 4 de noviembre de 2026
 
 > **Actualización de cierre:** la matriz inicial y las cifras históricas de abajo describen un momento anterior. El estado vigente de esta continuación aparece al final y en [evidencias de QA](evidencias-qa-integral.md).

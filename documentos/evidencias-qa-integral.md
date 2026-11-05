@@ -1,3 +1,17 @@
+## Recorrido técnico continuo — versión candidata
+
+En `CloudBooks_Demo_Entrega_20261105` se prepararon cinco cuentas académicas, stock 98 del libro de demostración, un pedido aprobado, uno en revisión, una cotización vigente, dos avisos y ocho correos Simulados. Se creó un respaldo `COPY_ONLY` con `CHECKSUM`, se verificó y se restauró en `CloudBooks_QA_Ensayo_20261105`. No se modificó la base principal.
+
+En la copia, un único recorrido automatizado Chromium duró **13,7 s**: visitante busca y agrega seis libros, inicia sesión y conserva el carrito, verifica Q702.24 con descuento e IVA, compra y descarga su comprobante; prueba fondos insuficientes y revisión por titular distinto; consulta pedido, dashboard, inventario, avisos, historial y 13 plantillas; como institucional consulta solicitud, cotización y PDF, el asesor ve la asignación y el cliente acepta. Se verificó acceso del segundo administrador y los enlaces WhatsApp sin enviar. El stock pasó de 98 a 92. La cola registró la respuesta de cotización, aprobación, revisión y rechazo en estado Simulado. La copia se restableció una vez desde el respaldo para comprobar el procedimiento; volvió a tener dos pedidos, una cotización vigente y stock 98.
+
+El primer intento se detuvo por el propio guion: el cliente HTTP siguió una redirección y el resultado se interpretó incorrectamente como acceso al PDF ajeno. Se desactivó el seguimiento en esa comprobación, se restauró la copia y se repitió el recorrido completo con éxito. No se modificó la aplicación por ese error del guion. El recorrido no demuestra diez minutos de exposición oral.
+
+Se comprobaron acciones en la última columna, tras desplazar horizontalmente, en pedidos, catálogo administrativo, inventario, usuarios, instituciones, solicitudes comerciales y cotizaciones a 1440, 1024, 768 y 375 px. En móvil se inspeccionaron además capturas de las últimas columnas. No se observó un defecto que impidiera esas acciones. La [captura de pedidos a 375](evidencias/diseno-final/pedidos-acciones-375.png) se guardó como evidencia. Las verificaciones de seguridad y plantillas anteriores permanecen vigentes; no se afirma cobertura exhaustiva.
+
+La base preparada y su respaldo permanecen en este equipo; la base de ensayo es temporal. Véanse [instrucciones de presentación](instrucciones-presentacion.md) y [checklist](checklist-entrega-final.md). El acceso visual a Gmail/Outlook y la URL pública siguen siendo externos y no son bloqueantes por sí mismos.
+
+---
+
 ## Cierre funcional: verificaciones adicionales del 5 de noviembre
 
 - Una prueba HTTP nueva, ejecutada en SQL Server restaurado para QA, preparó dos carritos de 6 y 8 unidades sobre stock 12. La primera compra se aprobó; la segunda redirigió al carrito con mensaje de existencias, conservó 8 unidades, no produjo pedido nuevo ni aviso adicional y dejó stock 6. En navegador se reprodujo el rechazo y se ajustó el carrito a 6. [Captura](evidencias/diseno-final/stock-insuficiente-1024.png). No se probó que todas las ejecuciones simultáneas tengan el mismo orden; la prueba concurrente previa cubre otra intercalación.

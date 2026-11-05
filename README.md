@@ -109,3 +109,7 @@ En Inicio, “Más vendidos” suma unidades de pedidos aprobados y enviados; si
 ## Estado de preparación de la entrega
 
 La lista vigente de verificaciones, evidencias y pendientes se encuentra en [checklist de entrega](documentos/checklist-entrega-final.md). El pago es una simulación académica; el comprobante no es factura fiscal y el correo automático de QA se mantiene en modo simulado.
+
+## Versión candidata y presentación
+
+La base local preparada, el arranque, las cuentas de demostración, la recuperación y la secuencia están descritos en [instrucciones de presentación](documentos/instrucciones-presentacion.md). El [guion final](documentos/guion-demostracion-final.md) propone diez minutos; el recorrido técnico automático no sustituye el ensayo oral del equipo. Estado y límites en la [checklist](documentos/checklist-entrega-final.md).

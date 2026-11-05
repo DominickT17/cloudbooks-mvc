@@ -59,3 +59,7 @@ La búsqueda del buzón Gmail mediante el conector encontró en la bandeja de en
 ## Continuación funcional del 5 de noviembre
 
 La recepción anterior se comprobó mediante el conector de Gmail. Se intentó acceder a la interfaz para revisar su presentación, pero el entorno de interfaz falló al iniciar (`failed to write kernel assets`); la apariencia de Gmail escritorio/móvil y Outlook continúa sin comprobarse. No se realizaron envíos nuevos. Los botones a la aplicación permanecen condicionados a una URL HTTPS pública válida y controlada; la falta de esa URL o de Outlook no se presenta como un defecto de CloudBooks ni como requisito docente sin guía.
+
+## Verificación del recorrido candidato
+
+En la base de presentación se observaron ocho correos en estado Simulado. En la copia de ensayo, la respuesta de cotización y los eventos de compra/revisión quedaron también en Simulado. El recorrido abrió las 13 plantillas sin efectuar envíos. La apariencia en las interfaces de Gmail/Outlook y los enlaces hacia una URL pública controlada siguen siendo verificaciones externas; la recepción anterior en Gmail sí está documentada.

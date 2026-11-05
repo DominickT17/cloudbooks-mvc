@@ -1,3 +1,9 @@
+## Revisión de acciones — versión candidata
+
+En navegador se desplazaron al extremo derecho las tablas de pedidos, catálogo, inventario, usuarios, instituciones, solicitudes y cotizaciones a 1440, 1024, 768 y 375 px. Los controles objetivo quedaron visibles dentro del contenedor; se inspeccionaron capturas móviles de las últimas columnas. Se conserva [pedidos a 375 px](evidencias/diseno-final/pedidos-acciones-375.png). No se detectaron bloqueantes de diseño en los estados observados; las tablas mantienen desplazamiento interno. Esta comprobación complementa, no convierte en exhaustivas, las matrices históricas que siguen.
+
+---
+
 ## Continuación de cierre funcional — 5 de noviembre de 2026
 
 Se inspeccionaron visualmente las capturas completas existentes de las 14 rutas a **1440, 1024 y 768 px**, además de la inspección previa a 375 px. Esto acredita el estado capturado de cada página, no todos sus estados ni controles: en las tablas con desplazamiento horizontal se vio la posición inicial y siguen pendientes las columnas ocultas en cada resolución. Las capturas públicas antiguas preceden al ajuste del pie; la evidencia nueva de stock insuficiente muestra el pie corregido. No se observaron nuevos defectos generales en las vistas inspeccionadas.
