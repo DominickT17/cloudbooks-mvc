@@ -1,5 +1,7 @@
 # Evidencias de QA integral — 4 de noviembre de 2026
 
+> Para la continuación de diseño del 5 de noviembre, incluidas las mediciones por resolución y las capturas pendientes, consulta [revisión de diseño final](revision-diseno-final.md). Las secciones históricas siguientes conservan el alcance y los límites de sus respectivas ejecuciones.
+
 ## Entorno y reproducción
 
 Se restauró `base-datos/CloudBooks.sql` con `sqlcmd -f 65001` en `CloudBooks_QA_Integral_01a1a8e9`, una base temporal de SQL Server Express que se eliminó después de las pruebas. Los recorridos HTTP utilizaron `WebApplicationFactory`/TestServer en proceso, con conexión forzada a esa base y `IProveedorCorreo` sustituido por el proveedor simulado. No se habilitó Resend ni se mostraron o modificaron secretos. Las pruebas de SQL solo se habilitan mediante `CLOUDBOOKS_QA_SQL`; las nuevas verifican además que el nombre de base empiece por `CloudBooks_QA_`.

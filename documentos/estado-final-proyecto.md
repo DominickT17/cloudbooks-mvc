@@ -80,3 +80,9 @@ Esta clasificación expresa la evidencia disponible, no una certificación de en
 | Documentación y demo | Parcial | Guion y evidencias actualizados; falta ensayar la demo completa en navegador y revisar el resto de documentos. |
 
 **Evaluación actual: NO LISTO PARA ENTREGA.** Las tareas visuales, responsive y de QA pendientes son parte de los criterios solicitados; no deben presentarse como completadas por las pruebas existentes.
+
+## Fase de diseño del 5 de noviembre
+
+Se reorganizaron la navegación y las vistas administrativas de dashboard, pedidos, catálogo, inventario, usuarios, configuración, instituciones, solicitudes y cotizaciones. El checkout y Mi cuenta recibieron mejoras visuales; los cambios mantienen las reglas comerciales y el correo de prueba en modo simulado. Se midieron las 14 rutas principales en cuatro anchos y se inspeccionaron partes de las vistas en navegador. Las 13 plantillas se abrieron en marcos de 600, 430 y 375 px, con revisión visual parcial.
+
+La matriz detallada y sus límites están en [revisión de diseño final](revision-diseno-final.md). No se conservaron capturas como archivos y siguen pendientes la revisión completa de pantallas y correos, la accesibilidad integral y las pruebas en clientes reales de correo. Por esos criterios, el proyecto continúa **NO LISTO PARA ENTREGA**.
