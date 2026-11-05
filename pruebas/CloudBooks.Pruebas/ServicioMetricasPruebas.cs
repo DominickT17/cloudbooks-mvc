@@ -1,0 +1,105 @@
+using CloudBooks.Web.Datos;
+using CloudBooks.Web.Modelos;
+using CloudBooks.Web.Servicios;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+
+namespace CloudBooks.Pruebas;
+
+public class ServicioMetricasPruebas : IDisposable
+{
+    private readonly SqliteConnection conexion = new("Data Source=:memory:");
+    private readonly ContextoAplicacion contexto;
+
+    public ServicioMetricasPruebas()
+    {
+        conexion.Open();
+        contexto = new ContextoAplicacion(new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlite(conexion).Options);
+        contexto.Database.EnsureCreated();
+        var usuario = new UsuarioAplicacion { Id = "cliente", UserName = "cliente" };
+        var libro = new Libro { ISBN = "123", Titulo = "Lecturas", Sinopsis = "Descripción", PrecioBase = 100m, Stock = 5, Categoria = new Categoria { Nombre = "Narrativa" }, Editorial = new Editorial { Nombre = "Editorial" } };
+        foreach (var (estado, cantidad) in new[] { (EstadoPedido.Pendiente, 20), (EstadoPedido.Cancelado, 30), (EstadoPedido.Aprobado, 2), (EstadoPedido.Enviado, 3) })
+            contexto.Pedidos.Add(new Pedido { Usuario = usuario, Estado = estado, Total = cantidad * 100m, Detalles = [new DetallePedido { Libro = libro, Titulo = libro.Titulo, Cantidad = cantidad, PrecioUnitario = 100m, Subtotal = cantidad * 100m }] });
+        contexto.SaveChanges();
+        contexto.ChangeTracker.Clear();
+    }
+
+    [Fact]
+    public async Task DashboardCuentaRevisionYCancelacionDeSeguridadSinSumarlasAVentas()
+    {
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.EnRevision, Total = 800m });
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.CanceladoPorSeguridad, Total = 900m });
+        await contexto.SaveChangesAsync();
+        var metricas = await new ServicioMetricas(contexto).ObtenerAsync();
+        Assert.Equal(1, metricas.EnRevision);
+        Assert.Equal(2, metricas.Cancelados);
+        Assert.Equal(500m, metricas.Ventas);
+        Assert.Equal(5, metricas.PedidosRecientes.Count);
+    }
+
+    [Fact]
+    public async Task DashboardCuentaCadaMotivoSoloEnPedidosEnRevision()
+    {
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.EnRevision, TipoRevision = TipoRevisionPedido.Seguridad | TipoRevisionPedido.Inventario });
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.EnRevision, TipoRevision = TipoRevisionPedido.Comercial });
+        contexto.Pedidos.Add(new Pedido { UsuarioId = "cliente", Estado = EstadoPedido.Aprobado, TipoRevision = TipoRevisionPedido.Seguridad });
+        await contexto.SaveChangesAsync();
+        var metricas = await new ServicioMetricas(contexto).ObtenerAsync();
+        Assert.Equal(2, metricas.EnRevision);
+        Assert.Equal(1, metricas.RevisionSeguridad);
+        Assert.Equal(1, metricas.RevisionComercial);
+        Assert.Equal(1, metricas.RevisionInventario);
+    }
+
+    [Fact]
+    public async Task VentasYRankingSoloCuentanPedidosAprobadosYEnviados()
+    {
+        var metricas = await new ServicioMetricas(contexto).ObtenerAsync();
+        Assert.Equal(500m, metricas.Ventas);
+        Assert.Equal(4, metricas.Pedidos);
+        Assert.Equal(5, Assert.Single(metricas.MasVendidos).Unidades);
+        Assert.Equal(5, Assert.Single(metricas.StockBajo).Stock);
+    }
+
+    [Fact]
+    public async Task StockBajoUsaUmbralConfigurado()
+    {
+        var parametros = new ServicioParametros(contexto);
+        Assert.Null(await parametros.GuardarAsync(new ParametrosSistema { TasaImpuesto = 0.12m, UmbralStockBajo = 4, DiasVigencia = 15 }));
+        var metricas = await new ServicioMetricas(contexto, parametros).ObtenerAsync();
+        Assert.Empty(metricas.StockBajo);
+    }
+
+    [Fact]
+    public async Task CatalogosRechazanNombresDuplicadosYVacios()
+    {
+        var catalogos = new ServicioCatalogos(contexto);
+        Assert.NotNull(await catalogos.GuardarAsync("categorias", 0, "narrativa"));
+        Assert.NotNull(await catalogos.GuardarAsync("categorias", 0, "   "));
+        Assert.Null(await catalogos.GuardarAsync("categorias", 0, "Literatura"));
+    }
+
+    [Fact]
+    public async Task CuentaSoloSolicitudesInstitucionalesPendientes()
+    {
+        var solicitud = new SolicitudInstitucional { UsuarioId = "cliente", Institucion = "Institución", Nit = "1", TipoInstitucion = "Educativa", Telefono = "123", Direccion = "Dirección", Representante = "Representante", Estado = EstadoSolicitudInstitucional.Pendiente };
+        contexto.SolicitudesInstitucionales.Add(solicitud); await contexto.SaveChangesAsync();
+        Assert.Equal(1, (await new ServicioMetricas(contexto).ObtenerAsync()).SolicitudesInstitucionalesPendientes);
+        solicitud.Estado = EstadoSolicitudInstitucional.Aprobada; await contexto.SaveChangesAsync();
+        Assert.Equal(0, (await new ServicioMetricas(contexto).ObtenerAsync()).SolicitudesInstitucionalesPendientes);
+    }
+
+    [Fact]
+    public async Task ContadoresDeMenuReflejanEstadosPendientes()
+    {
+        var solicitud = new SolicitudInstitucional { UsuarioId = "cliente", Institucion = "Institución", Nit = "1", TipoInstitucion = "Educativa", Telefono = "123", Direccion = "Dirección", Representante = "Representante", Estado = EstadoSolicitudInstitucional.Pendiente };
+        contexto.SolicitudesInstitucionales.Add(solicitud); await contexto.SaveChangesAsync();
+        var servicio = new ServicioPendientesAdministrativos(contexto);
+        var antes = await servicio.ObtenerAsync(); Assert.Equal(1, antes.Pedidos); Assert.Equal(1, antes.Instituciones);
+        solicitud.Estado = EstadoSolicitudInstitucional.Rechazada;
+        var pedido = await contexto.Pedidos.FirstAsync(p => p.Estado == EstadoPedido.Pendiente); pedido.Estado = EstadoPedido.Cancelado;
+        await contexto.SaveChangesAsync(); var despues = await servicio.ObtenerAsync(); Assert.Equal(0, despues.Pedidos); Assert.Equal(0, despues.Instituciones);
+    }
+
+    public void Dispose() { contexto.Dispose(); conexion.Dispose(); }
+}

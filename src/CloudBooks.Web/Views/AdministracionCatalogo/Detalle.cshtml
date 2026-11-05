@@ -1,0 +1,6 @@
+@model CloudBooks.Web.ModelosVista.LibroAdministracionModelo
+@{ ViewData["Title"] = Model.Titulo; }
+<section class="container pagina"><a asp-action="Index">← Catálogo</a><div class="detalle-libro"><img class="detalle-portada" src="@Model.ImagenPortada" alt="Portada de @Model.Titulo" /><div>
+<p class="etiqueta">@(Model.Activo ? "ACTIVO" : "INACTIVO")</p><h1>@Model.Titulo</h1><p>@string.Join(", ", Model.Autores.Where(a => Model.AutoresIds.Contains(a.Id)).Select(a => a.Nombre))</p><p>Q@(Model.PrecioBase.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))</p><p>@Model.Sinopsis</p>
+<dl class="ficha"><div><dt>ISBN</dt><dd>@Model.ISBN</dd></div><div><dt>Editorial</dt><dd>@Model.Editoriales.FirstOrDefault(e => e.Id == Model.EditorialId)?.Nombre</dd></div><div><dt>Categoría</dt><dd>@Model.Categorias.FirstOrDefault(c => c.Id == Model.CategoriaId)?.Nombre</dd></div><div><dt>Año</dt><dd>@Model.AnioEdicion</dd></div><div><dt>Formato</dt><dd>@Model.Formato</dd></div><div><dt>Existencias</dt><dd>@(Model.Formato == CloudBooks.Web.Modelos.FormatoLibro.Ebook ? "Digital" : Model.Stock.ToString())</dd></div></dl>
+<a class="boton" asp-action="Editar" asp-route-id="@Model.Id">Editar libro</a></div></div></section>

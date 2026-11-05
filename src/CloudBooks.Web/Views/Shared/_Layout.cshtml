@@ -1,0 +1,69 @@
+@{
+    var controladorActual = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var panelAdministrativo = User.IsInRole("Administrador") && (controladorActual.StartsWith("Administracion", StringComparison.Ordinal) || controladorActual == "Cotizaciones");
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - CloudBooks</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/cloudbooks.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="cabecera">
+        <nav class="container navegacion" aria-label="Navegación principal">
+            <a asp-controller="Inicio" asp-action="Index" aria-label="CloudBooks, inicio"><img class="marca" src="~/imagenes/marca/cloudbooks.png" alt="CloudBooks" /></a>
+            <button class="menu-boton" type="button" aria-expanded="false" aria-controls="menu-principal"><i data-lucide="menu"></i><span>Menú</span></button>
+            <div class="nav-enlaces" id="menu-principal">
+                <a asp-controller="Inicio" asp-action="Index">Inicio</a>
+                <a asp-controller="Catalogo" asp-action="Index">Catálogo</a>
+                <a asp-controller="Inicio" asp-action="Instituciones">Instituciones</a>
+                @await Component.InvokeAsync("ContadorCarrito")
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <details class="menu-cuenta"><summary><i data-lucide="user-round"></i> Mi cuenta</summary><div class="menu-cuenta-panel">
+                    <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a><a asp-controller="Pedidos" asp-action="Index">Mis pedidos</a><a asp-controller="Carrito" asp-action="Index">Carrito</a>
+                    @if (User.IsInRole("ClienteMinorista") && !User.IsInRole("ClienteInstitucional")) { <a asp-controller="Inicio" asp-action="Instituciones">Cuenta institucional</a> }
+                    @if (User.IsInRole("ClienteInstitucional")) { <a asp-controller="Cotizaciones" asp-action="Index">Mis cotizaciones</a><a asp-controller="Solicitudes" asp-action="Crear">Nueva solicitud especial</a> }
+                    @if (User.IsInRole("AsesorVentas")) { <a asp-controller="Asesor" asp-action="Index">Panel de asesor y solicitudes</a> }
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Administracion" asp-action="Index">Administración</a> }
+                    <form asp-controller="Cuenta" asp-action="Salir" method="post"><button class="enlace-boton" type="submit">Cerrar sesión</button></form></div></details>
+                }
+                else
+                {
+                    <a class="nav-ingreso" asp-controller="Cuenta" asp-action="Ingresar">Iniciar sesión</a>
+                    <a class="nav-registro" asp-controller="Cuenta" asp-action="Registrar">Registrarse</a>
+                }
+            </div>
+        </nav>
+    </header>
+    <div class="@(panelAdministrativo ? "marco-administracion" : "marco-publico")">
+        @if (panelAdministrativo)
+        {
+            <aside class="barra-administracion"><nav aria-label="Administración">
+                <a asp-controller="Inicio" asp-action="Index">← Volver a la tienda</a>
+                <a asp-controller="Administracion" asp-action="Index">Dashboard</a>
+                <a asp-controller="AdministracionCatalogo" asp-action="Index">Catálogo</a>
+                <a asp-controller="AdministracionInventario" asp-action="Index">Inventario</a>
+                <a asp-controller="Administracion" asp-action="Pedidos">Pedidos</a>
+                <a asp-controller="AdministracionInstituciones" asp-action="Index">Solicitudes institucionales</a>
+                <a asp-controller="AdministracionSolicitudes" asp-action="Index">Solicitudes comerciales</a>
+                <a asp-controller="Cotizaciones" asp-action="Administracion">Cotizaciones</a>
+                <a asp-controller="AdministracionUsuarios" asp-action="Index">Usuarios</a>
+                <a asp-controller="AdministracionConfiguracion" asp-action="Index">Configuración</a>
+            </nav></aside>
+        }
+        <main>@RenderBody()</main>
+    </div>
+    <footer class="pie"><div class="container"><div class="pie-columnas"><div><strong>CloudBooks</strong><p>Tu próxima lectura empieza aquí.</p></div><div><strong>Explorar</strong><a asp-controller="Inicio" asp-action="Index">Inicio</a><a asp-controller="Catalogo" asp-action="Index">Catálogo</a></div><div><strong>Instituciones</strong><a asp-controller="Inicio" asp-action="Instituciones">Compras institucionales</a>@if (User.IsInRole("ClienteInstitucional")) { <a asp-controller="Cotizaciones" asp-action="Index">Mis cotizaciones</a> }</div><div><strong>Cuenta</strong>@if (User.Identity?.IsAuthenticated == true) { <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a><a asp-controller="Pedidos" asp-action="Index">Mis pedidos</a> } else { <a asp-controller="Cuenta" asp-action="Ingresar">Iniciar sesión</a> }</div></div><div class="pie-contacto"><span><i data-lucide="map-pin"></i> Zona 1, Quetzaltenango, Guatemala</span><span><i data-lucide="mail"></i> <a href="mailto:dominickt1703@gmail.com">dominickt1703@gmail.com</a></span><span><i data-lucide="phone"></i> +502 5575 1509</span><p>CloudBooks · Proyecto académico · Universidad Mesoamericana</p></div></div></footer>
+    <div class="ayuda-pie"><div class="container"><a class="whatsapp-ayuda" href="https://wa.me/50255751509?text=Hola%2C%20necesito%20ayuda%20con%20CloudBooks." target="_blank" rel="noopener noreferrer">¿Necesitas ayuda? Escríbenos por WhatsApp ↗</a></div></div>
+    <dialog id="mini-carrito" class="mini-carrito" aria-labelledby="titulo-mini-carrito"><div id="contenido-mini-carrito"></div></dialog>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/lucide/umd/lucide.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,10 @@
+@model CloudBooks.Web.ModelosVista.SolicitudEspecialModelo
+@{ ViewData["Title"] = "Nueva solicitud especial"; }
+<section class="container pagina"><p class="etiqueta">CLOUDBOOKS PARA INSTITUCIONES</p><h1>Nueva solicitud especial</h1><p>Cuéntanos qué necesitas para preparar una propuesta.</p>
+<form asp-action="Crear" method="post" class="formulario formulario-institucional"><div asp-validation-summary="All" class="errores" role="alert"></div>
+<label asp-for="Titulo"></label><input asp-for="Titulo" /><label asp-for="Cantidad"></label><input asp-for="Cantidad" type="number" min="1" max="10000" />
+<label asp-for="Acabado"></label><select asp-for="Acabado"><option value="">Selecciona</option><option>Tapa blanda</option><option>Tapa dura</option><option>Otro</option></select>
+<label asp-for="Papel"></label><select asp-for="Papel"><option value="">Selecciona</option><option>Bond</option><option>Couché</option><option>Reciclado</option><option>Otro</option></select>
+<label asp-for="FechaRequerida"></label><input asp-for="FechaRequerida" type="date" /><label asp-for="Observaciones"></label><textarea asp-for="Observaciones" rows="4"></textarea>
+<button class="boton" type="submit">Enviar solicitud</button></form></section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

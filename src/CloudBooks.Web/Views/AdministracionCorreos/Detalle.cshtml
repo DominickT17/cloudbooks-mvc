@@ -1,0 +1,7 @@
+@model CloudBooks.Web.Modelos.CorreoPendiente
+@{ ViewData["Title"] = "Detalle de correo"; }
+<section class="container pagina"><a asp-action="Index">← Historial de correos</a><h1>Detalle de correo</h1>
+@if (TempData["Error"] != null) { <p class="alert alert-danger">@TempData["Error"]</p> } @if (TempData["Exito"] != null) { <p class="alert alert-success">@TempData["Exito"]</p> }
+<div class="admin-panel"><p><strong>Asunto:</strong> @Model.Asunto</p><p><strong>Destinatario:</strong> @Model.Destinatario</p><p><strong>Referencia:</strong> @Model.Referencia · <strong>Estado:</strong> @Model.Estado · <strong>Proveedor:</strong> @(Model.Proveedor ?? "Pendiente")</p><p><strong>Intentos:</strong> @Model.Intentos · <strong>Último intento UTC:</strong> @Model.UltimoIntentoUtc</p><p><strong>Último error:</strong> @(Model.Error ?? "Ninguno")</p>
+@if (Model.Estado == CloudBooks.Web.Modelos.EstadoCorreo.Fallido) { <form asp-action="Reintentar" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="boton-secundario" type="submit">Programar reintento seguro</button></form> }
+<h2>Vista previa</h2><iframe title="Vista previa del correo" sandbox srcdoc="@Model.Html" style="width:100%;min-height:420px;border:1px solid #d8e3ef"></iframe></div></section>

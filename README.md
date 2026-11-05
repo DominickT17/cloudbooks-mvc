@@ -1,2 +1,115 @@
-# cloudbooks-mvc
-CloudBooks - Plataforma Web Editorial Multicanal desarrollada con ASP.NET Core MVC, SQL Server y Entity Framework Core para el Proyecto Final de Arquitectura de Sistemas.
+# CloudBooks
+
+## Descripción
+
+Plataforma editorial multicanal para lectores e instituciones. Permite explorar libros, realizar compras simuladas y gestionar pedidos, inventario y cotizaciones institucionales. Es un proyecto universitario; no procesa dinero real.
+
+## Tecnologías
+
+.NET 10, ASP.NET Core MVC, Razor, Entity Framework Core, SQL Server, Identity, Bootstrap, CSS propio, Chart.js y QuestPDF.
+
+## Requisitos
+
+SDK .NET 10, SQL Server y `sqlcmd` si se utiliza la alternativa SQL. Para desarrollo Windows se probó `.\SQLEXPRESS` con autenticación integrada. La base se llama `CloudBooks`.
+
+## Instalación
+
+```powershell
+dotnet restore
+dotnet tool restore
+```
+
+## Configuración de SQL Server
+
+En `src/CloudBooks.Web/appsettings.Development.json`, ajusta `ConnectionStrings:DefaultConnection` a tu instancia. La configuración incluida usa autenticación integrada. No agregues contraseñas reales a archivos versionados.
+
+## Crear base mediante migraciones
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = 'Development'
+dotnet ef database update --project src/CloudBooks.Web
+```
+
+Al iniciar en Development, el inicializador agrega datos académicos faltantes sin duplicar libros por ISBN ni usuarios por correo. Los roles se preparan al arrancar. Las migraciones no se aplican automáticamente.
+
+## Alternativa mediante CloudBooks.sql
+
+Usa [CloudBooks.sql](base-datos/CloudBooks.sql) **solo en una base vacía y dedicada**: incluye esquema, historial de migraciones y datos de demostración con hashes de contraseñas académicas. No lo ejecutes sobre una base existente ni lo vuelvas a ejecutar sobre la misma base.
+
+```powershell
+sqlcmd -S '.\SQLEXPRESS' -E -b -Q "CREATE DATABASE [CloudBooks];"
+sqlcmd -S '.\SQLEXPRESS' -d CloudBooks -E -b -I -f 65001 -i base-datos/CloudBooks.sql
+```
+
+El primer comando requiere que `CloudBooks` no exista. Si usas otra base o instancia, ajusta ambos comandos y la cadena de conexión. SQL Server puede advertir sobre el tamaño máximo teórico de índices de Identity.
+
+## Ejecución
+
+```powershell
+dotnet run --project src/CloudBooks.Web
+```
+
+Abre la dirección indicada en consola. Las portadas y Chart.js se sirven localmente.
+
+## Credenciales de prueba
+
+Consulta [credenciales de prueba](documentos/credenciales-prueba.md). Son **solo para demostración académica**; no se deben usar en producción. La semilla contiene diez obras ficticias con portadas locales.
+
+## Roles
+
+Visitante anónimo, `ClienteMinorista`, `ClienteInstitucional`, `AsesorVentas` y `Administrador`. El registro público asigna el rol minorista; la cuenta institucional requiere aprobación. Las cuentas administradoras no se pueden modificar desde la pantalla de roles.
+
+## Arquitectura MVC
+
+Los controladores autorizan y reciben peticiones, los servicios concentran las reglas, EF Core accede a SQL Server y Razor presenta los resultados. Identity gestiona cuentas, QuestPDF genera cotizaciones y Chart.js muestra los estados de pedidos. Véanse [arquitectura](documentos/arquitectura.md) y [modelo de datos](documentos/modelo-datos.md).
+
+## Estructura de carpetas
+
+- `src/CloudBooks.Web/Controllers`: controladores MVC.
+- `Modelos`, `ModelosVista`, `Servicios` y `Datos`: entidades, datos para vistas, reglas y contexto/migraciones.
+- `Views` y `wwwroot`: vistas, estilos, imágenes y bibliotecas locales.
+- `pruebas`: pruebas automatizadas; `documentos`: guías; `base-datos`: SQL de entrega.
+
+## Funcionalidades
+
+Catálogo con búsqueda y filtros; carrito persistente; descuentos e impuesto; pago simulado; pedidos y aprobación transaccional; inventario; gestión administrativa de libros, autores, categorías, editoriales y usuarios; dashboard; solicitudes institucionales; asignación de asesores; cotizaciones, respuesta y PDF.
+
+El administrador configura la tasa de impuesto, el umbral de stock bajo y la vigencia de nuevas cotizaciones. Los valores iniciales son 12 %, 5 unidades y 15 días. Pedidos y cotizaciones existentes conservan sus importes, tasa y fecha de vencimiento. Las ventas del dashboard incluyen solo pedidos aprobados y enviados. Para el flujo institucional consulta [su guía](documentos/flujo-institucional.md).
+
+### Revisión de pedidos
+
+Los pedidos nuevos requieren revisión si el titular de la tarjeta simulada difiere del cliente, si un cliente minorista solicita al menos 30 unidades del mismo título o si el total supera el monto configurable (inicialmente Q10,000). Una compra física también requiere revisión de inventario cuando consume al menos el 70 % de las existencias y deja una cantidad igual o inferior al umbral de stock bajo. La cantidad y el porcentaje se pueden configurar; los libros digitales no tienen revisión de inventario. Una compra de 10 unidades no genera revisión por sí sola. La comparación del nombre ignora mayúsculas, acentos y espacios repetidos; no verifica la identidad real. Los pedidos sin alertas se aprueban automáticamente y descuentan stock en una transacción; los demás requieren revisión administrativa antes de aprobarse. El descuento de existencias se hace una sola vez y la cancelación previa no las modifica. Los pedidos anteriores conservan sus estados.
+
+El checkout acepta únicamente tarjetas ficticias en Development y no almacena el número completo ni el CVV; solo conserva los últimos cuatro dígitos de una tarjeta autorizada. Los escenarios se describen en [credenciales de prueba](documentos/credenciales-prueba.md). Para cada alerta se registran mensajes locales dirigidos al cliente y a administración, dentro de la transacción del pedido; el detalle informa al cliente y el dashboard al administrador.
+
+Los pedidos nuevos registran el resultado aprobado y el estado del pago simulado: autorizado mientras se revisa y confirmado al aprobar el pedido. Al cancelar un pedido pendiente o en revisión se anula su autorización simulada; no se permite cancelar pedidos aprobados ni enviados. Los pedidos antiguos muestran el pago como no registrado, porque no existe información suficiente para reconstruirlo. Los intentos rechazados conservan el carrito y registran usuario, fecha y resultado sin número ni CVV; no se crea un pedido para ellos.
+
+Las notificaciones transaccionales usan una cola persistente y un procesador en segundo plano. Por defecto los correos son **simulados**, sin envío externo; es posible configurar Resend explícitamente. El historial administrativo distingue simulación de aceptación por el proveedor. La configuración segura, los reintentos y sus límites se explican en [correo transaccional](documentos/correo-transaccional.md).
+
+El teléfono es opcional y puede actualizarse en Mi cuenta. Se normaliza al formato `+502` seguido de ocho dígitos. Los enlaces de WhatsApp abren una conversación con texto sugerido; el usuario debe enviarlo manualmente.
+
+## Pruebas
+
+```powershell
+dotnet build
+dotnet test
+```
+
+Las pruebas automatizadas usan SQLite aislado para reglas y servicios; las operaciones de SQL Server y recorridos de navegador se deben verificar también en el entorno de destino. Recorrido sugerido: [guía de demostración](documentos/guia-demostracion.md).
+
+## Integrantes
+
+- Dóminick Ricardo Cifuentes Tomás
+- Yeisson Alexander Poroj Toc
+
+El carrito de visitantes se guarda en la sesión del navegador. Al iniciar sesión o registrarse, sus cantidades se suman al carrito de la cuenta. Si un artículo ya no está disponible o supera las existencias, permanece en la sesión para que el cliente lo ajuste o retire antes de finalizar la compra. El resumen de visitante es estimado; el descuento institucional se aplica después de iniciar sesión. La sesión utiliza la memoria de la aplicación y puede perderse al reiniciar el servidor o al caducar.
+
+En Inicio, “Más vendidos” suma unidades de pedidos aprobados y enviados; si hay menos de cuatro títulos con ventas se muestra “Lecturas destacadas” en orden alfabético. Los administradores pueden marcar libros como recomendados al crear o editar. Los últimos cinco títulos consultados se guardan en la sesión; no incluyen datos personales.
+
+## Estado de preparación de la entrega
+
+La lista vigente de verificaciones, evidencias y pendientes se encuentra en [checklist de entrega](documentos/checklist-entrega-final.md). El pago es una simulación académica; el comprobante no es factura fiscal y el correo automático de QA se mantiene en modo simulado.
+
+## Versión candidata y presentación
+
+La base local preparada, el arranque, las cuentas de demostración, la recuperación y la secuencia están descritos en [instrucciones de presentación](documentos/instrucciones-presentacion.md). El [guion final](documentos/guion-demostracion-final.md) propone diez minutos; el recorrido técnico automático no sustituye el ensayo oral del equipo. Estado y límites en la [checklist](documentos/checklist-entrega-final.md).

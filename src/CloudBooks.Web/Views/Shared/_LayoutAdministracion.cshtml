@@ -1,0 +1,42 @@
+@using CloudBooks.Web.Modelos
+@inject Microsoft.AspNetCore.Identity.UserManager<UsuarioAplicacion> GestorUsuarios
+@{
+    var usuarioActual = await GestorUsuarios.GetUserAsync(User);
+    var nombre = string.IsNullOrWhiteSpace(usuarioActual?.NombreCompleto) ? "Administrador" : usuarioActual.NombreCompleto;
+    var nombres = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    var iniciales = string.Concat(nombres.Take(2).Select(n => char.ToUpperInvariant(n[0])));
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Administración CloudBooks</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/cloudbooks.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/administracion.css" asp-append-version="true" />
+</head>
+<body class="admin-cuerpo">
+<div class="admin-estructura">
+    <aside class="admin-lateral">
+        <a class="admin-identidad" asp-controller="Administracion" asp-action="Index" aria-label="CloudBooks, centro de administración">
+            <svg class="admin-marca-icono" viewBox="0 0 44 44" aria-hidden="true"><path fill="#69bdff" d="M10 27a8 8 0 0 1-.1-15.9A12 12 0 0 1 33 13a7 7 0 0 1 1 14H10Z"/><path fill="#fff" d="M8 20c5-1 10 0 14 4v9c-4-4-9-5-14-4V20Zm28 0c-5-1-10 0-14 4v9c4-4 9-5 14-4V20Z"/><path fill="none" stroke="#d5edff" stroke-width="1.5" d="M22 24v9"/></svg>
+            <span><strong>CloudBooks</strong><small>Centro de administración</small></span>
+        </a>
+        <details class="admin-menu" open><summary><i data-lucide="menu"></i> Menú administrativo</summary>@await Component.InvokeAsync("MenuAdministracion")</details>
+        <div class="admin-perfil-lateral"><span class="admin-avatar">@iniciales</span><span><strong>@nombre</strong><small>Administrador</small></span></div>
+    </aside>
+    <div class="admin-area">
+        <header class="admin-superior">
+            <div class="admin-ruta"><span><a asp-controller="Administracion" asp-action="Index">Administración</a> <span aria-hidden="true">/</span> @ViewData["Title"]</span><strong>@ViewData["Title"]</strong></div>
+            <div class="admin-cuenta">
+                <a class="admin-campana" asp-controller="Administracion" asp-action="Notificaciones" aria-label="Avisos administrativos"><i data-lucide="bell"></i></a>
+                <details class="admin-cuenta-menu"><summary><span class="admin-avatar">@iniciales</span><span class="admin-cuenta-nombre"><strong>@nombre</strong><small>Administrador</small></span><i data-lucide="chevron-down"></i></summary>
+                    <div><a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a><form asp-controller="Cuenta" asp-action="Salir" method="post"><button class="enlace-boton" type="submit">Cerrar sesión</button></form></div>
+                </details>
+            </div>
+        </header>
+        <main>@RenderBody()</main>
+    </div>
+</div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script><script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script><script src="~/lib/lucide/umd/lucide.min.js"></script><script src="~/js/site.js" asp-append-version="true"></script>@await RenderSectionAsync("Scripts", required: false)
+</body></html>

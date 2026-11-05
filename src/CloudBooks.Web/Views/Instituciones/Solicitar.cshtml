@@ -1,0 +1,13 @@
+@model CloudBooks.Web.ModelosVista.SolicitudInstitucionalModelo
+@{ ViewData["Title"] = "Solicitar cuenta institucional"; }
+<section class="container pagina"><p class="etiqueta">CLOUDBOOKS PARA INSTITUCIONES</p><h1>Solicitar cuenta institucional</h1><p>Comparte los datos de tu institución para que podamos revisar tu solicitud.</p>
+<form asp-action="Solicitar" method="post" class="formulario formulario-institucional">
+<div asp-validation-summary="All" class="errores" role="alert"></div>
+<label asp-for="Institucion">Institución</label><input asp-for="Institucion" />
+<label asp-for="Nit">NIT</label><input asp-for="Nit" />
+<label asp-for="TipoInstitucion"></label><input asp-for="TipoInstitucion" />
+<label asp-for="Telefono"></label><input asp-for="Telefono" type="tel" />
+<label asp-for="Direccion"></label><input asp-for="Direccion" />
+<label asp-for="Representante"></label><input asp-for="Representante" />
+<button type="submit" class="boton">Enviar solicitud</button></form></section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

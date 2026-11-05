@@ -1,0 +1,51 @@
+using CloudBooks.Web.Datos;
+using CloudBooks.Web.Modelos;
+using CloudBooks.Web.ModelosVista;
+using Microsoft.EntityFrameworkCore;
+
+namespace CloudBooks.Web.Servicios;
+
+public class ServicioMetricas(ContextoAplicacion contexto, ServicioParametros? parametros = null)
+{
+    public async Task<DashboardModelo> ObtenerAsync()
+    {
+        var porEstado = await contexto.Pedidos.AsNoTracking().GroupBy(p => p.Estado).Select(g => new { Estado = g.Key, Cantidad = g.Count() }).ToListAsync();
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+        var umbral = parametros == null ? ParametrosSistema.UmbralInicial : (await parametros.ObtenerAsync()).UmbralStockBajo;
+        var clientes = from asignacion in contexto.UserRoles join rol in contexto.Roles on asignacion.RoleId equals rol.Id
+            where rol.NormalizedName == "CLIENTEMINORISTA" || rol.NormalizedName == "CLIENTEINSTITUCIONAL" select asignacion.UserId;
+        var institucionales = from asignacion in contexto.UserRoles join rol in contexto.Roles on asignacion.RoleId equals rol.Id
+            where rol.NormalizedName == "CLIENTEINSTITUCIONAL" select asignacion.UserId;
+        var masVendidos = await contexto.DetallesPedido.AsNoTracking().Where(d => d.Pedido.Estado == EstadoPedido.Aprobado || d.Pedido.Estado == EstadoPedido.Enviado)
+            .GroupBy(d => new { d.LibroId, d.Libro.Titulo }).Select(g => new { g.Key.LibroId, g.Key.Titulo, Unidades = g.Sum(d => d.Cantidad) })
+            .OrderByDescending(x => x.Unidades).ThenBy(x => x.Titulo).Take(5).ToListAsync();
+        var pedidosRecientes = await contexto.Pedidos.AsNoTracking().OrderByDescending(p => p.FechaUtc).Take(5).ToListAsync();
+        var institucionesRecientes = await contexto.SolicitudesInstitucionales.AsNoTracking().OrderByDescending(s => s.FechaUtc).Take(5).ToListAsync();
+        var cotizacionesRecientes = await contexto.Cotizaciones.AsNoTracking().Include(c => c.Solicitud).ThenInclude(s => s.PerfilInstitucional).OrderByDescending(c => c.FechaUtc).Take(5).ToListAsync();
+        var actividad = pedidosRecientes.Select(p => new ActividadAdministrativa(p.FechaUtc, "Pedido registrado", $"{p.Codigo} · {p.EstadoTexto}", "pedido", p.Id))
+            .Concat(institucionesRecientes.Select(s => new ActividadAdministrativa(s.FechaUtc, "Solicitud institucional recibida", s.Institucion, "institucion", s.Id)))
+            .Concat(cotizacionesRecientes.Select(c => new ActividadAdministrativa(c.FechaUtc, "Cotización emitida", $"{c.Codigo} · {c.Solicitud.PerfilInstitucional.Institucion}", "cotizacion", c.Id)))
+            .OrderByDescending(a => a.FechaUtc).Take(6).ToList();
+        return new DashboardModelo
+        {
+            Ventas = await contexto.Pedidos.Where(p => p.Estado == EstadoPedido.Aprobado || p.Estado == EstadoPedido.Enviado).SumAsync(p => (decimal?)p.Total) ?? 0m,
+            Pedidos = porEstado.Sum(e => e.Cantidad),
+            Pendientes = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Pendiente)?.Cantidad ?? 0,
+            EnRevision = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.EnRevision)?.Cantidad ?? 0,
+            RevisionSeguridad = await contexto.Pedidos.CountAsync(p => p.Estado == EstadoPedido.EnRevision && (p.TipoRevision & TipoRevisionPedido.Seguridad) != 0),
+            RevisionComercial = await contexto.Pedidos.CountAsync(p => p.Estado == EstadoPedido.EnRevision && (p.TipoRevision & TipoRevisionPedido.Comercial) != 0),
+            RevisionInventario = await contexto.Pedidos.CountAsync(p => p.Estado == EstadoPedido.EnRevision && (p.TipoRevision & TipoRevisionPedido.Inventario) != 0),
+            SolicitudesComercialesPendientes = await contexto.SolicitudesCotizacion.CountAsync(s => s.Estado == EstadoSolicitudCotizacion.Solicitada || s.Estado == EstadoSolicitudCotizacion.EnRevision),
+            Aprobados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Aprobado)?.Cantidad ?? 0,
+            Enviados = porEstado.FirstOrDefault(e => e.Estado == EstadoPedido.Enviado)?.Cantidad ?? 0,
+            Cancelados = porEstado.Where(e => e.Estado == EstadoPedido.Cancelado || e.Estado == EstadoPedido.CanceladoPorSeguridad).Sum(e => e.Cantidad),
+            SolicitudesInstitucionalesPendientes = await contexto.SolicitudesInstitucionales.CountAsync(s => s.Estado == EstadoSolicitudInstitucional.Pendiente),
+            CotizacionesPendientes = await contexto.Cotizaciones.CountAsync(c => c.Estado == EstadoSolicitudCotizacion.Cotizada && c.FechaVencimiento >= hoy),
+            Clientes = await clientes.Distinct().CountAsync(), Institucionales = await institucionales.Distinct().CountAsync(),
+            StockBajo = await contexto.Libros.AsNoTracking().Where(l => l.Activo && l.Formato != FormatoLibro.Ebook && l.Stock <= umbral).OrderBy(l => l.Stock).ThenBy(l => l.Titulo).ToListAsync(),
+            MasVendidos = masVendidos.Select(x => new LibroVendido(x.LibroId, x.Titulo, x.Unidades)).ToList(),
+            PedidosRecientes = pedidosRecientes,
+            Actividad = actividad
+        };
+    }
+}
