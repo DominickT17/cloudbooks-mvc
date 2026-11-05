@@ -1,21 +1,16 @@
-# Capturas pendientes — diseño final
+# Evidencias de diseño final
 
-La revisión del 4 y 5 de noviembre de 2026 se realizó en el navegador integrado con datos de una base SQL temporal y correo simulado. La herramienta permitió observar capturas en la sesión, pero en esta ejecución no ofreció una operación documentada para guardarlas directamente en esta carpeta. Por ello **no se adjuntan imágenes** ni se consideran completadas las evidencias visuales de entrega. Los resultados y su alcance están en [revisión de diseño](../../revision-diseno-final.md).
+Capturas reales de Chromium/Playwright sobre CloudBooks en Development, una base aislada de QA y correo simulado. Las imágenes son de página completa en el viewport indicado; las tablas móviles muestran su posición horizontal inicial. Se enmascaró en gris el enlace de correo personal del pie y se sustituyeron los nombres de las cuentas administradoras en la base de prueba. Los demás nombres y contactos mostrados son datos académicos de demostración.
 
-## Capturas manuales por guardar
+- Dashboard: [1440](dashboard-1440.png), [375](dashboard-375.png).
+- Pedidos: [1440](pedidos-1440.png), [375](pedidos-375.png), [detalle 1440](pedido-detalle-1440.png).
+- Inventario: [1440](inventario-1440.png), [375](inventario-375.png).
+- Usuarios: [1440](usuarios-1440.png), [375](usuarios-375.png).
+- [Instituciones 1440](instituciones-1440.png) y [cotizaciones 1440](cotizaciones-1440.png).
+- Configuración: [1440](configuracion-1440.png), [375](configuracion-375.png).
+- Checkout: [1440](checkout-1440.png), [375](checkout-375.png).
+- Plantilla de pedido aprobado: [marco 600](correo-pedido-aprobado-600.png), [marco 375](correo-pedido-aprobado-375.png). Para capturar el correo completo se amplió la altura del iframe sin cambiar su ancho ni su contenido. Sin URL pública los botones a la aplicación no aparecen.
 
-Usa una instancia Development con una base exclusiva de demostración y proveedor `Simulado`. Inicia sesión con las cuentas descritas en [credenciales de prueba](../../credenciales-prueba.md). No actives Resend ni uses la base principal. Ajusta el viewport del navegador y guarda capturas reales, sin recortar información necesaria para entender la pantalla:
+Se produjeron capturas temporales adicionales a 1024 y 768 px; no se guardaron en el repositorio. La [matriz de revisión](../../revision-diseno-final.md) distingue esas capturas y mediciones de la inspección visual y de las acciones aún pendientes. Una captura HTML no demuestra compatibilidad con Gmail u Outlook.
 
-| Archivo sugerido | Vista | Ancho |
-|---|---|---:|
-| `dashboard-1440.png`, `dashboard-375.png` | Administración → Dashboard | 1440 y 375 px |
-| `pedidos-1440.png`, `pedidos-375.png` | Administración → Pedidos | 1440 y 375 px |
-| `pedido-detalle-1440.png` | Detalle de un pedido de demostración | 1440 px |
-| `inventario-1440.png`, `inventario-375.png` | Administración → Inventario | 1440 y 375 px |
-| `usuarios-1440.png`, `usuarios-375.png` | Administración → Usuarios | 1440 y 375 px |
-| `instituciones-1440.png`, `cotizaciones-1440.png` | Listados correspondientes | 1440 px |
-| `configuracion-1440.png`, `configuracion-375.png` | Administración → Configuración | 1440 y 375 px |
-| `checkout-1440.png`, `checkout-375.png` | Carrito de demostración → Finalizar compra | 1440 y 375 px |
-| `correos-600.png`, `correos-375.png` | Avisos → Historial de correos → Plantillas de demostración | Marco de 600 y 375 px |
-
-En 1024 y 768 px revisa también las vistas listadas en la matriz. En tablas, utiliza el desplazamiento horizontal interno para comprobar las acciones de la última columna. Para las plantillas, inspecciona además los pies, texto largo y botones con una URL pública real configurada y controlada; la vista sin URL omite esos botones. Una captura de navegador no demuestra compatibilidad con Gmail u Outlook.
+Para reproducir la revisión manual, restaura `base-datos/CloudBooks.sql` en una base dedicada, usa Development con `Correo:Proveedor=Simulado` y las [cuentas ficticias](../../credenciales-prueba.md). Recorre cada pantalla hasta el pie a los cuatro anchos; en tablas mueve el contenido horizontalmente hasta la última columna. No uses la base principal ni actives Resend para estas pruebas.

@@ -14,3 +14,8 @@ Preparar una base de demostración dedicada, aplicar migraciones, arrancar en De
 | 9:00–10:00 | Mostrar roles, parámetros comerciales y protección de stock. Abrir el enlace de WhatsApp sin enviar el mensaje: una persona decide si lo envía. |
 
 Para mostrar la aprobación institucional, volver a iniciar sesión tras la decisión administrativa. Si no hay asesor activo, administración puede reintentar la asignación. Un recorrido HTTP aislado comprobó la secuencia de aprobación, asignación, cotización y aceptación; este guion todavía debe ensayarse en el navegador y con los datos preparados para la presentación.
+## Preparación y estado del ensayo — continuación del 5 de noviembre
+
+**Pendiente de ensayo completo cronometrado.** Los recorridos parciales de compra, revisión, administración e institución se comprobaron por separado, pero no constituyen una demostración completa de diez minutos. No usar como datos finales el pedido manipulado para el PDF largo.
+
+Para el ensayo, restaurar el SQL en una base exclusiva, usar Development y `Correo:Proveedor=Simulado`; confirmar las cuentas de demostración, stock del libro elegido y las tarjetas ficticias antes de empezar. Preparar una compra aprobada y otra con titular distinto para revisión; comprobar dashboard e inventario. Crear una solicitud institucional, aprobarla, volver a iniciar sesión, crear solicitud comercial, ingresar como asesor y emitir una cotización. Comprobar acceso al PDF como dueño, historial y plantillas simuladas. Para fondos insuficientes, verificar el mensaje y la conservación del carrito antes de la compra aprobada. En WhatsApp mostrar el enlace sin enviar. El guion de tiempos anterior debe recorrerse una vez con cronómetro y registrar el resultado antes de declarar el ensayo exitoso.

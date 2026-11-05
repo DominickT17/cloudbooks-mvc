@@ -1,3 +1,40 @@
+# Continuación de QA visual — 5 de noviembre de 2026
+
+Esta sección actualiza la matriz histórica de abajo. Se ejecutó Chromium con Playwright sobre una base SQL Server aislada, datos académicos y correo simulado. Se capturaron las 14 rutas completas a 1440, 1024, 768 y 375 px; todas respondieron 200 y, en esa ejecución, el ancho global coincidió con el viewport. **Eso no demuestra por sí solo la ausencia de defectos ni la revisión de todas las acciones y estados.** Las imágenes de 1024 y 768 fueron temporales; no se conservan como evidencia de entrega. Las capturas de 375 se inspeccionaron completas, en el estado mostrado, y las tablas requieren desplazamiento horizontal interno. Se guardaron las capturas prioritarias indicadas abajo; el correo personal del pie se cubrió con una máscara gris y se sustituyeron los nombres de los administradores en la base de QA.
+
+Leyenda: **P** = captura completa producida y medición sin desbordamiento global, pero revisión integral de estados/controles pendiente; **V** = además, imagen completa inspeccionada en el estado mostrado. No implica que todos los filtros, errores o estados vacíos se hayan comprobado. La columna de evidencia cita solamente archivos físicos conservados.
+
+| Pantalla | 1440 | 1024 | 768 | 375 | Problema / corrección | Evidencia guardada | Estado final |
+|---|---|---|---|---|---|---|---|
+| Dashboard | P | P | P | V | Sin defecto visual identificado en el estado inspeccionado. | dashboard-1440.png, dashboard-375.png | Parcial: falta estado vacío completo. |
+| Pedidos | P | P | P | V | Tabla con desplazamiento interno. Búsqueda y detalle comprobados. | pedidos-1440.png, pedidos-375.png | Parcial: faltan acciones y estados. |
+| Detalle de pedido | P | P | P | V | Sin defecto visual identificado en pedido aprobado. | pedido-detalle-1440.png | Parcial: falta revisar motivos y acciones de revisión. |
+| Catálogo administrativo | P | P | P | V | Tabla con desplazamiento interno. | — | Parcial: formularios y estados. |
+| Inventario | P | P | P | V | Búsqueda, guardado y filtro vacío comprobados. | inventario-1440.png, inventario-375.png | Parcial: controles restantes. |
+| Usuarios | P | P | P | V | Filtro de rol, opciones y protección visual comprobados. | usuarios-1440.png, usuarios-375.png | Parcial: filtros y protección por POST. |
+| Instituciones | P | P | P | V | Tabla con desplazamiento interno. | instituciones-1440.png | Parcial: acciones y estados. |
+| Solicitudes comerciales | P | P | P | V | Tabla con desplazamiento interno. | — | Parcial: acciones y estados. |
+| Cotizaciones | P | P | P | V | Tabla con desplazamiento interno. | cotizaciones-1440.png | Parcial: acciones y estados. |
+| Configuración | P | P | P | V | Guardado de umbral y mensaje de éxito comprobados en QA. | configuracion-1440.png, configuracion-375.png | Parcial: error de validación pendiente. |
+| Inicio público | P | P | P | V | Enlace WhatsApp aislado tras el pie; integrado visualmente al pie. | — | Parcial: enlaces y estados. |
+| Carrito | P | P | P | V | Pie corregido como en Inicio. | — | Parcial: estado vacío y errores. |
+| Checkout | P | P | P | V | Pie corregido; tarjeta vencida y sin fondos conservan carrito; titular distinto genera revisión. | checkout-1440.png, checkout-375.png | Parcial: stock insuficiente y validaciones restantes. |
+| Mi cuenta | P | P | P | V | Pie corregido como en Inicio. | — | Parcial: validación de teléfono. |
+
+Las capturas administrativas iniciales preceden al ajuste del pie público; las de checkout se repitieron después. El menú público no cerraba con Escape: se agregó cierre y devolución de foco, comprobados a 375 px; también se comprobaron apertura, Escape y foco en el menú administrativo. No se completó la navegación por cada opción ni una auditoría de accesibilidad y contraste. Se comprobó el filtro vacío de inventario tras corregir un error del guion de automatización: después de guardar, la búsqueda anterior se reinicia.
+
+## Correos y clientes
+
+Se capturaron temporalmente las 13 plantillas completas en marcos exteriores de 600, 430 y 375 px, con anchos interiores medidos de 598, 428 y 373 px. Se revisaron visualmente sus composiciones completas mediante hojas de contacto, incluidas marca, estado, texto y pie; el pedido aprobado y la cotización mostraron sus tablas. Se conservaron dos capturas del pedido aprobado. Los ejemplos no tenían URL pública, por lo que los botones a la aplicación no aparecieron y quedan por revisar con una URL HTTPS controlada. La revisión visual de estas muestras no verifica todas las combinaciones de contenido, contraste ni enlaces.
+
+El conector de Gmail encontró el mensaje de pedido aprobado enviado previamente en la bandeja de entrada: se acredita su recepción, no su presentación visual. Gmail de escritorio/móvil y Outlook siguen pendientes de inspección visual; no se envió otro correo. Procedimiento: abrir ese mensaje recibido en Gmail web y móvil; revisar encabezado, imagen o marca tipográfica, tablas y totales, enlaces, pie y modo oscuro. Repetir en Outlook escritorio y móvil con una copia ya recibida o, si no existe, solicitar autorización antes de enviar una nueva prueba. No activar Resend para el QA automático.
+
+## Pendientes para cierre
+
+Revisar visualmente las 14 páginas completas también a 1440, 1024 y 768 px, sus estados vacíos/con datos, todas las acciones y validaciones; completar checkout con stock insuficiente; probar enlaces de correo con URL pública autorizada y presentación real en Gmail/Outlook; ensayar la demostración completa y revisar la matriz de recursos privados y POST por rol. Esta fase **no está terminada**.
+
+---
+
 # Revisión de diseño final — 5 de noviembre de 2026
 
 ## Alcance y leyenda
