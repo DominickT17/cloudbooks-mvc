@@ -24,6 +24,8 @@ public class CorreosSqlPruebas
     public async Task PedidoYColaPersistenAunqueFalleElProveedor()
     {
         var cadena = Environment.GetEnvironmentVariable("CLOUDBOOKS_QA_SQL")!;
+        if (!new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(cadena).InitialCatalog.StartsWith("CloudBooks_QA_", StringComparison.Ordinal))
+            throw new InvalidOperationException("Se requiere una base temporal de QA.");
         await using var contexto = new ContextoAplicacion(new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlServer(cadena).Options);
         var libro = await contexto.Libros.FirstAsync(l => l.Activo && l.Formato != FormatoLibro.Ebook);
         libro.Stock = 50;
