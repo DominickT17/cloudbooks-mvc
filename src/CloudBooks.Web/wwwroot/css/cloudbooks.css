@@ -13,6 +13,9 @@ h1 { max-width: 680px; font-size: clamp(2.6rem, 6vw, 4.7rem); font-weight: 700; 
 .bienvenida h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); }
 .pie { border-top: 1px solid #e8eef5; padding: 2rem 0; color: #52677c; font-size: .9rem; }
 .pie a { color: inherit; }
+.ayuda-pie { background:#20364f; padding:0 0 1.5rem; }
+.whatsapp-ayuda { display:inline-block; color:#dbe8f4; padding:.6rem 0; }
+.whatsapp-ayuda:hover, .whatsapp-ayuda:focus-visible { color:#fff; }
 .nav-enlaces { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
 .nav-enlaces a, .enlace-boton { color: var(--tinta); font-weight: 600; text-decoration: none; font-size: .92rem; }
 .enlace-boton { border: 0; background: transparent; padding: 0; }

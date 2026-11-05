@@ -39,8 +39,13 @@ public class ServicioPdfCotizaciones(IWebHostEnvironment entorno)
                     tabla.Header(h => { foreach (var titulo in new[] { "Concepto", "Cant.", "Precio", "Subtotal" }) h.Cell().Background("#eaf3fc").Padding(6).Text(titulo).Bold(); });
                     foreach (var detalle in cotizacion.Detalles)
                     {
-                        tabla.Cell().Padding(6).Text(detalle.Concepto); tabla.Cell().Padding(6).Text(detalle.Cantidad.ToString());
-                        tabla.Cell().Padding(6).Text(dinero(detalle.PrecioUnitario)); tabla.Cell().Padding(6).Text(dinero(detalle.Subtotal));
+                        tabla.Cell().ColumnSpan(4).PreventPageBreak().Row(fila =>
+                        {
+                            fila.RelativeItem(4).Padding(6).Text(detalle.Concepto);
+                            fila.RelativeItem(1).Padding(6).Text(detalle.Cantidad.ToString());
+                            fila.RelativeItem(2).Padding(6).Text(dinero(detalle.PrecioUnitario));
+                            fila.RelativeItem(2).Padding(6).Text(dinero(detalle.Subtotal));
+                        });
                     }
                 });
                 columna.Item().AlignRight().Width(230).PaddingTop(12).Column(resumen =>

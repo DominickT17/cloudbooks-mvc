@@ -46,6 +46,31 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
     }
 
     [SqlTemporalFact]
+    public async Task MatrizDeLecturaAdministrativaRequiereElRolAdministrador()
+    {
+        await using var app = CrearAplicacion();
+        var rutas = new[] { "/Administracion", "/Administracion/Pedidos", "/AdministracionCatalogo", "/AdministracionInventario", "/AdministracionInstituciones", "/AdministracionSolicitudes", "/Cotizaciones/Administracion", "/AdministracionUsuarios", "/AdministracionConfiguracion", "/Administracion/Notificaciones", "/AdministracionCorreos", "/AdministracionCorreos/Ejemplos" };
+        using var visitante = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = true });
+        foreach (var ruta in rutas)
+        {
+            var respuesta = await visitante.GetAsync(ruta);
+            Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+            Assert.Contains("/Cuenta/Ingresar", respuesta.Headers.Location?.ToString());
+        }
+        foreach (var correo in new[] { "cliente@cloudbooks.local", "institucion@cloudbooks.local", "asesor@cloudbooks.local", "admin.dominick@cloudbooks.local", "admin.yeisson@cloudbooks.local" })
+        {
+            using var cliente = await IngresarAsync(app, correo);
+            var esAdmin = correo.StartsWith("admin.", StringComparison.Ordinal);
+            foreach (var ruta in rutas)
+            {
+                var respuesta = await cliente.GetAsync(ruta);
+                Assert.Equal(esAdmin ? HttpStatusCode.OK : HttpStatusCode.Redirect, respuesta.StatusCode);
+                if (!esAdmin) Assert.Contains("/Cuenta/AccesoDenegado", respuesta.Headers.Location?.ToString());
+            }
+        }
+    }
+
+    [SqlTemporalFact]
     public async Task RutasDirectasProtegenAdministracionYSeparanRoles()
     {
         await using var app = CrearAplicacion();
@@ -210,6 +235,25 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
         respuesta = await cliente.PostAsync("/Cotizaciones/Responder", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(detalle), ["id"] = vencida.Id.ToString(), ["aceptar"] = "true" }));
         Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
         Assert.Equal(EstadoSolicitudCotizacion.Vencida, await db.SolicitudesCotizacion.AsNoTracking().Where(s => s.Id == segunda.Id).Select(s => s.Estado).SingleAsync());
+
+        crearHtml = await cliente.GetStringAsync("/Solicitudes/Crear");
+        respuesta = await cliente.PostAsync("/Solicitudes/Crear", new FormUrlEncodedContent(new Dictionary<string, string> {
+            ["__RequestVerificationToken"] = Token(crearHtml), ["Titulo"] = "Cotización para rechazo QA", ["Cantidad"] = "5", ["Acabado"] = "Tapa blanda", ["Papel"] = "Bond", ["FechaRequerida"] = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)).ToString("yyyy-MM-dd") }));
+        Assert.Equal("/Solicitudes", respuesta.Headers.Location?.ToString());
+        var tercera = await db.SolicitudesCotizacion.AsNoTracking().SingleAsync(s => s.UsuarioId == usuario.Id && s.Titulo == "Cotización para rechazo QA");
+        asesorHtml = await asesorHttp.GetStringAsync($"/Asesor/Detalle/{tercera.Id}");
+        respuesta = await asesorHttp.PostAsync("/Asesor/IniciarRevision", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(asesorHtml), ["id"] = tercera.Id.ToString() }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        cotizarHtml = await asesorHttp.GetStringAsync($"/Asesor/Cotizar/{tercera.Id}");
+        respuesta = await asesorHttp.PostAsync("/Asesor/Cotizar", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(cotizarHtml), ["SolicitudId"] = tercera.Id.ToString(), ["Concepto"] = tercera.Titulo, ["Cantidad"] = "5", ["PrecioUnitario"] = "10.00" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        var rechazada = await db.Cotizaciones.AsNoTracking().SingleAsync(c => c.SolicitudCotizacionId == tercera.Id);
+        detalle = await cliente.GetStringAsync($"/Cotizaciones/Detalle/{rechazada.Id}");
+        respuesta = await cliente.PostAsync("/Cotizaciones/Responder", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(detalle), ["id"] = rechazada.Id.ToString(), ["aceptar"] = "false" }));
+        Assert.Equal(HttpStatusCode.Redirect, respuesta.StatusCode);
+        Assert.Equal(EstadoSolicitudCotizacion.Rechazada, await db.Cotizaciones.AsNoTracking().Where(c => c.Id == rechazada.Id).Select(c => c.Estado).SingleAsync());
+        Assert.Equal(EstadoSolicitudCotizacion.Rechazada, await db.SolicitudesCotizacion.AsNoTracking().Where(s => s.Id == tercera.Id).Select(s => s.Estado).SingleAsync());
+        Assert.True(await db.CorreosPendientes.AnyAsync(c => c.ClaveEvento.StartsWith($"cotizacion/{rechazada.Id}/respuesta/admin/") && c.Tipo == "cotizacion_rechazada"));
     }
 
     [SqlTemporalFact]

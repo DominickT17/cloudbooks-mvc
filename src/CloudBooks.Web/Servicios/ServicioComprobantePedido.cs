@@ -30,7 +30,14 @@ public class ServicioComprobantePedido(IWebHostEnvironment entorno)
                 {
                     tabla.ColumnsDefinition(c => { c.RelativeColumn(4); c.RelativeColumn(1); c.RelativeColumn(2); c.RelativeColumn(2); });
                     tabla.Header(h => { foreach (var titulo in new[] { "Libro", "Cant.", "Precio", "Subtotal" }) h.Cell().Background("#eaf3fc").Padding(6).Text(titulo).Bold(); });
-                    foreach (var detalle in pedido.Detalles) { tabla.Cell().Padding(6).Text(detalle.Titulo); tabla.Cell().Padding(6).Text(detalle.Cantidad.ToString()); tabla.Cell().Padding(6).Text(Dinero(detalle.PrecioUnitario)); tabla.Cell().Padding(6).Text(Dinero(detalle.Subtotal)); }
+                    foreach (var detalle in pedido.Detalles)
+                        tabla.Cell().ColumnSpan(4).PreventPageBreak().Row(fila =>
+                        {
+                            fila.RelativeItem(4).Padding(6).Text(detalle.Titulo);
+                            fila.RelativeItem(1).Padding(6).Text(detalle.Cantidad.ToString());
+                            fila.RelativeItem(2).Padding(6).Text(Dinero(detalle.PrecioUnitario));
+                            fila.RelativeItem(2).Padding(6).Text(Dinero(detalle.Subtotal));
+                        });
                 });
                 columna.Item().AlignRight().Width(230).PaddingTop(12).Column(resumen =>
                 {

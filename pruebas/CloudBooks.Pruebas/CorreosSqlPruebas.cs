@@ -21,6 +21,29 @@ public class SqlTemporalFactAttribute : FactAttribute
 public class CorreosSqlPruebas
 {
     [SqlTemporalFact]
+    public async Task BloqueoVigenteNoSeReclamaYElVencidoSeRecupera()
+    {
+        var cadena = Environment.GetEnvironmentVariable("CLOUDBOOKS_QA_SQL")!;
+        if (!new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(cadena).InitialCatalog.StartsWith("CloudBooks_QA_", StringComparison.Ordinal))
+            throw new InvalidOperationException("Se requiere una base temporal de QA.");
+        var opciones = new DbContextOptionsBuilder<ContextoAplicacion>().UseSqlServer(cadena).Options;
+        await using var contexto = new ContextoAplicacion(opciones);
+        var bloqueo = Guid.NewGuid();
+        var correo = new CorreoPendiente { ClaveEvento = "qa/bloqueo/" + Guid.NewGuid().ToString("N"), Destinatario = "cliente@example.test", Asunto = "Recuperación QA", Html = "Prueba", Tipo = "qa", CreadoUtc = DateTime.UtcNow, Estado = EstadoCorreo.EnProceso, Bloqueo = bloqueo, BloqueadoHastaUtc = DateTime.UtcNow.AddMinutes(10), PrimerIntentoUtc = DateTime.UtcNow.AddMinutes(-2), Intentos = 1 };
+        contexto.CorreosPendientes.Add(correo);
+        await contexto.SaveChangesAsync();
+        var procesador = new ProcesadorCorreos(contexto, new ProveedorCorreoSimulado());
+        Assert.False(await procesador.ProcesarUnoAsync());
+        await contexto.CorreosPendientes.Where(c => c.Id == correo.Id).ExecuteUpdateAsync(s => s.SetProperty(c => c.BloqueadoHastaUtc, DateTime.UtcNow.AddMinutes(-1)));
+        Assert.True(await procesador.ProcesarUnoAsync());
+        var final = await contexto.CorreosPendientes.AsNoTracking().SingleAsync(c => c.Id == correo.Id);
+        Assert.Equal(EstadoCorreo.Simulado, final.Estado);
+        Assert.Equal(2, final.Intentos);
+        Assert.Null(final.Bloqueo);
+        Assert.Null(final.BloqueadoHastaUtc);
+    }
+
+    [SqlTemporalFact]
     public async Task PedidoYColaPersistenAunqueFalleElProveedor()
     {
         var cadena = Environment.GetEnvironmentVariable("CLOUDBOOKS_QA_SQL")!;

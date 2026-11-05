@@ -8,6 +8,13 @@ document.querySelectorAll('input[type="password"]').forEach(input => {
 });
 const menu = document.querySelector('.menu-boton');
 menu?.addEventListener('click', () => { const abierto = menu.getAttribute('aria-expanded') === 'true'; menu.setAttribute('aria-expanded', String(!abierto)); document.querySelector('#menu-principal').classList.toggle('abierto', !abierto); });
+document.addEventListener('keydown', evento => {
+ if (evento.key === 'Escape' && menu?.getAttribute('aria-expanded') === 'true') {
+  menu.setAttribute('aria-expanded', 'false');
+  document.querySelector('#menu-principal')?.classList.remove('abierto');
+  menu.focus();
+ }
+});
 const clave = document.querySelector('input[name="Contrasena"]');
 if (clave && document.querySelector('.requisitos')) {
  const reglas = {longitud: v => v.length >= 6, mayuscula: v => /[A-Z]/.test(v), minuscula: v => /[a-z]/.test(v), numero: v => /[0-9]/.test(v), simbolo: v => /[^a-zA-Z0-9]/.test(v)};

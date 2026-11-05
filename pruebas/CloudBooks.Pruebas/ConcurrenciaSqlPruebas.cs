@@ -18,6 +18,51 @@ public class ConcurrenciaSqlPruebas(ITestOutputHelper salida)
     }
 
     [SqlTemporalFact]
+    public async Task DosComprasConcurrentesDeEbookNoConsumenExistencias()
+    {
+        var opciones = Opciones();
+        await using var preparacion = new ContextoAplicacion(opciones);
+        var categoria = await preparacion.Categorias.FirstAsync();
+        var editorial = await preparacion.Editoriales.FirstAsync();
+        var sufijo = Guid.NewGuid().ToString("N");
+        var ebook = new Libro { ISBN = sufijo[..13], Titulo = "E-book académico QA", Sinopsis = "Prueba", CategoriaId = categoria.Id, EditorialId = editorial.Id, PrecioBase = 10, Stock = 0, Formato = FormatoLibro.Ebook };
+        var a = new UsuarioAplicacion { Id = "qa-ebook-a-" + sufijo, UserName = "qa-ebook-a-" + sufijo, NombreCompleto = "Cliente QA A" };
+        var b = new UsuarioAplicacion { Id = "qa-ebook-b-" + sufijo, UserName = "qa-ebook-b-" + sufijo, NombreCompleto = "Cliente QA B" };
+        preparacion.Carritos.AddRange(new Carrito { Usuario = a, Detalles = [new DetalleCarrito { Libro = ebook, Cantidad = 1 }] }, new Carrito { Usuario = b, Detalles = [new DetalleCarrito { Libro = ebook, Cantidad = 1 }] });
+        await preparacion.SaveChangesAsync();
+        var inicio = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task<(Pedido? Pedido, string? Error)> Comprar(string usuario)
+        {
+            await using var contexto = new ContextoAplicacion(opciones);
+            await inicio.Task;
+            return await new ServicioPedidos(contexto, new ServicioDescuentos(), new ServicioParametros(contexto)).CrearAsync(usuario, false, MetodoPagoSimulado.TransferenciaSimulada);
+        }
+        var primera = Comprar(a.Id);
+        var segunda = Comprar(b.Id);
+        inicio.SetResult();
+        var resultados = await Task.WhenAll(primera, segunda);
+        await using var verificacion = new ContextoAplicacion(opciones);
+        var pedidos = await verificacion.Pedidos.AsNoTracking().Where(p => p.UsuarioId == a.Id || p.UsuarioId == b.Id).Include(p => p.Detalles).ToListAsync();
+        Assert.Equal(resultados.Count(r => r.Pedido != null), pedidos.Count);
+        Assert.All(pedidos, p => { Assert.Equal(EstadoPedido.Aprobado, p.Estado); Assert.Single(p.Detalles); });
+        Assert.Equal(0, await verificacion.Libros.Where(l => l.Id == ebook.Id).Select(l => l.Stock).SingleAsync());
+        Assert.Equal(resultados.Count(r => r.Error != null), await verificacion.DetallesCarrito.CountAsync(d => d.Carrito.UsuarioId == a.Id || d.Carrito.UsuarioId == b.Id));
+        Assert.NotEmpty(pedidos);
+        foreach (var (resultado, usuario) in resultados.Zip(new[] { a.Id, b.Id }))
+        {
+            if (resultado.Error == null) continue;
+            Assert.Contains("inténtalo de nuevo", resultado.Error);
+            await using var reintento = new ContextoAplicacion(opciones);
+            var repetido = await new ServicioPedidos(reintento, new ServicioDescuentos(), new ServicioParametros(reintento)).CrearAsync(usuario, false, MetodoPagoSimulado.TransferenciaSimulada);
+            Assert.Null(repetido.Error);
+            Assert.Equal(EstadoPedido.Aprobado, repetido.Pedido!.Estado);
+        }
+        Assert.Equal(2, await verificacion.Pedidos.CountAsync(p => p.UsuarioId == a.Id || p.UsuarioId == b.Id));
+        Assert.Equal(0, await verificacion.DetallesCarrito.CountAsync(d => d.Carrito.UsuarioId == a.Id || d.Carrito.UsuarioId == b.Id));
+        salida.WriteLine($"Dos compras simultáneas de e-book: {pedidos.Count} aprobadas; {resultados.Count(r => r.Error != null)} con error controlado; stock digital 0.");
+    }
+
+    [SqlTemporalFact]
     public async Task DosComprasSimultaneasNoVendenMasDeDoceUnidades()
     {
         var opciones = Opciones();
