@@ -20,6 +20,21 @@ dotnet run --no-build --no-launch-profile --project src/CloudBooks.Web
 
 3. Abre [CloudBooks local](http://127.0.0.1:5199/) y deja esa terminal abierta. Para detener la aplicación usa `Ctrl+C`. Confirma en Administración → Configuración que aparezca **Simulado · sin envío externo**. Las variables anteriores solo afectan a esa terminal y evitan utilizar la base principal y el proveedor real.
 
+## Configurar la transferencia simulada en este equipo
+
+Los datos bancarios no están en Git. En Development se leen de **user-secrets**; configura cada valor localmente desde la raíz del repositorio. Los comandos solicitan los valores de forma interactiva para no escribirlos en la documentación ni en el historial de comandos:
+
+```powershell
+foreach ($banco in @('Banrural', 'Industrial')) {
+    $numeroLocal = Read-Host "Número para $banco"
+    $titularLocal = Read-Host "Titular para $banco"
+    dotnet user-secrets set "TransferenciaSimulada:${banco}:Numero" $numeroLocal --project src/CloudBooks.Web
+    dotnet user-secrets set "TransferenciaSimulada:${banco}:Titular" $titularLocal --project src/CloudBooks.Web
+}
+```
+
+Reinicia la aplicación. Si falta un número o titular, se indica configuración pendiente para ese banco. En otro entorno utiliza un proveedor de configuración externo protegido, por ejemplo las variables `TransferenciaSimulada__Banrural__Numero`, `TransferenciaSimulada__Banrural__Titular`, `TransferenciaSimulada__Industrial__Numero` y `TransferenciaSimulada__Industrial__Titular`. User-secrets es almacenamiento local sin cifrado y no está destinado a producción. La tarjeta y la transferencia son simulaciones académicas: la autorización es ficticia, no se verifica una operación bancaria y no se debe enviar dinero real.
+
 ## Cuentas y tarjetas académicas
 
 Todas las cuentas siguientes usan la contraseña ficticia `CloudBooksDemo2026!`. Son exclusivamente para Development; no las uses en producción.

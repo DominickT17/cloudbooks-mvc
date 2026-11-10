@@ -1,3 +1,7 @@
+## Actualización del 10 de noviembre de 2026
+
+**Estado: LISTO PARA REVISIÓN MANUAL FINAL.** La nueva selección de pago y las pruebas descritas en [QA integral](evidencias-qa-integral.md) pasaron en entornos aislados. Sigue pendiente el ensayo oral humano y la revisión visual en Gmail/Outlook; verificar la vigencia de la cotización el día de la presentación. Las secciones históricas siguientes documentan el estado de la versión anterior.
+
 # Checklist de versión candidata — CloudBooks
 
 **Estado del código: CANDIDATO A ENTREGA.** El recorrido técnico continuo y la restauración aislada pasaron; no se detectaron bloqueantes en los escenarios comprobados. Antes de presentar, el equipo debe efectuar el ensayo oral con cronómetro y comprobar la vigencia de la cotización. Esto no equivale a una aprobación docente ni autoriza el merge.

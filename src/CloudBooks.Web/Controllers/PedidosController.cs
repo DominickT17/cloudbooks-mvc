@@ -61,6 +61,8 @@ public class PedidosController(ServicioPedidos pedidos, ServicioCarrito carrito,
             }
             ultimosCuatro = pago.UltimosCuatro;
         }
+        // Ignore any card fields submitted with the other method, even from a crafted request.
+        if (metodo != MetodoPagoSimulado.TarjetaSimulada) { titular = null; ultimosCuatro = null; }
         var resultado = await pedidos.CrearAsync(UsuarioId, User.IsInRole("ClienteInstitucional"), metodo.Value, titular, ultimosCuatro);
         if (resultado.Error != null) { TempData["Error"] = resultado.Error; return RedirectToAction("Index", "Carrito"); }
         TempData["Exito"] = resultado.Pedido!.Estado == EstadoPedido.Aprobado ? "Tu pedido fue aprobado. El pago es una simulación." : "Tu pedido fue recibido y requiere revisión. El pago es una simulación.";

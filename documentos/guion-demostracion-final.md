@@ -6,7 +6,7 @@ Usa la base y los accesos de [instrucciones de presentación](instrucciones-pres
 |---|---|---|
 | 0:00–1:00 | Presentar inicio y [arquitectura](arquitectura.md). | «CloudBooks es una librería académica MVC: las vistas presentan, los controladores autorizan y los servicios aplican reglas sobre SQL Server». |
 | 1:00–3:00 | Buscar un libro, agregar seis como visitante e iniciar sesión como minorista. | «El carrito se conserva al iniciar sesión. Aquí se ven el descuento por volumen, el IVA y el total». |
-| 3:00–4:00 | Pagar con la tarjeta ficticia aprobada, abrir el pedido y descargar el comprobante. | «El pago es simulado y el comprobante no es una factura fiscal. Al aprobarse se actualiza la existencia». |
+| 3:00–4:00 | Pagar con la tarjeta ficticia aprobada, abrir el pedido y descargar el comprobante. | «El pago es simulado y el comprobante no es una factura fiscal. Al aprobarse se actualiza la existencia. La transferencia también es ficticia y no se verifica en ningún banco». |
 | 4:00–5:30 | Entrar como administrador y abrir el pedido preparado en revisión; mostrar dashboard e inventario. | «Un titular diferente requiere revisión académica; no implica afirmar fraude ni reserva existencias. El panel reúne alertas y stock». |
 | 5:30–6:30 | Mostrar avisos, historial y plantillas de demostración. | «Los avisos de correo se guardan en una cola. En modo simulado no sale ningún mensaje». |
 | 6:30–8:30 | Mostrar solicitud comercial y cotización como institucional; descargar PDF y mostrar la asignación al asesor. | «La institución solicita una propuesta, el asesor la prepara y el cliente puede consultar y responder su cotización». |

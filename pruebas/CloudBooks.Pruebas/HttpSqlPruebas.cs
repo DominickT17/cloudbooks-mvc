@@ -93,6 +93,38 @@ public class HttpSqlPruebas(ITestOutputHelper salida)
     }
 
     [SqlTemporalFact]
+    public async Task TransferenciaIgnoraTarjetaYMetodoAusenteNoCreaPedido()
+    {
+        await using var db = new ContextoAplicacion(OpcionesQaSql());
+        var usuario = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "cliente@cloudbooks.local");
+        var libro = await db.Libros.SingleAsync(l => l.ISBN == "9789929000003");
+        libro.Stock = 100;
+        await db.SaveChangesAsync();
+        await using var app = CrearAplicacion();
+        using var cliente = await IngresarAsync(app, usuario.Email!);
+        var detalle = await cliente.GetStringAsync($"/Catalogo/Detalle/{libro.Id}");
+        await cliente.PostAsync("/Carrito/Agregar", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(detalle), ["libroId"] = libro.Id.ToString(), ["cantidad"] = "1" }));
+        var checkout = await cliente.GetStringAsync("/Pedidos/Confirmar");
+        var token = Token(checkout);
+        Assert.Contains("id=\"datos-tarjeta\" class=\"checkout-datos\" hidden disabled", checkout);
+        Assert.Contains("id=\"datos-transferencia\" class=\"checkout-datos\" hidden", checkout);
+        Assert.Equal(HttpStatusCode.BadRequest, (await cliente.PostAsync("/Pedidos/Crear", new FormUrlEncodedContent(new Dictionary<string, string> { ["metodo"] = "1" }))).StatusCode);
+        var sinMetodo = await cliente.PostAsync("/Pedidos/Crear", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = token }));
+        Assert.Equal("/Pedidos/Confirmar", sinMetodo.Headers.Location?.ToString());
+        Assert.Equal(0, await db.Pedidos.CountAsync(p => p.UsuarioId == usuario.Id));
+        var datos = new Dictionary<string, string> { ["__RequestVerificationToken"] = token, ["metodo"] = "1", ["titular"] = "Dato que debe ignorarse", ["numero"] = "4000000000000002", ["cvv"] = "123" };
+        var respuesta = await cliente.PostAsync("/Pedidos/Crear", new FormUrlEncodedContent(datos));
+        Assert.StartsWith("/Pedidos/Detalle/", respuesta.Headers.Location?.ToString());
+        var pedido = await db.Pedidos.AsNoTracking().SingleAsync(p => p.UsuarioId == usuario.Id);
+        Assert.Equal(MetodoPagoSimulado.TransferenciaSimulada, pedido.MetodoPago);
+        Assert.Null(pedido.TitularTarjeta);
+        Assert.Null(pedido.UltimosCuatro);
+        await cliente.PostAsync("/Pedidos/Crear", new FormUrlEncodedContent(datos));
+        Assert.Equal(1, await db.Pedidos.CountAsync(p => p.UsuarioId == usuario.Id));
+        Assert.Equal(99, await db.Libros.AsNoTracking().Where(l => l.Id == libro.Id).Select(l => l.Stock).SingleAsync());
+    }
+
+    [SqlTemporalFact]
     public async Task CheckoutConStockQueCambioConservaCarritoSinConfirmarOtroPedido()
     {
         var opciones = OpcionesQaSql();

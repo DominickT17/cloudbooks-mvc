@@ -1,6 +1,11 @@
 (() => {
  const form = document.querySelector('.checkout-formulario');
  if (!form) return;
+ const tarjeta = form.querySelector('#datos-tarjeta');
+ const transferencia = form.querySelector('#datos-transferencia');
+ const mensajeMetodo = form.querySelector('#mensaje-metodo');
+ const boton = form.querySelector('[type="submit"]');
+ const titular = form.querySelector('#titular');
  const numero = form.querySelector('#numero');
  const vencimiento = form.querySelector('#vencimiento');
  const cvv = form.querySelector('#cvv');
@@ -40,6 +45,29 @@
    campo.dispatchEvent(new Event('input', { bubbles: true }));
   });
  }
+ function actualizarMetodo() {
+  const metodo = form.querySelector('[name="metodo"]:checked')?.value;
+  tarjeta.hidden = metodo !== '0';
+  tarjeta.disabled = metodo !== '0';
+  transferencia.hidden = metodo !== '1';
+  mensajeMetodo.textContent = metodo ? '' : 'Selecciona un método de pago';
+  if (metodo !== '0') {
+   for (const campo of [titular, numero, vencimiento, cvv]) campo.value = '';
+   for (const campo of [numero, vencimiento, cvv]) error(campo, '');
+  }
+  document.getElementById('resultado-copia').textContent = '';
+ }
+ form.querySelectorAll('[name="metodo"]').forEach(opcion => opcion.addEventListener('change', actualizarMetodo));
+ actualizarMetodo();
+ form.querySelectorAll('[data-copiar-cuenta]').forEach(botonCopiar => botonCopiar.addEventListener('click', async () => {
+  const estado = document.getElementById('resultado-copia');
+  try {
+   await navigator.clipboard.writeText(botonCopiar.closest('.checkout-banco').querySelector('.numero-cuenta').textContent.trim());
+   estado.textContent = 'Número de cuenta copiado';
+  } catch {
+   estado.textContent = 'No se pudo copiar. Selecciona el número y cópialo manualmente.';
+  }
+ }));
  function validarFecha() {
   const valor = digitos(vencimiento.value);
   if (valor.length !== 4) return 'Ingresa el vencimiento en formato MM/AA.';
@@ -49,13 +77,24 @@
   if (anio < hoy.getUTCFullYear() || (anio === hoy.getUTCFullYear() && mes < hoy.getUTCMonth() + 1)) return 'La tarjeta simulada está vencida.';
   return '';
  }
+ numero.addEventListener('input', () => error(numero, numero.value && digitos(numero.value).length !== 16 ? 'Ingresa 16 dígitos.' : ''));
+ vencimiento.addEventListener('input', () => error(vencimiento, vencimiento.value && digitos(vencimiento.value).length === 4 ? validarFecha() : ''));
+ cvv.addEventListener('input', () => error(cvv, cvv.value && !/^[0-9]{3,4}$/.test(cvv.value) ? 'Ingresa 3 o 4 dígitos.' : ''));
  vencimiento.addEventListener('blur', () => { if (vencimiento.value) error(vencimiento, validarFecha()); });
  form.addEventListener('submit', evento => {
-  if (form.querySelector('[name="metodo"]:checked')?.value !== '0') return;
+  if (boton.disabled) { evento.preventDefault(); return; }
+  if (form.querySelector('[name="metodo"]:checked')?.value !== '0') {
+   boton.disabled = true;
+   boton.textContent = 'Procesando pedido…';
+   return;
+  }
   const mensajes = [[numero, digitos(numero.value).length === 16 ? '' : 'Ingresa 16 dígitos.'], [vencimiento, validarFecha()], [cvv, /^[0-9]{3,4}$/.test(cvv.value) ? '' : 'Ingresa 3 o 4 dígitos.']];
   mensajes.forEach(([campo, mensaje]) => error(campo, mensaje));
   const primero = mensajes.find(([, mensaje]) => mensaje);
   if (primero) { evento.preventDefault(); primero[0].focus(); return; }
   numero.value = digitos(numero.value);
+  boton.disabled = true;
+  boton.textContent = 'Procesando pedido…';
  });
+ window.addEventListener('pageshow', () => { boton.disabled = false; boton.textContent = 'Confirmar pedido'; });
 })();
