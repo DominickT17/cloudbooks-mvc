@@ -4,7 +4,7 @@
 
 Un único equipo servidor ejecuta ASP.NET Core MVC (.NET 10) y SQL Server Express local. La tablet, el equipo administrativo y la segunda computadora se conectan a esa misma instancia mediante Wi-Fi **privado**; no hace falta internet ni acceso remoto a SQL Server. Todos los pedidos, usuarios e inventario de la feria viven en `CloudBooks_CITEIN_2026`. El servidor necesita `dotnet`, `sqlcmd`, el servicio `MSSQL$SQLEXPRESS` y el repositorio con sus dependencias restauradas. Las portadas están incluidas localmente.
 
-La experiencia de la tablet usa un layout propio. Al comenzar se crea una identidad Identity sin contraseña con un alias y una cookie independientes de la cookie administrativa. La identidad tiene exclusivamente el rol `ClienteMinorista`, y cada nueva demostración crea otra identidad. Las sesiones se limitan a 12 inicios por IP por minuto y 5.000 identidades académicas por base; las demás rutas tienen un límite de 120 solicitudes por IP por minuto. La compra utiliza el carrito, cálculo comercial, simulador de tarjeta y transacción de pedidos existentes. Si un pedido requiere revisión, no se descuenta el inventario hasta su aprobación administrativa. El monitor consulta el último pedido académico cada cuatro segundos mientras está visible, sin recargar la página; solo un administrador puede acceder. El panel normal sigue disponible.
+La experiencia de la tablet usa un layout propio. Al comenzar se crea una identidad Identity sin contraseña con un alias y una cookie independientes de la cookie administrativa. La identidad tiene exclusivamente el rol `ClienteMinorista`, y cada nueva demostración crea otra identidad. Las sesiones se limitan a 12 inicios por IP por minuto y 5.000 identidades académicas por base; las demás rutas tienen un límite de 120 solicitudes por IP por minuto. La compra utiliza el carrito, cálculo comercial, simulador de tarjeta y transacción de pedidos existentes. Si un pedido requiere revisión, no se descuenta el inventario hasta su aprobación administrativa. El monitor consulta el total, el pedido más reciente y los últimos cinco pedidos académicos cada cuatro segundos mientras está visible, sin recargar la página; solo un administrador puede acceder. El panel normal sigue disponible. Una identidad académica registra como máximo un pedido: las solicitudes de compra y de comprobación se serializan en la única instancia del servidor. Ante un resultado incierto, la tablet consulta el pedido antes de permitir otro intento; una recarga conserva la comprobación pendiente si el navegador permite almacenamiento de sesión.
 
 La activación exige simultáneamente `CiteinDemo:Enabled=true`, entorno `Development`, servidor SQL local, base con nombre exacto `CloudBooks_CITEIN_2026` y proveedor `Simulado`; si la combinación no se cumple, el arranque falla. Si la función está desactivada, `/citein` y sus subrutas responden 404. Este es un entorno académico: `Development` crea cuentas de prueba con credenciales conocidas documentadas en [credenciales-prueba.md](credenciales-prueba.md). **No conectarlo a internet ni usar datos reales.** Los visitantes no necesitan conocer esas cuentas; el expositor debe proteger la red y cerrar sesión administrativa al terminar.
 
@@ -24,7 +24,7 @@ En PowerShell, desde la raíz del repositorio:
 .\scripts\iniciar-demo-citein.ps1 -Puerto 5200
 ```
 
-El script comprueba el proyecto, SQL Express, el puerto y la presencia de migraciones; configura la conexión local y correo simulado solamente en el proceso actual. No cambia configuraciones privadas ni cierra otros procesos. Copia la IP mostrada y usa:
+El script comprueba el proyecto, SQL Express, cada migración del proyecto, los seis ISBN activos y sus formatos, avisa si algún libro físico tiene menos de 20 ejemplares y revisa el puerto. Tras el inicio comprueba la respuesta HTTP local. Configura la conexión y el correo simulado solamente en el proceso actual; no cambia configuraciones privadas ni cierra otros procesos. Copia la IP mostrada y usa:
 
 - Tablet: `http://IP-MOSTRADA:5199/citein`.
 - Administración y sistema completo: `http://IP-MOSTRADA:5199/`.
@@ -34,14 +34,22 @@ En Administración inicia sesión con una de las cuentas académicas administrad
 
 ## Recorrido y comprobaciones previas
 
-1. Tablet: comenzar, elegir un libro, revisar subtotal, descuento, IVA y total, y pulsar **Realizar compra simulada**.
+1. Tablet: comenzar, elegir uno de los tres destacados o pulsar **Explorar todos los libros**, revisar subtotal, descuento, IVA y total, y pulsar **Confirmar compra simulada**.
 2. Comprueba el código y estado reales. Si está en revisión, explícalo: todavía no se han descontado existencias. Si falla, lee el mensaje y vuelve a elegir un libro.
-3. En el monitor observa el pedido, abre su detalle original y verifica el inventario. El botón **Realizar otra demostración** crea una sesión nueva y conserva los pedidos anteriores.
+3. En el monitor observa el pedido, abre su detalle original y verifica el inventario. El botón **Preparar siguiente demostración** cierra únicamente la sesión académica de la tablet y vuelve a la bienvenida; el siguiente visitante inicia una identidad nueva y los pedidos anteriores se conservan.
 4. Antes del evento, prueba al menos dos compras en una red privada, acceso administrativo, actualización del monitor, existencias y legibilidad táctil en ambas orientaciones. Prueba también en la tablet física; la verificación automatizada no sustituye esta prueba presencial. Las capturas de navegador están en `documentos/evidencias/citein-2026`.
 
 ## Base, respaldo y restablecimiento
 
 La base CITEIN se creó por separado mediante las migraciones del repositorio y datos académicos de desarrollo. El catálogo de feria incorpora cuatro libros físicos con 200 unidades iniciales y dos ebooks sin inventario físico; los pedidos de las pruebas permanecen en ella. La base principal `CloudBooks`, `CloudBooks_Demo_Entrega_20261105` y sus respaldos no forman parte del procedimiento. La contraseña académica y los datos de tarjeta ficticia ya presentes en el código no son credenciales bancarias reales; no agregues secretos ni datos reales.
+
+### Respaldar y verificar la base actual
+
+El respaldo conserva todos los pedidos existentes; no es un estado limpio. En SQL Server Management Studio, conéctate a `.\SQLEXPRESS` y confirma que la base seleccionada sea exactamente `CloudBooks_CITEIN_2026`. En **Tareas → Copia de seguridad**, selecciona una copia completa de solo copia y una ruta nueva fuera del repositorio donde la cuenta del servicio SQL Server tenga permiso de escritura. Usa un nombre que incluya fecha y hora y comprueba que no exista antes de iniciar. Activa la suma de comprobación del medio si está disponible; no sobrescribas respaldos existentes.
+
+Comprueba en las propiedades del archivo que la base de origen sea `CloudBooks_CITEIN_2026` y ejecuta la opción **Comprobar copia de seguridad** de SSMS, o `RESTORE VERIFYONLY` sobre ese archivo. Confirma que la verificación termine correctamente y registra la ruta y la fecha. Esta comprobación verifica la legibilidad del respaldo; no sustituye una restauración de ensayo en un entorno aislado.
+
+### Recuperación y estado limpio
 
 Para recuperar un **estado inicial limpio**, acuerda primero con el equipo qué pedidos de CITEIN se perderán. Detén la aplicación y confirma en SQL Server Management Studio que el destino es exactamente `CloudBooks_CITEIN_2026`; verifica además el origen y la fecha de un respaldo limpio creado antes de la feria. Haz un respaldo adicional de la base actual en una ruta aprobada y verifica que se pueda leer. Solo entonces restaura manualmente el respaldo limpio sobre esa base concreta con las opciones y rutas de archivos revisadas en SSMS. Nunca selecciones `CloudBooks`, `CloudBooks_Demo_Entrega_20261105` ni otro respaldo como destino. La restauración elimina los cambios posteriores al respaldo; requiere autorización explícita del responsable. No hay restauración ni eliminación automáticas. Si aún no existe un respaldo limpio, prepara y verifica uno después de que el responsable decida cómo conservar o retirar los pedidos de prueba; el respaldo actual con pedidos no representa un estado limpio.
 
@@ -91,6 +99,26 @@ Para comprobar un ebook, elige uno marcado **Libro digital** y revisa que el mon
 - **Pedido en revisión:** muestra el estado real; utiliza el proceso normal de revisión administrativa. No repitas la compra suponiendo que falló.
 - **Límite de sesiones o de solicitudes:** espera un minuto si se limita la IP; si se alcanza el límite de identidades, prepara un respaldo y acuerda un reinicio seguro del entorno.
 
+## Monitor de presentación y recuperación de conexión
+
+Abre `/citein/monitor` con la cuenta de Administrador. La cabecera muestra el total real de pedidos CITEIN, el código más reciente, el estado de conexión y la hora guatemalteca de la última consulta exitosa. El historial muestra los cinco pedidos más recientes de visitantes CITEIN; no incluye clientes normales. El botón **Modo presentación** amplía la vista y solicita pantalla completa si el navegador lo permite; **Salir de presentación** o la tecla Escape permiten regresar. La consulta se pausa en una pestaña oculta.
+
+Cuando falla una consulta, el monitor muestra **Reconectando** y, ante otro fallo, **Sin conexión con el servidor**, conservando los últimos datos y su hora. Al recuperarse la conexión vuelve a consultar. No interpreta un historial vacío como desconexión. Para un libro físico muestra la cantidad comprada y las existencias actuales; no inventa un valor anterior. Un ebook indica que no descuenta inventario físico. Un pedido en revisión se presenta como pendiente y aclara que el inventario físico aún no se ha descontado.
+
+Si la tablet pierde la respuesta de la compra, deja la selección en pantalla y solicita comprobar el estado. No pulses repetidamente ni reinicies la aplicación: recupera la red y usa **Comprobar estado de la compra**. Si ya existe el pedido, se abre su resultado; si el servidor confirma que no existe, se habilita otro intento. Si continúa sin conexión, permanece bloqueado hasta poder comprobarlo. El servidor también impide crear un segundo pedido para la misma identidad académica. Si se recarga la página, se reanuda la comprobación pendiente cuando el almacenamiento de sesión está disponible.
+
+### Pruebas de preparación
+
+`dotnet test CloudBooks.sln --no-restore` ejecuta la suite habitual. Para verificar dos clientes y el doble envío contra la demostración local, con SQL Express, la aplicación y el puerto 5199 activos, usa `py -3 pruebas\probar-citein-http.py --ejecutar`. **La prueba crea dos pedidos reales de demostración y descuenta una unidad física**; no los elimina. No la ejecutes durante la exposición y verifica que el libro tenga más de 20 unidades. Las capturas se guardaron en `documentos/evidencias/citein-2026/pulido-final`.
+
+### Lista del día de CITEIN
+
+- Confirmar energía, SQL Express y la red privada sin aislamiento de clientes; ejecutar el script y leer sus diagnósticos.
+- Comprobar en tablet la IP mostrada, los tres destacados y el catálogo completo; abrir Administración y el monitor con la cuenta académica.
+- Ejecutar una compra de ensayo y contrastar código, importe, estado y stock en ambas pantallas.
+- Ensayar la reconexión y verificar que el monitor vuelva a **Conectado**. Confirmar un respaldo verificado y espacio suficiente de inventario.
+- Verificar presencialmente la tablet física y el acceso entre los tres equipos. Falta realizar una prueba con internet externo realmente bloqueado manteniendo la red local; no se cambiaron reglas de firewall para simularla.
+
 ## Guion de aproximadamente dos minutos
 
 «CloudBooks es una librería digital construida con ASP.NET Core MVC y SQL Server. Para esta feria preparamos una experiencia simplificada para tablet, pero estamos usando la misma aplicación y las mismas reglas comerciales que ven los administradores.
@@ -105,4 +133,4 @@ Finalmente, podemos iniciar otra demostración; el pedido anterior permanece reg
 
 ## Límites conocidos
 
-Se realizaron pruebas con clientes independientes en el mismo servidor, no con una tablet física. El montaje y la interacción táctil real, la conectividad entre equipos y la regla de firewall deben verificarse presencialmente. La cuenta académica y los pedidos de prueba persisten hasta un restablecimiento explícito. El límite de IP usa la dirección observada directamente: no se ha diseñado para operar detrás de un proxy público. El monitor muestra el último pedido de demostración, no una lista histórica; el historial completo permanece en Administración.
+Se realizaron pruebas con clientes independientes en el mismo servidor, no con una tablet física. El montaje y la interacción táctil real, la conectividad entre equipos y la regla de firewall deben verificarse presencialmente. La cuenta académica y los pedidos de prueba persisten hasta un restablecimiento explícito. El límite de IP usa la dirección observada directamente: no se ha diseñado para operar detrás de un proxy público. El monitor presenta hasta cinco pedidos CITEIN y el total de esos pedidos; el historial completo permanece en Administración. La sincronización por identidad se ha diseñado para una sola instancia del servidor, como en el montaje de la feria.
