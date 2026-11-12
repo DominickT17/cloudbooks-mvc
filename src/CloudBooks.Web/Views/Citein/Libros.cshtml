@@ -1,0 +1,6 @@
+@model List<CloudBooks.Web.Modelos.Libro>
+@{ Layout = "_LayoutCitein"; }
+<nav class="pasos" aria-label="Progreso"><strong>01 <span>Elegir libro</span></strong><span>→</span><span>02 Confirmar</span><span>→</span><span>03 Resultado</span></nav>
+<div class="titulo"><p class="etiqueta">TU PRIMER PASO</p><h1>Elige un libro</h1><p>Selecciona el libro que te gustaría llevar.</p></div>
+@if (Model.Count == 0) { <div class="vacio">No hay libros disponibles en este momento. Solicita ayuda al expositor.</div> }
+<div class="rejilla">@foreach (var libro in Model) { <article class="tarjeta"><div class="portada"><img src="@libro.ImagenPortada" alt="Portada de @libro.Titulo"></div><div class="tarjeta-texto"><h2>@libro.Titulo</h2><p class="precio">Q @libro.PrecioBase.ToString("N2")</p><form asp-action="Elegir" method="post"><input type="hidden" name="libroId" value="@libro.Id"><button class="boton secundario" type="submit">Elegir este libro <span aria-hidden="true">→</span></button></form></div></article> }</div>

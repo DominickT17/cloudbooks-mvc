@@ -79,19 +79,18 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
         await transaccion.CommitAsync();
         return (pedido, null);
         }
-        catch (SqlException error) when (error.Number == 1205)
+        catch (Exception error) when (EsInterbloqueo(error))
         {
+            // EF Core puede envolver el error SQL en varias capas de excepciones.
             return (null, "Otro pedido modificó las existencias al mismo tiempo. Tu carrito se conserva; revisa la disponibilidad e inténtalo de nuevo.");
         }
-        catch (DbUpdateException error) when (error.InnerException is SqlException { Number: 1205 })
-        {
-            return (null, "Otro pedido modificó las existencias al mismo tiempo. Tu carrito se conserva; revisa la disponibilidad e inténtalo de nuevo.");
-        }
-        catch (InvalidOperationException error) when (error.InnerException is SqlException { Number: 1205 })
-        {
-            // EF Core puede envolver la víctima de interbloqueo como fallo transitorio.
-            return (null, "Otro pedido modificó las existencias al mismo tiempo. Tu carrito se conserva; revisa la disponibilidad e inténtalo de nuevo.");
-        }
+    }
+
+    private static bool EsInterbloqueo(Exception error)
+    {
+        for (Exception? actual = error; actual != null; actual = actual.InnerException)
+            if (actual is SqlException { Number: 1205 }) return true;
+        return false;
     }
 
     public Task<List<Pedido>> ObtenerPorUsuarioAsync(string usuarioId) => contexto.Pedidos.AsNoTracking().Where(p => p.UsuarioId == usuarioId).OrderByDescending(p => p.Id).ToListAsync();

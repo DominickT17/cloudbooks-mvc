@@ -4,12 +4,30 @@ using CloudBooks.Web.Servicios;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Resend;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Data.SqlClient;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddAuthentication().AddCookie("Citein", opciones =>
+{
+    opciones.Cookie.Name = ".CloudBooks.Citein";
+    opciones.Cookie.HttpOnly = true;
+    opciones.Cookie.SameSite = SameSiteMode.Lax;
+    opciones.ExpireTimeSpan = TimeSpan.FromHours(4);
+    opciones.SlidingExpiration = false;
+    opciones.LoginPath = "/citein";
+});
+builder.Services.AddRateLimiter(opciones => opciones.AddPolicy("citein", contexto =>
+    RateLimitPartition.GetFixedWindowLimiter(contexto.Connection.RemoteIpAddress?.ToString() ?? "local", _ =>
+        new FixedWindowRateLimiterOptions { PermitLimit = 120, Window = TimeSpan.FromMinutes(1), QueueLimit = 0, AutoReplenishment = true })));
+builder.Services.AddRateLimiter(opciones => opciones.AddPolicy("citein-inicio", contexto =>
+    RateLimitPartition.GetFixedWindowLimiter(contexto.Connection.RemoteIpAddress?.ToString() ?? "local", _ =>
+        new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0, AutoReplenishment = true })));
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(opciones => { opciones.IdleTimeout = TimeSpan.FromDays(7); opciones.Cookie.HttpOnly = true; opciones.Cookie.IsEssential = true; });
 builder.Services.AddScoped<ServicioCarritoInvitado>();
@@ -58,17 +76,33 @@ builder.Services.ConfigureApplicationCookie(opciones =>
 });
 
 var app = builder.Build();
+var citeinHabilitado = builder.Configuration.GetValue<bool>("CiteinDemo:Enabled");
+if (citeinHabilitado)
+{
+    var cadena = new SqlConnectionStringBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
+    var servidor = cadena.DataSource.ToLowerInvariant();
+    if (!app.Environment.IsDevelopment() || cadena.InitialCatalog != "CloudBooks_CITEIN_2026" ||
+        !(servidor.StartsWith(@".\") || servidor.StartsWith(@"localhost\") || servidor == "." || servidor == "localhost") ||
+        !string.Equals(builder.Configuration["Correo:Proveedor"], "Simulado", StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("CITEIN requiere Development, SQL Server local, base CloudBooks_CITEIN_2026 y correo Simulado.");
+}
 
 using (var alcance = app.Services.CreateScope())
     await DatosIniciales.InicializarAsync(alcance.ServiceProvider, app.Environment.IsDevelopment());
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment() || citeinHabilitado)
 {
     app.UseExceptionHandler("/Inicio/Error");
 }
 app.UseStatusCodePagesWithReExecute("/Inicio/Estado", "?codigo={0}");
+app.Use(async (contexto, siguiente) =>
+{
+    if (!citeinHabilitado && contexto.Request.Path.StartsWithSegments("/citein")) { contexto.Response.StatusCode = 404; return; }
+    await siguiente();
+});
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseSession();
 app.UseAuthentication();

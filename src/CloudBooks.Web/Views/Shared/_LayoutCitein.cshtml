@@ -1,0 +1,5 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>CloudBooks · CITEIN 2026</title><link rel="stylesheet" href="~/css/citein.css" asp-append-version="true"></head>
+<body><header class="cabecera"><a class="marca" href="/citein"><span class="marca-icono">✦</span> CloudBooks</a><span class="insignia">CITEIN 2026 <b>·</b> UMES</span></header>
+<main class="contenedor">@if (TempData["Error"] is string error) { <div class="alerta" role="alert">@error</div> } @RenderBody()</main>
+<footer>Experiencia académica · No se realizan pagos reales</footer><script src="~/js/citein.js" asp-append-version="true"></script></body></html>
