@@ -37,15 +37,49 @@ En Administración inicia sesión con una de las cuentas académicas administrad
 1. Tablet: comenzar, elegir un libro, revisar subtotal, descuento, IVA y total, y pulsar **Realizar compra simulada**.
 2. Comprueba el código y estado reales. Si está en revisión, explícalo: todavía no se han descontado existencias. Si falla, lee el mensaje y vuelve a elegir un libro.
 3. En el monitor observa el pedido, abre su detalle original y verifica el inventario. El botón **Realizar otra demostración** crea una sesión nueva y conserva los pedidos anteriores.
-4. Antes del evento, prueba al menos dos compras en una red privada, acceso administrativo, actualización del monitor, existencias y legibilidad táctil en ambas orientaciones. Prueba también en la tablet física; la verificación automatizada no sustituye esta prueba presencial.
+4. Antes del evento, prueba al menos dos compras en una red privada, acceso administrativo, actualización del monitor, existencias y legibilidad táctil en ambas orientaciones. Prueba también en la tablet física; la verificación automatizada no sustituye esta prueba presencial. Las capturas de navegador están en `documentos/evidencias/citein-2026`.
 
 ## Base, respaldo y restablecimiento
 
-La base CITEIN se creó por separado mediante las migraciones del repositorio y datos académicos de desarrollo. Cinco libros físicos se prepararon con 200 unidades inicialmente; los pedidos de las pruebas ya realizadas permanecen en ella. La base principal `CloudBooks`, `CloudBooks_Demo_Entrega_20261105` y sus respaldos no forman parte del procedimiento. La contraseña académica y los datos de tarjeta ficticia ya presentes en el código no son credenciales bancarias reales; no agregues secretos ni datos reales.
+La base CITEIN se creó por separado mediante las migraciones del repositorio y datos académicos de desarrollo. El catálogo de feria incorpora cuatro libros físicos con 200 unidades iniciales y dos ebooks sin inventario físico; los pedidos de las pruebas permanecen en ella. La base principal `CloudBooks`, `CloudBooks_Demo_Entrega_20261105` y sus respaldos no forman parte del procedimiento. La contraseña académica y los datos de tarjeta ficticia ya presentes en el código no son credenciales bancarias reales; no agregues secretos ni datos reales.
 
 Para recuperar un **estado inicial limpio**, acuerda primero con el equipo qué pedidos de CITEIN se perderán. Detén la aplicación y confirma en SQL Server Management Studio que el destino es exactamente `CloudBooks_CITEIN_2026`; verifica además el origen y la fecha de un respaldo limpio creado antes de la feria. Haz un respaldo adicional de la base actual en una ruta aprobada y verifica que se pueda leer. Solo entonces restaura manualmente el respaldo limpio sobre esa base concreta con las opciones y rutas de archivos revisadas en SSMS. Nunca selecciones `CloudBooks`, `CloudBooks_Demo_Entrega_20261105` ni otro respaldo como destino. La restauración elimina los cambios posteriores al respaldo; requiere autorización explícita del responsable. No hay restauración ni eliminación automáticas. Si aún no existe un respaldo limpio, prepara y verifica uno después de que el responsable decida cómo conservar o retirar los pedidos de prueba; el respaldo actual con pedidos no representa un estado limpio.
 
 Para reponer existencias sin borrar pedidos, un administrador puede editar el stock desde Administración → Inventario, tras comprobar que la aplicación apunta a la base CITEIN. Registra cualquier ajuste en la preparación de la feria. No modifiques directamente otras bases.
+
+## Catálogo académico y procedencia
+
+Los importes son **precios simulados en quetzales**, elegidos para el ejercicio académico; no son precios de las editoriales. Los ebooks de OpenStax pueden consultarse gratuitamente en sus sitios oficiales. La compra simulada no proporciona licencias, archivos ni descargas. Las existencias indicadas son las iniciales: pueden disminuir conforme se aprueban pedidos.
+
+| ISBN de la edición | Libro y autores | Editorial, edición y año | Formato | Precio demo | Stock inicial |
+|---|---|---|---|---:|---:|
+| 9786075502090 | Álgebra — Aurelio Baldor | Grupo Editorial Patria, 4.ª, 2019 | Tapa dura | Q165.00 | 200 |
+| 9786075502076 | Aritmética — Aurelio Baldor | Grupo Editorial Patria, 4.ª, 2019 | Tapa dura | Q150.00 | 200 |
+| 9786075502069 | Geometría y trigonometría — Aurelio Baldor | Grupo Editorial Patria, 4.ª, 2019 | Tapa dura | Q175.00 | 200 |
+| 9786073221245 | Física universitaria, volumen 1 — Hugh D. Young y Roger A. Freedman | Pearson Educación, 13.ª, 2013 | Tapa blanda | Q235.00 | 200 |
+| 9781951693510 | Cálculo volumen 1 — Gilbert Strang y Edwin “Jed” Herman | OpenStax, edición digital en español, 2022 | Digital | Q35.00 | No aplica (0) |
+| 9781951693909 | Física universitaria volumen 1 — Samuel J. Ling, Jeff Sanny y William Moebs | OpenStax, edición digital en español, 2021 | Digital | Q35.00 | No aplica (0) |
+
+**Fuentes bibliográficas consultadas:**
+
+- [Grupo Editorial Patria, serie Baldor](https://editorialpatria.com.mx/wp-content/uploads/2024/07/Serie-Baldor.pdf): títulos, autor, 4.ª edición e ISBN; se adopta 2019 para la serie según esa ficha. Otra [ficha de recursos académicos](https://recursosacademicos.com/wp-content/uploads/2024/10/Catalogo_General_Bachillerato_compressed.pdf) identifica la encuadernación y consigna 2020 para Geometría; hay discrepancia de año entre fuentes.
+- [Catálogo de Pearson, Física universitaria volumen I](https://pearson.es/docs/default-source/espa%C3%B1afiles/cat%C3%A1logo-universidad-2015-low1fb56a8b436366b1aea8ff00004a2a88.pdf): edición 13, ISBN físico y año. La [biblioteca UPSE](https://bibliotecas.upse.edu.ec/cgi-bin/koha/opac-detail.pl?biblionumber=18030) confirma Young y Freedman como autores, y la [ficha comercial](https://www.buscalibre.com/int-es/libro-fisica-universitaria-volumen-01/9786073221245/p/32247506) especifica tapa blanda.
+- [OpenStax, Cálculo volumen 1](https://openstax.org/books/c%C3%A1lculo-volumen-1/pages/prefacio) y [ficha legal del PDF](https://assets.openstax.org/oscms-prodcms/media/documents/Calculo_volumen_1_-_WEB_vGHB4xK.pdf): autores, 2022 e ISBN digital. Texto bajo CC BY-NC-SA 4.0 según la ficha vigente.
+- [OpenStax, Física universitaria volumen 1](https://openstax.org/books/f%C3%ADsica-universitaria-volumen-1/pages/indice) y [ficha legal del PDF](https://assets.openstax.org/oscms-prodcms/media/documents/FisicaUniversitariaVolumen1-WEB.pdf): autores, 2021 e ISBN digital. El PDF de 2021 indica CC BY 4.0, mientras el pie actual de la web indica CC BY-NC-SA; consulta las condiciones específicas vigentes antes de reutilizar contenido.
+
+**Imágenes y permisos:** se reutiliza el logo oficial de CloudBooks incluido en el repositorio. Las seis cubiertas de `wwwroot/imagenes/citein` son SVG originales, ilustrativos y locales: no reproducen las cubiertas de Patria, Pearson ni OpenStax. No se encontró autorización suficiente para incorporar portadas editoriales; la ficha de OpenStax excluye expresamente sus portadas y logotipos de la licencia del contenido. No se distribuye texto, imágenes, PDF ni marcas gráficas de OpenStax. El enlace de referencia es opcional y requiere internet; la aplicación y sus imágenes no lo requieren.
+
+### Preparar o actualizar la selección
+
+Con SQL Express local en ejecución y después de comprobar el destino, desde la raíz del repositorio:
+
+```powershell
+sqlcmd -S '.\SQLEXPRESS' -d CloudBooks_CITEIN_2026 -E -C -b -f 65001 -i scripts\preparar-catalogo-citein.sql
+```
+
+El script comprueba el nombre exacto de la base, opera en una transacción e inserta solo los ISBN ausentes y sus autores. Una segunda ejecución no duplica obras ni repone el stock; una coincidencia incompatible detiene la operación. No modifica pedidos ni productos existentes. Los seis ISBN permitidos y su orden están declarados en `CiteinController`; para cambiar la selección, verificar primero datos y derechos, actualizar la lista explícita, preparar los registros sin sobrescribir históricos, y ejecutar las pruebas de selección, compra e inventario. El inventario se ajusta desde Administración en la base CITEIN.
+
+Para comprobar un ebook, elige uno marcado **Libro digital** y revisa que el monitor muestre «No aplica · libro digital» en existencias físicas. El stock SQL permanece en cero. Sus textos se consultan en los enlaces oficiales anteriores cuando haya conexión; la feria no incluye una copia descargable.
 
 ## Fallos habituales
 

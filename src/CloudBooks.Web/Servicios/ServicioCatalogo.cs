@@ -31,6 +31,10 @@ public class ServicioCatalogo(ContextoAplicacion contexto)
         return filtros;
     }
 
+    public Task<List<Libro>> ObtenerPorIsbnAsync(IEnumerable<string> isbn) => contexto.Libros.AsNoTracking()
+        .Where(libro => libro.Activo && isbn.Contains(libro.ISBN)).Include(libro => libro.Autores)
+        .Include(libro => libro.Categoria).ToListAsync();
+
     public Task<Libro?> ObtenerAsync(int id) => contexto.Libros.AsNoTracking().Include(libro => libro.Autores)
         .Include(libro => libro.Categoria).Include(libro => libro.Editorial)
         .FirstOrDefaultAsync(libro => libro.Id == id && libro.Activo);

@@ -19,6 +19,12 @@ public class CiteinController(ContextoAplicacion db, UserManager<UsuarioAplicaci
 {
     private string UsuarioId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     private const string Esquema = "Citein";
+    // ISBN de ediciones verificadas; el orden de feria no depende de los IDs SQL.
+    private static readonly string[] IsbnCitein = ["9786075502090", "9786075502076", "9786075502069", "9786073221245", "9781951693510", "9781951693909"];
+    private static bool Habilitado(Libro libro) => IsbnCitein.Contains(libro.ISBN) && libro.Activo &&
+        (libro.Formato == FormatoLibro.Ebook || libro.Stock > 0);
+    private async Task<List<Libro>> LibrosHabilitadosAsync() => (await catalogo.ObtenerPorIsbnAsync(IsbnCitein))
+        .Where(Habilitado).OrderBy(l => Array.IndexOf(IsbnCitein, l.ISBN)).ToList();
 
     [HttpGet("")]
     public IActionResult Index() => View();
@@ -45,16 +51,14 @@ public class CiteinController(ContextoAplicacion db, UserManager<UsuarioAplicaci
     [Authorize(AuthenticationSchemes = Esquema, Roles = "ClienteMinorista"), HttpGet("libros")]
     public async Task<IActionResult> Libros()
     {
-        var libros = (await catalogo.BuscarAsync(new CloudBooks.Web.ModelosVista.CatalogoModelo())).Libros
-            .Where(l => l.Formato != FormatoLibro.Ebook && l.Stock > 0).Take(4).ToList();
+        var libros = await LibrosHabilitadosAsync();
         return View(libros);
     }
 
     [Authorize(AuthenticationSchemes = Esquema, Roles = "ClienteMinorista"), HttpPost("elegir"), ValidateAntiForgeryToken]
     public async Task<IActionResult> Elegir(int libroId)
     {
-        var disponibles = (await catalogo.BuscarAsync(new CloudBooks.Web.ModelosVista.CatalogoModelo())).Libros
-            .Where(l => l.Formato != FormatoLibro.Ebook && l.Stock > 0).Take(4).Any(l => l.Id == libroId);
+        var disponibles = (await LibrosHabilitadosAsync()).Any(l => l.Id == libroId);
         if (!disponibles) { TempData["Error"] = "Este libro ya no está disponible. Elige otro."; return RedirectToAction(nameof(Libros)); }
         var anterior = await carrito.ObtenerAsync(UsuarioId);
         foreach (var detalle in anterior?.Detalles ?? []) await carrito.EliminarAsync(UsuarioId, detalle.Id);
@@ -66,10 +70,14 @@ public class CiteinController(ContextoAplicacion db, UserManager<UsuarioAplicaci
     [Authorize(AuthenticationSchemes = Esquema, Roles = "ClienteMinorista"), HttpGet("confirmar")]
     public async Task<IActionResult> Confirmar()
     {
-        var detalle = (await carrito.ObtenerAsync(UsuarioId))?.Detalles.SingleOrDefault();
-        if (detalle == null) return RedirectToAction(nameof(Libros));
-        var resumen = descuentos.Calcular(detalle.Libro.PrecioBase, 1, false, (await parametros.ObtenerAsync()).TasaImpuesto);
-        return View(new ConfirmacionCitein(detalle.Libro, resumen));
+        var detalles = (await carrito.ObtenerAsync(UsuarioId))?.Detalles;
+        var detalle = detalles?.Count == 1 ? detalles[0] : null;
+        if (detalle == null || detalle.Cantidad != 1 || !Habilitado(detalle.Libro))
+        { TempData["Error"] = "El libro ya no está disponible para la demostración. Elige uno nuevamente."; return RedirectToAction(nameof(Libros)); }
+        var libro = await catalogo.ObtenerAsync(detalle.LibroId);
+        if (libro == null || !Habilitado(libro)) { TempData["Error"] = "El libro ya no está disponible. Elige otro."; return RedirectToAction(nameof(Libros)); }
+        var resumen = descuentos.Calcular(libro.PrecioBase, 1, false, (await parametros.ObtenerAsync()).TasaImpuesto);
+        return View(new ConfirmacionCitein(libro, resumen));
     }
 
     [Authorize(AuthenticationSchemes = Esquema, Roles = "ClienteMinorista"), HttpPost("comprar"), ValidateAntiForgeryToken]
@@ -77,6 +85,9 @@ public class CiteinController(ContextoAplicacion db, UserManager<UsuarioAplicaci
     {
         var usuario = await usuarios.FindByIdAsync(UsuarioId);
         if (usuario == null || !usuario.Activo || !await usuarios.IsInRoleAsync(usuario, "ClienteMinorista")) return Forbid(Esquema);
+        var detalles = (await carrito.ObtenerAsync(UsuarioId))?.Detalles;
+        if (detalles?.Count != 1 || detalles[0].Cantidad != 1 || !Habilitado(detalles[0].Libro))
+        { TempData["Error"] = "El libro ya no está disponible para la demostración. Elige uno nuevamente."; return RedirectToAction(nameof(Libros)); }
         var tarjeta = new SimuladorTarjeta().Evaluar("4000000000000002", "12/99", "123", DateOnly.FromDateTime(DateTime.UtcNow));
         if (!tarjeta.Autorizada) { TempData["Error"] = "No fue posible autorizar el pago simulado."; return RedirectToAction(nameof(Confirmar)); }
         var resultado = await pedidos.CrearAsync(UsuarioId, false, MetodoPagoSimulado.TarjetaSimulada, usuario.NombreCompleto, tarjeta.UltimosCuatro);
@@ -104,7 +115,7 @@ public class CiteinController(ContextoAplicacion db, UserManager<UsuarioAplicaci
         var detalle = pedido.Detalles.First();
         return Json(new { pedido.Id, pedido.Codigo, Cliente = pedido.Usuario.NombreCompleto, Libro = detalle.Titulo,
             pedido.Total, Estado = pedido.EstadoTexto, Hora = FechaPresentacion.EnGuatemala(pedido.FechaUtc).ToString("dd/MM/yyyy HH:mm:ss"),
-            Existencias = detalle.Libro.Stock, DetalleUrl = Url.Action("DetallePedido", "Administracion", new { id = pedido.Id }) });
+            Existencias = detalle.Formato == FormatoLibro.Ebook ? (int?)null : detalle.Libro.Stock, DetalleUrl = Url.Action("DetallePedido", "Administracion", new { id = pedido.Id }) });
     }
 }
 
