@@ -8,7 +8,7 @@ using Microsoft.Data.SqlClient;
 
 namespace CloudBooks.Web.Servicios;
 
-public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null, INotificacionesPedido? notificaciones = null, IServicioNotificaciones? correos = null)
+public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos descuentos, ServicioParametros? parametros = null, INotificacionesPedido? notificaciones = null, IServicioNotificaciones? correos = null, ServicioComprobantePedido? comprobante = null, ILogger<ServicioPedidos>? logger = null)
 {
     public async Task<(Pedido? Pedido, string? Error)> CrearAsync(string usuarioId, bool institucional, MetodoPagoSimulado metodo, string? titular = null, string? ultimosCuatro = null)
     {
@@ -158,6 +158,19 @@ public class ServicioPedidos(ContextoAplicacion contexto, ServicioDescuentos des
             "revision" => $"Recibimos tu pedido {pedido.Codigo}. Nuestro equipo realizará una validación adicional; no necesitas repetir la compra. No se han reservado existencias.",
             _ => $"Tu pedido {pedido.Codigo} fue cancelado. Si existía una autorización simulada, fue anulada. No se realizó ningún cargo bancario real."
         };
-        await correos!.EncolarAsync($"pedido/{pedido.Id}/{tipo}/cliente", tipo, pedido.Codigo, cliente.Email, asunto, $"Hola, {cliente.NombreCompleto}:\n\n{detalle}");
+        byte[]? pdf = null;
+        if (tipo == "aprobado" && comprobante != null && !(cliente.Email?.EndsWith("@visitante.citein.invalid", StringComparison.OrdinalIgnoreCase) ?? false))
+        {
+            try
+            {
+                var completo = await contexto.Pedidos.AsNoTracking().Include(p => p.Usuario).Include(p => p.Detalles)
+                    .SingleAsync(p => p.Id == pedido.Id && p.Estado == EstadoPedido.Aprobado);
+                var generado = comprobante.Generar(completo);
+                if (generado.Length >= 5 && generado.AsSpan(0, 5).SequenceEqual("%PDF-"u8)) pdf = generado;
+                else logger?.LogWarning("El comprobante del pedido {PedidoId} no es un PDF válido.", pedido.Id);
+            }
+            catch (Exception error) { logger?.LogWarning("No se pudo generar el comprobante del pedido {PedidoId}: {Tipo}", pedido.Id, error.GetType().Name); }
+        }
+        await correos!.EncolarAsync($"pedido/{pedido.Id}/{tipo}/cliente", tipo, pedido.Codigo, cliente.Email, asunto, $"Hola, {cliente.NombreCompleto}:\n\n{detalle}", pdf);
     }
 }

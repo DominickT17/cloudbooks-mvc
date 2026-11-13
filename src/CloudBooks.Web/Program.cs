@@ -51,9 +51,11 @@ builder.Services.Configure<ResendClientOptions>(opciones => opciones.ApiToken = 
 builder.Services.AddTransient<IResend, ResendClient>();
 builder.Services.AddScoped<ProveedorCorreoResend>();
 builder.Services.AddScoped<ProveedorCorreoSimulado>();
+builder.Services.AddScoped<ProveedorCorreoCitein>();
 builder.Services.AddScoped<IProveedorCorreo>(servicios =>
-    ConfiguracionCorreo.UsarResend(builder.Configuration)
-        ? servicios.GetRequiredService<ProveedorCorreoResend>() : servicios.GetRequiredService<ProveedorCorreoSimulado>());
+    builder.Configuration.GetValue<bool>("CiteinDemo:Enabled") && ConfiguracionCorreo.UsarResend(builder.Configuration)
+        ? servicios.GetRequiredService<ProveedorCorreoCitein>()
+        : ConfiguracionCorreo.UsarResend(builder.Configuration) ? servicios.GetRequiredService<ProveedorCorreoResend>() : servicios.GetRequiredService<ProveedorCorreoSimulado>());
 builder.Services.AddHostedService<ServicioFondoCorreos>();
 builder.Services.AddScoped<INotificacionesPedido, NotificacionesPedido>();
 builder.Services.AddScoped<ServicioAvisosAdministracion>();
@@ -82,9 +84,9 @@ if (citeinHabilitado)
     var cadena = new SqlConnectionStringBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
     var servidor = cadena.DataSource.ToLowerInvariant();
     if (!app.Environment.IsDevelopment() || cadena.InitialCatalog != "CloudBooks_CITEIN_2026" ||
-        !(servidor.StartsWith(@".\") || servidor.StartsWith(@"localhost\") || servidor == "." || servidor == "localhost") ||
-        !string.Equals(builder.Configuration["Correo:Proveedor"], "Simulado", StringComparison.OrdinalIgnoreCase))
-        throw new InvalidOperationException("CITEIN requiere Development, SQL Server local, base CloudBooks_CITEIN_2026 y correo Simulado.");
+        !(servidor.StartsWith(@".\") || servidor.StartsWith(@"localhost\") || servidor == "." || servidor == "localhost"))
+        throw new InvalidOperationException("CITEIN requiere Development, SQL Server local y base CloudBooks_CITEIN_2026.");
+    ConfiguracionCorreo.ValidarCitein(builder.Configuration);
 }
 
 using (var alcance = app.Services.CreateScope())

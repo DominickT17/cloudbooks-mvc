@@ -13,7 +13,7 @@ public static class PlantillasCorreo
         return asunto + "\n\n" + WebUtility.HtmlDecode(System.Text.RegularExpressions.Regex.Replace(separado, "<[^>]*>", " ")).Trim();
     }
 
-    public static PlantillaGenerada Crear(string clave, string tipo, string asunto, string contenido, string? urlBase, string? urlLogo = null)
+    public static PlantillaGenerada Crear(string clave, string tipo, string asunto, string contenido, string? urlBase, string? urlLogo = null, bool logoInterno = false)
     {
         static string E(string? valor) => WebUtility.HtmlEncode(valor ?? "");
         static bool EsHttpsPublico(string? valor, out Uri? uri)
@@ -69,7 +69,7 @@ public static class PlantillasCorreo
             ("cotizacion_emitida", false) => ResumenCotizacion(contenido),
             _ => string.Join("<br>", contenido.Replace("\r\n", "\n").Split('\n').Select(E))
         };
-        var marca = logo == null ? "<span style=\"font-size:24px;font-weight:700;letter-spacing:-.5px;color:#ffffff\">CloudBooks</span>" : $"<img src=\"{E(logo)}\" alt=\"CloudBooks\" width=\"150\" style=\"display:block;border:0;max-width:150px;height:auto\">";
+        var marca = logoInterno ? "<img src=\"cid:cloudbooks-logo\" alt=\"CloudBooks\" width=\"150\" style=\"display:block;border:0;max-width:150px;height:auto\">" : logo == null ? "<span style=\"font-size:24px;font-weight:700;letter-spacing:-.5px;color:#ffffff\">CloudBooks</span>" : $"<img src=\"{E(logo)}\" alt=\"CloudBooks\" width=\"150\" style=\"display:block;border:0;max-width:150px;height:auto\">";
         var boton = enlace == null ? "" : $"<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:26px 0 12px\"><tr><td bgcolor=\"#1478c9\" style=\"border-radius:6px\"><a href=\"{E(enlace)}\" style=\"display:inline-block;padding:14px 23px;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none\">{E(accion)} &rarr;</a></td></tr></table>";
         var pdf = enlacePdf == null ? "" : $"<p style=\"margin:14px 0 0;font-size:13px\"><a href=\"{E(enlacePdf)}\" style=\"color:#126bb0\">{(tipo == "aprobado" ? "Descargar comprobante" : "Descargar PDF de cotización")}</a> · Acceso con tu cuenta</p>";
         var preheader = E(titulo + " · " + (tipo == "pago_rechazado" ? "Tu carrito sigue disponible." : "Consulta los detalles en CloudBooks."));

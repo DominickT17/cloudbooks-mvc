@@ -4,6 +4,10 @@ CloudBooks guarda las intenciones de correo en SQL dentro de la operación comer
 
 Por defecto se usa el proveedor **simulado**. El HTML y el destinatario quedan registrados para inspección, pero no se envía ningún mensaje. La activación de Resend es explícita. Los correos ya marcados como simulados no se envían al activar Resend; realiza nuevas operaciones de prueba con destinatarios controlados.
 
+## CITEIN 2026
+
+La modalidad de feria agrega una autorización por ejecución y por destinatario; no procesa correos históricos en Resend. Sus requisitos, comprobaciones y pasos específicos se documentan en [Demostración CITEIN](demo-citein-2026.md#correo-transaccional-y-prueba-controlada-con-resend). Las indicaciones generales siguientes no sustituyen esas restricciones.
+
 ## Configurar Resend
 
 1. Crear una clave de API y verificar un dominio de envío en Resend para enviar a clientes. `onboarding@resend.dev` es un remitente de prueba con restricciones; para uso normal configura un remitente de tu dominio verificado. Revisa la [guía oficial para .NET](https://resend.com/docs/send-with-dotnet).

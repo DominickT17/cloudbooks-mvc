@@ -1,4 +1,6 @@
-param([ValidateRange(1,65535)][int]$Puerto = 5199)
+param([ValidateRange(1,65535)][int]$Puerto = 5199, [switch]$CorreoReal, [string]$DestinatarioAutorizado)
+if ($CorreoReal -and [string]::IsNullOrWhiteSpace($DestinatarioAutorizado)) { throw "Con -CorreoReal debes especificar -DestinatarioAutorizado." }
+if (-not $CorreoReal -and $DestinatarioAutorizado) { throw "-DestinatarioAutorizado requiere -CorreoReal." }
 $ErrorActionPreference = 'Stop'
 $raiz = Split-Path -Parent $PSScriptRoot
 $proyecto = Join-Path $raiz 'src\CloudBooks.Web\CloudBooks.Web.csproj'
@@ -32,33 +34,45 @@ Write-Host 'Catálogo: seis libros activos configurados.'
 $bajo = @($esperados | Where-Object { $registros[$_][1] -ne '2' -and [int]$registros[$_][2] -lt 20 })
 if ($bajo.Count -gt 0) { Write-Warning "Existencias físicas menores de 20: $($bajo -join ', '). Revísalas en Administración." } else { Write-Host 'Inventario: al menos 20 ejemplares por libro físico.' }
 Write-Host "Puerto ${Puerto}: disponible."
-$env:ConnectionStrings__DefaultConnection = 'Server=.\SQLEXPRESS;Database=CloudBooks_CITEIN_2026;Trusted_Connection=True;TrustServerCertificate=True'
-$env:ASPNETCORE_ENVIRONMENT = 'Development'
-$env:Correo__Proveedor = 'Simulado'
-$env:CiteinDemo__Enabled = 'true'
-$env:Logging__LogLevel__Default = 'Warning'
-[Environment]::SetEnvironmentVariable('Logging__LogLevel__Microsoft.Hosting.Lifetime', 'Information', 'Process')
-Write-Host 'Correo: proveedor Simulado configurado para esta ejecución.'
-$direcciones = @(Get-NetIPConfiguration | Where-Object { $_.NetAdapter.Status -eq 'Up' -and $_.IPv4DefaultGateway } | ForEach-Object { $_.IPv4Address.IPAddress } | Where-Object { $_ -and $_ -notlike '169.254.*' })
-Write-Host 'Base: CloudBooks_CITEIN_2026 | Correo: Simulado | Red: solo privada'
-if ($direcciones.Count -eq 0) { Write-Warning 'No se detectó una IP con puerta de enlace. Consulta ipconfig y usa la IPv4 de la red privada.' }
-foreach ($ip in $direcciones) {
-    Write-Host "Tablet / Jurado: http://${ip}:${Puerto}/citein"
-    Write-Host "Administración:   http://${ip}:${Puerto}/"
-    Write-Host "Monitor CITEIN:   http://${ip}:${Puerto}/citein/monitor"
-}
-Write-Host 'Detén la aplicación con Ctrl+C en esta ventana.'
-$verificado = $false
-& dotnet run --project $proyecto --no-launch-profile --urls "http://0.0.0.0:$Puerto" | ForEach-Object {
-    Write-Host $_
-    if (-not $verificado -and "$_" -match 'Now listening on:') {
-        $verificado = $true
-        try {
-            $respuesta = Invoke-WebRequest -Uri "http://127.0.0.1:$Puerto/citein" -UseBasicParsing -TimeoutSec 8
-            if ($respuesta.StatusCode -eq 200 -and $respuesta.Content -match 'Bienvenido a') { Write-Host 'Aplicación local: accesible (HTTP 200).' }
-            else { Write-Warning 'La aplicación respondió, pero no se pudo verificar la bienvenida CITEIN.' }
-        } catch { Write-Warning 'No se pudo verificar la aplicación local. Comprueba la ventana y vuelve a probar la URL.' }
+$variablesTemporales = @('ConnectionStrings__DefaultConnection', 'ASPNETCORE_ENVIRONMENT', 'Correo__Proveedor', 'CiteinDemo__CorreoReal', 'CiteinDemo__SesionCorreo', 'CiteinDemo__DestinatarioAutorizado', 'CiteinDemo__Enabled', 'Logging__LogLevel__Default', 'Logging__LogLevel__Microsoft.Hosting.Lifetime')
+$valoresAnteriores = @{}
+foreach ($nombre in $variablesTemporales) { $valoresAnteriores[$nombre] = [Environment]::GetEnvironmentVariable($nombre, 'Process') }
+try {
+    $env:ConnectionStrings__DefaultConnection = 'Server=.\SQLEXPRESS;Database=CloudBooks_CITEIN_2026;Trusted_Connection=True;TrustServerCertificate=True'
+    $env:ASPNETCORE_ENVIRONMENT = 'Development'
+    $env:Correo__Proveedor = if ($CorreoReal) { 'Resend' } else { 'Simulado' }
+    $env:CiteinDemo__CorreoReal = if ($CorreoReal) { 'true' } else { 'false' }
+    $env:CiteinDemo__SesionCorreo = if ($CorreoReal) { [guid]::NewGuid().ToString('N') } else { '' }
+    $env:CiteinDemo__DestinatarioAutorizado = if ($CorreoReal) { $DestinatarioAutorizado.Trim() } else { '' }
+    $env:CiteinDemo__Enabled = 'true'
+    $env:Logging__LogLevel__Default = 'Warning'
+    [Environment]::SetEnvironmentVariable('Logging__LogLevel__Microsoft.Hosting.Lifetime', 'Information', 'Process')
+    Write-Host "Correo para esta ejecución: $($env:Correo__Proveedor)."
+    if ($CorreoReal) { Write-Host 'Solo se enviarán eventos nuevos del destinatario autorizado; las demás notificaciones serán simuladas.' }
+    $direcciones = @(Get-NetIPConfiguration | Where-Object { $_.NetAdapter.Status -eq 'Up' -and $_.IPv4DefaultGateway } | ForEach-Object { $_.IPv4Address.IPAddress } | Where-Object { $_ -and $_ -notlike '169.254.*' })
+    Write-Host "Base: CloudBooks_CITEIN_2026 | Correo: $($env:Correo__Proveedor) | Red: solo privada"
+    if ($direcciones.Count -eq 0) { Write-Warning 'No se detectó una IP con puerta de enlace. Consulta ipconfig y usa la IPv4 de la red privada.' }
+    foreach ($ip in $direcciones) {
+        Write-Host "Tablet / Jurado: http://${ip}:${Puerto}/citein"
+        Write-Host "Administración:   http://${ip}:${Puerto}/"
+        Write-Host "Monitor CITEIN:   http://${ip}:${Puerto}/citein/monitor"
     }
+    Write-Host 'Detén la aplicación con Ctrl+C en esta ventana.'
+    $verificado = $false
+    & dotnet run --project $proyecto --no-launch-profile --urls "http://0.0.0.0:$Puerto" | ForEach-Object {
+        Write-Host $_
+        if (-not $verificado -and "$_" -match 'Now listening on:') {
+            $verificado = $true
+            try {
+                $respuesta = Invoke-WebRequest -Uri "http://127.0.0.1:$Puerto/citein" -UseBasicParsing -TimeoutSec 8
+                if ($respuesta.StatusCode -eq 200 -and $respuesta.Content -match 'Bienvenido a') { Write-Host 'Aplicación local: accesible (HTTP 200).' }
+                else { Write-Warning 'La aplicación respondió, pero no se pudo verificar la bienvenida CITEIN.' }
+            } catch { Write-Warning 'No se pudo verificar la aplicación local. Comprueba la ventana y vuelve a probar la URL.' }
+        }
+    }
+    if ($LASTEXITCODE -ne 0) { throw 'La aplicación terminó con error.' }
+    if (-not $verificado) { Write-Warning 'No se recibió una señal de escucha; no se comprobó la aplicación local.' }
+
+} finally {
+    foreach ($nombre in $variablesTemporales) { [Environment]::SetEnvironmentVariable($nombre, $valoresAnteriores[$nombre], 'Process') }
 }
-if ($LASTEXITCODE -ne 0) { throw 'La aplicación terminó con error.' }
-if (-not $verificado) { Write-Warning 'No se recibió una señal de escucha; no se comprobó la aplicación local.' }

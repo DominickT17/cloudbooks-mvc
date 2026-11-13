@@ -161,6 +161,9 @@ namespace CloudBooks.Web.Datos.Migraciones
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<byte[]>("ComprobantePdf")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("datetime2");
 
@@ -186,6 +189,9 @@ namespace CloudBooks.Web.Datos.Migraciones
 
                     b.Property<int>("Intentos")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("LogoCorreo")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<DateTime?>("PrimerIntentoUtc")
                         .HasColumnType("datetime2");

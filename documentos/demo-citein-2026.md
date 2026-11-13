@@ -6,7 +6,7 @@ Un único equipo servidor ejecuta ASP.NET Core MVC (.NET 10) y SQL Server Expres
 
 La experiencia de la tablet usa un layout propio. Al comenzar se crea una identidad Identity sin contraseña con un alias y una cookie independientes de la cookie administrativa. La identidad tiene exclusivamente el rol `ClienteMinorista`, y cada nueva demostración crea otra identidad. Las sesiones se limitan a 12 inicios por IP por minuto y 5.000 identidades académicas por base; las demás rutas tienen un límite de 120 solicitudes por IP por minuto. La compra utiliza el carrito, cálculo comercial, simulador de tarjeta y transacción de pedidos existentes. Si un pedido requiere revisión, no se descuenta el inventario hasta su aprobación administrativa. El monitor consulta el total, el pedido más reciente y los últimos cinco pedidos académicos cada cuatro segundos mientras está visible, sin recargar la página; solo un administrador puede acceder. El panel normal sigue disponible. Una identidad académica registra como máximo un pedido: las solicitudes de compra y de comprobación se serializan en la única instancia del servidor. Ante un resultado incierto, la tablet consulta el pedido antes de permitir otro intento; una recarga conserva la comprobación pendiente si el navegador permite almacenamiento de sesión.
 
-La activación exige simultáneamente `CiteinDemo:Enabled=true`, entorno `Development`, servidor SQL local, base con nombre exacto `CloudBooks_CITEIN_2026` y proveedor `Simulado`; si la combinación no se cumple, el arranque falla. Si la función está desactivada, `/citein` y sus subrutas responden 404. Este es un entorno académico: `Development` crea cuentas de prueba con credenciales conocidas documentadas en [credenciales-prueba.md](credenciales-prueba.md). **No conectarlo a internet ni usar datos reales.** Los visitantes no necesitan conocer esas cuentas; el expositor debe proteger la red y cerrar sesión administrativa al terminar.
+La activación exige simultáneamente `CiteinDemo:Enabled=true`, entorno `Development`, servidor SQL local, base con nombre exacto `CloudBooks_CITEIN_2026` y una modalidad de correo válida; el valor predeterminado es `Simulado` y Resend exige una activación y un destinatario explícitos por ejecución. Si la combinación no se cumple, el arranque falla. Si la función está desactivada, `/citein` y sus subrutas responden 404. Este es un entorno académico: `Development` crea cuentas de prueba con credenciales conocidas documentadas en [credenciales-prueba.md](credenciales-prueba.md). **No exponer la aplicación a internet ni usar credenciales de producción.** Los visitantes no necesitan conocer esas cuentas; el expositor debe proteger la red y cerrar sesión administrativa al terminar.
 
 ## Preparación de red
 
@@ -24,13 +24,67 @@ En PowerShell, desde la raíz del repositorio:
 .\scripts\iniciar-demo-citein.ps1 -Puerto 5200
 ```
 
-El script comprueba el proyecto, SQL Express, cada migración del proyecto, los seis ISBN activos y sus formatos, avisa si algún libro físico tiene menos de 20 ejemplares y revisa el puerto. Tras el inicio comprueba la respuesta HTTP local. Configura la conexión y el correo simulado solamente en el proceso actual; no cambia configuraciones privadas ni cierra otros procesos. Copia la IP mostrada y usa:
+El script comprueba el proyecto, SQL Express, cada migración del proyecto, los seis ISBN activos y sus formatos, avisa si algún libro físico tiene menos de 20 ejemplares y revisa el puerto. Tras el inicio comprueba la respuesta HTTP local. Configura la conexión y, por defecto, el correo simulado en el proceso; al terminar restaura las variables anteriores. No cambia configuraciones privadas ni cierra otros procesos. Copia la IP mostrada y usa:
 
 - Tablet: `http://IP-MOSTRADA:5199/citein`.
 - Administración y sistema completo: `http://IP-MOSTRADA:5199/`.
 - Monitor: `http://IP-MOSTRADA:5199/citein/monitor`.
 
 En Administración inicia sesión con una de las cuentas académicas administradoras de [credenciales-prueba.md](credenciales-prueba.md). En otra computadora abre la aplicación completa. Comprueba que el código y total del resultado de la tablet coinciden con el monitor y con Administración → Pedidos; el libro muestra su existencia actual. Si la actualización automática falla, abre el panel normal de pedidos. Mantén la ventana PowerShell abierta y pulsa **Ctrl+C** para detener el servidor; SQL Server se mantiene activo.
+
+## Correo transaccional y prueba controlada con Resend
+
+La cola y las plantillas existentes registran los eventos de aprobación, revisión y cancelación. Con el comando de inicio sin opciones, **Simulado** sigue siendo el predeterminado y no necesita internet. Los pedidos de la tablet usan identidades `@visitante.citein.invalid`: nunca se envían a Resend ni se pide el correo personal al jurado. Las direcciones `.invalid` y `.local` tampoco salen mediante el proveedor real.
+
+### Preparar configuración privada
+
+1. En [Domains de Resend](https://resend.com/domains), añade un dominio propio controlado por el equipo, publica los registros DNS que indique Resend y espera a que figure como verificado. El remitente debe usar exactamente ese dominio. `onboarding@resend.dev` no sirve para esta modalidad CITEIN. En [API Keys](https://resend.com/api-keys), comprueba que la clave existente tenga permiso de envío para ese dominio. La aplicación verifica que el dominio declarado coincida con el remitente; **Resend verifica la autorización real del dominio y de la clave** al recibir la solicitud.
+2. La clave `Resend:ApiKey` se almacena en User Secrets de este proyecto, fuera de Git. No la imprimas ni pegues en el repositorio. Para comprobar únicamente si existen las entradas, desde la raíz ejecuta:
+
+   ```powershell
+   $rutaSecretos = Join-Path $env:APPDATA 'Microsoft\UserSecrets\c9ab3ad4-5ea3-40f1-9e53-3d1b4174ea0f\secrets.json'
+   if (Test-Path -LiteralPath $rutaSecretos) {
+       $datosSecretos = Get-Content -LiteralPath $rutaSecretos -Raw | ConvertFrom-Json
+       foreach ($nombre in @('Resend:ApiKey', 'Correo:ApiKey', 'Correo:Remitente', 'Correo:DominioVerificado')) {
+           $valor = $datosSecretos.PSObject.Properties[$nombre].Value
+           '{0}: {1}' -f $nombre, $(if ([string]::IsNullOrWhiteSpace($valor)) { 'ausente' } else { 'configurado' })
+       }
+       Remove-Variable datosSecretos, valor -ErrorAction SilentlyContinue
+   } else { 'Archivo de User Secrets ausente' }
+   ```
+
+   Si ya existe la clave, consérvala. Si falta, el responsable puede agregar `Resend:ApiKey` a los User Secrets del proyecto mediante un editor privado, sin pegarla en la consola ni compartirla. `Correo:ApiKey` es una alternativa anterior; si ambas existen, prevalece `Resend:ApiKey`.
+3. Configura solo los valores reales autorizados del remitente y dominio propio; sustituye ambos marcadores antes de ejecutar. No incluyas la clave en estos comandos:
+
+   ```powershell
+   dotnet user-secrets set 'Correo:Remitente' 'CloudBooks <notificaciones@TU-DOMINIO-VERIFICADO>' --project src/CloudBooks.Web
+   dotnet user-secrets set 'Correo:DominioVerificado' 'TU-DOMINIO-VERIFICADO' --project src/CloudBooks.Web
+   ```
+
+   El logo oficial se adjunta de forma interna al correo nuevo; no exige una URL pública. Los botones de la aplicación solo se incluyen si `Correo:UrlBase` es una URL HTTPS pública configurada y controlada por el equipo. Sin ella se omiten; no se usan direcciones de la red privada. No publiques CITEIN para habilitar los botones.
+4. La versión añade las migraciones `ComprobanteCorreo` y `LogoCorreo`, con columnas opcionales para conservar los archivos exactos usados por los reintentos. Antes de iniciar, confirma que se aplicaron **exclusivamente en la base CITEIN**. Si el script indica que faltan, haz antes un respaldo verificado de esa base, detén la aplicación y, desde la raíz, ejecuta:
+
+   ```powershell
+   dotnet ef database update --project src/CloudBooks.Web --connection 'Server=.\SQLEXPRESS;Database=CloudBooks_CITEIN_2026;Trusted_Connection=True;TrustServerCertificate=True'
+   ```
+
+   Nunca cambies el nombre de esa base por `CloudBooks` u otra base principal. Las migraciones agregan columnas y conservan los registros anteriores.
+
+### Autorizar y realizar una compra de prueba
+
+1. Pide autorización del dueño de **un** buzón real y verifica su dirección. Esta versión admite direcciones válidas de otros proveedores, no solo Gmail. Para una prueba real, muestra al operador únicamente el destinatario y el asunto previsto `CloudBooks | Tu pedido PED-NNNNNN fue confirmado` (el código se asigna al crear el pedido); solicita su confirmación antes de comprar. No autorices otras direcciones ni envíes mensajes históricos.
+2. Con internet disponible para Resend y la red local privada para CloudBooks, inicia reemplazando el marcador por esa única dirección autorizada:
+
+   ```powershell
+   .\scripts\iniciar-demo-citein.ps1 -CorreoReal -DestinatarioAutorizado 'BUZON-AUTORIZADO@gmail.com'
+   ```
+
+   Sin `-CorreoReal`, se usa Simulado aunque exista una clave guardada. Cada inicio de Resend genera una nueva autorización de sesión: solo los nuevos eventos de pedido para el destinatario indicado pueden enviarse en esa ejecución. Las demás notificaciones nuevas se simulan, incluidos los avisos administrativos. Los mensajes históricos pendientes y los de sesiones previas no se seleccionan para envío real ni se borran. Los mensajes ya simulados nunca se reenvían automáticamente. La autorización y el proveedor se restauran en el proceso al cerrar el script.
+3. En el equipo servidor abre `http://127.0.0.1:5199/`, ingresa con el cliente registrado cuyo correo coincide exactamente con el autorizado o regístralo con su consentimiento. Mantén esta prueba en el equipo y la red privada de confianza: el sitio de la feria usa HTTP y no debe exponerse a internet. Selecciona un libro disponible, agrega una unidad al carrito y confirma con **transferencia simulada**. No realices transferencias bancarias. El pedido modifica la base e inventario CITEIN; conserva el código. Si entra en revisión, el correo indica revisión y no lleva comprobante. Tras la revisión y aprobación administrativa se crea otro evento de aprobación con el PDF; al cancelar uno pendiente o en revisión se crea el evento de cancelación sin PDF.
+4. Abre **Administración → Avisos → Historial de correos**, busca el código y abre el detalle. `Pendiente` indica que se guardó el mensaje; `Simulado`, que no se envió; `AceptadoProveedor`, que Resend aceptó la solicitud; `ReintentoPendiente` indica un fallo temporal o resultado incierto y `Fallido`, que no se pudo confirmar después de los intentos. El identificador del proveedor aparece en el detalle. CloudBooks no implementa webhooks y no confirma entrega al buzón: comprueba el estado en Resend y pregunta al titular del Gmail si lo recibió, incluyendo spam. La vista previa del historial no reproduce necesariamente el logo interno CID.
+5. Si se generó el comprobante para un pedido aprobado, abre el PDF adjunto en el mensaje recibido y contrasta código, cliente, libros, importes y aviso académico. La generación fallida queda en el registro del servidor; el pedido y el correo siguen su curso sin adjunto. Los archivos del correo se guardan junto a la cola. Una aceptación por Resend no prueba que el adjunto haya llegado al buzón ni su apariencia en Gmail.
+
+La cola solo trabaja mientras la aplicación está abierta. Los fallos se reintentan con la misma clave y contenido durante la sesión, con un máximo de cinco intentos y una ventana de seguridad de 23 horas. Al reiniciar, una sesión nueva **no recupera automáticamente los pendientes reales de la sesión anterior**; investiga su estado antes de decidir cómo proceder, pues podría existir una aceptación cuyo resultado se perdió. No vuelvas a comprar para forzar un correo. Si no hay internet, detén y vuelve a iniciar sin `-CorreoReal`: Simulado conserva el funcionamiento de las compras sin enviar mensajes. Un fallo del proveedor no revierte ni duplica el pedido confirmado.
 
 ## Recorrido y comprobaciones previas
 

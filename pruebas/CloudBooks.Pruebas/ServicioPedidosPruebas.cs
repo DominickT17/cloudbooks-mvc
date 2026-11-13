@@ -232,6 +232,39 @@ public class ServicioPedidosPruebas : IDisposable
         Assert.Equal(2, await contexto.DetallesCarrito.CountAsync());
     }
 
+    [Fact]
+    public async Task ComprobanteRealSeGeneraSoloAlAprobarYSeConservaEnLaCola()
+    {
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+        var raiz = new DirectoryInfo(AppContext.BaseDirectory);
+        while (raiz != null && !File.Exists(Path.Combine(raiz.FullName, "CloudBooks.sln"))) raiz = raiz.Parent;
+        Assert.NotNull(raiz);
+        var entorno = new EntornoPdf { WebRootPath = Path.Combine(raiz.FullName, "src", "CloudBooks.Web", "wwwroot") };
+        var avisos = new ServicioNotificaciones(contexto, new ConfigurationBuilder().AddInMemoryCollection().Build());
+        var pedidos = new ServicioPedidos(contexto, new ServicioDescuentos(), correos: avisos, comprobante: new ServicioComprobantePedido(entorno));
+        var pedido = (await pedidos.CrearAsync("cliente", false, MetodoPagoSimulado.TarjetaSimulada, "Otra persona")).Pedido!;
+        Assert.Equal(EstadoPedido.EnRevision, pedido.Estado);
+        Assert.All(await contexto.CorreosPendientes.AsNoTracking().ToListAsync(), c => Assert.Null(c.ComprobantePdf));
+        Assert.Null(await pedidos.MarcarRevisadoAsync(pedido.Id));
+        Assert.Null(await pedidos.CambiarEstadoAsync(pedido.Id, EstadoPedido.Aprobado));
+        var aprobado = await contexto.CorreosPendientes.AsNoTracking().SingleAsync(c => c.Tipo == "aprobado");
+        Assert.NotNull(aprobado.ComprobantePdf);
+        Assert.True(aprobado.ComprobantePdf.Length > 1000);
+        Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(aprobado.ComprobantePdf, 0, 5));
+        Assert.Contains(pedido.Codigo, aprobado.TextoPlano);
+        Assert.Contains("Libro físico", aprobado.TextoPlano);
+    }
+
+    private sealed class EntornoPdf : Microsoft.AspNetCore.Hosting.IWebHostEnvironment
+    {
+        public string WebRootPath { get; set; } = "";
+        public Microsoft.Extensions.FileProviders.IFileProvider WebRootFileProvider { get; set; } = new Microsoft.Extensions.FileProviders.NullFileProvider();
+        public string ApplicationName { get; set; } = "Pruebas";
+        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = new Microsoft.Extensions.FileProviders.NullFileProvider();
+        public string ContentRootPath { get; set; } = "";
+        public string EnvironmentName { get; set; } = "Development";
+    }
+
     private class ProveedorFallido : IProveedorCorreo
     {
         public Task<ResultadoEntrega> EnviarAsync(CorreoPendiente correo, CancellationToken cancelacion) => Task.FromException<ResultadoEntrega>(new InvalidOperationException());
